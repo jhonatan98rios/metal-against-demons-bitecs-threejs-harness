@@ -1,0 +1,9 @@
+#!/bin/sh
+
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+
+export PNPM_HOME="$HOME/snap/code/241/.local/share/pnpm/bin"
+export PATH="$PNPM_HOME:$PATH"
+
+pnpm validate:full
