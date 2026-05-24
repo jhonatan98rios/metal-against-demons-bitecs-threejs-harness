@@ -47,8 +47,8 @@ export default tseslint.config(
     settings: {
       'boundaries/elements': [
         {
-          type: 'ecs',
-          pattern: 'src/game/ecs/*'
+          type: 'core',
+          pattern: 'src/game/core/*'
         },
         {
           type: 'gameplay',
@@ -96,8 +96,6 @@ export default tseslint.config(
 
       'functional/no-let': 'error',
 
-      'functional/no-loop-statements': 'error',
-
       /*
        * Boundaries
        */
@@ -109,23 +107,23 @@ export default tseslint.config(
 
           rules: [
             {
-              from: 'ecs',
-              allow: ['ecs']
+              from: 'core',
+              allow: ['core']
             },
 
             {
               from: 'gameplay',
-              allow: ['gameplay', 'ecs']
+              allow: ['gameplay', 'core']
             },
 
             {
               from: 'rendering',
-              allow: ['rendering', 'ecs']
+              allow: ['rendering', 'core']
             },
 
             {
               from: 'ui',
-              allow: ['ui', 'ecs', 'gameplay']
+              allow: ['ui', 'core', 'gameplay']
             }
           ]
         }

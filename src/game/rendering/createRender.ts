@@ -18,7 +18,8 @@ export const createRender = (canvas: HTMLCanvasElement) => {
     0.1,
     2000
   )
-  camera.position.set(200, 70, 300)
+  camera.position.set(30, 25, 50)
+  camera.lookAt(new THREE.Vector3(30, 0, 0))
 
   const ambient = new THREE.AmbientLight(0x404040, 0.4)
   scene.add(ambient)
