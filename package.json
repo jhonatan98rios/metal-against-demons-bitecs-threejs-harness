@@ -17,7 +17,8 @@
     "format:check": "pnpm prettier --check .",
     "format": "pnpm  prettier --write .",
     "validate": "pnpm lint && pnpm typecheck && pnpm test",
-    "validate:full": "pnpm validate && pnpm depcruise && pnpm knip && pnpm complexity && pnpm format && pnpm format:check"
+    "validate:full": "pnpm validate && pnpm depcruise && pnpm knip && pnpm complexity && pnpm format && pnpm format:check",
+    "prepare": "husky"
   },
   "dependencies": {
     "bitecs": "^0.4.0",
@@ -39,7 +40,9 @@
     "eslint-plugin-functional": "^9.0.5",
     "eslint-plugin-sonarjs": "^4.0.3",
     "eslint-plugin-unicorn": "^64.0.0",
+    "husky": "^9.1.7",
     "knip": "^6.14.2",
+    "lint-staged": "^17.0.5",
     "madge": "^8.0.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
@@ -53,5 +56,14 @@
     "semi": false,
     "singleQuote": true,
     "trailingComma": "none"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,mjs}": [
+      "prettier --write"
+    ]
   }
 }
