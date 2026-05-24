@@ -12,12 +12,7 @@ export default tseslint.config(
    */
 
   {
-    ignores: [
-      '.next/**', 
-      'dist/**', 
-      'node_modules/**',
-      'pnpm-lock.yaml'
-    ]
+    ignores: ['.next/**', 'dist/**', 'node_modules/**', 'pnpm-lock.yaml']
   },
 
   /*
