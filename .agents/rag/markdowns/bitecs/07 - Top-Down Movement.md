@@ -2,7 +2,6 @@
 
 WASD controls with 8-directional movement. Input is stored in a component, then processed by the movement system.
 
-
 ```JavaScript
 
 // Components
@@ -39,4 +38,3 @@ const movementSystem = (world) => {
   }
 }
 ```
-

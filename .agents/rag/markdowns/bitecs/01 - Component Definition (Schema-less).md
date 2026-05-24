@@ -3,7 +3,7 @@
 Define components as Plain Objects with arrays.
 The game uses simple SoA components for position, velocity, health, and more:
 
-*Rule: Always use the entity ID (eid) as the array index.*
+_Rule: Always use the entity ID (eid) as the array index._
 
 ```JavaScript
 // SoA component - recommended for performance
@@ -28,4 +28,3 @@ Position.y[eid] = 200
 Health.current[eid] = 100
 Health.max[eid] = 100
 ```
-

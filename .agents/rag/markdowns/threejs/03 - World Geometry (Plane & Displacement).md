@@ -7,7 +7,7 @@ Heavy use of displacement maps for terrain and tiling textures for roads.
 const geometry = new THREE.PlaneGeometry(width, height, 512, 512);
 const material = new THREE.MeshStandardMaterial({
   map: texture,
-  displacementMap: displacementMap, 
+  displacementMap: displacementMap,
   displacementScale: 5,
   roughness: 0.8,
 });

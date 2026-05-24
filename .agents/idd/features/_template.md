@@ -67,4 +67,4 @@ This file is the primary execution and maintenance contract for the feature.
 Use glossary anchors to reconnect later maintenance work to the source code that implements this feature.
 
 | Location | Type | Description |
-|----------|------|-------------|
+| -------- | ---- | ----------- |

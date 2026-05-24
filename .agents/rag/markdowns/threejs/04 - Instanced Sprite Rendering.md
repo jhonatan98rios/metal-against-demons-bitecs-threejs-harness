@@ -13,13 +13,13 @@ const dummy = new THREE.Object3D();
 const updateInstances = (entities, camera) => {
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i];
-    
+
     dummy.position.set(Position.x[eid], 4, Position.z[eid]);
-    
+
     // Flip sprite based on movement direction
     const flip = Velocity.x[eid] > 0 ? 1 : -1;
     dummy.scale.set(flip, 1, 1);
-    
+
     dummy.updateMatrix();
     mesh.setMatrixAt(i, dummy.matrix);
   }

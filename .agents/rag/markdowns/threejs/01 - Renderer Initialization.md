@@ -1,4 +1,5 @@
 # Renderer Initialization
+
 The renderer uses the modern WebGPU backend. It must be initialized asynchronously before the game loop starts.
 
 ```JavaScript
@@ -13,7 +14,7 @@ export async function createRenderer() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true; // Enables PCF shadows
-  
+
   document.body.appendChild(renderer.domElement);
   return renderer;
 }

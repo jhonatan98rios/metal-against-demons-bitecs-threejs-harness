@@ -7,7 +7,7 @@ No explicit user-approved rules have been recorded for this repository yet.
 ## Rules
 
 | Rule Type | Scope | Constraint | Rationale | Status |
-|-----------|-------|------------|-----------|--------|
+| --------- | ----- | ---------- | --------- | ------ |
 
 ## Notes
 

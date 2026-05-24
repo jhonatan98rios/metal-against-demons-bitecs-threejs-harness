@@ -75,6 +75,7 @@ const playerInputSystem = (world: World) => {
 ```
 
 # Conditional Systems
+
 Run systems only when certain conditions are met:
 
 ```TS
@@ -105,11 +106,12 @@ const renderPhase = (world) => {
   renderUI(world)
   renderDebug(world)
 }
-```  
-
+```
 
 # Delta Time
+
 Use custom world context to pass delta time to systems:
+
 ```TS
 // World with time context
 const world = createWorld({

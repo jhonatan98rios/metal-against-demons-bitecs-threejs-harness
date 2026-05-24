@@ -1,4 +1,3 @@
-
 # Typed Arrays
 
 For fixed-size worlds or multithreading, use TypedArrays.
@@ -25,7 +24,6 @@ const Sprite = {
   layer: new Int8Array(10000),
 }
 ```
-
 
 # SharedArrayBuffer for Multithreading
 

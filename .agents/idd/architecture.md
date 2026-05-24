@@ -17,10 +17,10 @@ is not implemented in the current tree.
 
 ## Projects
 
-| Name | Path | Role | Notes |
-|------|------|------|-------|
-| Next.js app shell | `.` | Web app | Root App Router scaffold serving `/` from `app/page.tsx`; layout and global styles live under `app/`. |
-| Local QA/tooling | `tools/` and root config files | Developer tooling | Harness, lint, dependency, test, and complexity checks run locally through `pnpm` scripts. |
+| Name              | Path                           | Role              | Notes                                                                                                 |
+| ----------------- | ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| Next.js app shell | `.`                            | Web app           | Root App Router scaffold serving `/` from `app/page.tsx`; layout and global styles live under `app/`. |
+| Local QA/tooling  | `tools/` and root config files | Developer tooling | Harness, lint, dependency, test, and complexity checks run locally through `pnpm` scripts.            |
 
 ## Capabilities
 
@@ -41,26 +41,26 @@ browser loads the root route, Next.js serves the App Router page and static
 assets, and the harness script runs in Node.js when invoked from the command
 line.
 
-| Component | Type | Runtime Or Host | Notes |
-|-----------|------|-----------------|-------|
-| Browser client | Web client | Browser | Consumes the root page rendered by Next.js. |
-| Next.js app server | Web app | Node.js | Serves the App Router layout, page, and `public/` assets. |
-| Harness CLI | Validation job | Node.js | Runs lint, typecheck, test, and optionally heavier checks based on diff size. |
+| Component          | Type           | Runtime Or Host | Notes                                                                         |
+| ------------------ | -------------- | --------------- | ----------------------------------------------------------------------------- |
+| Browser client     | Web client     | Browser         | Consumes the root page rendered by Next.js.                                   |
+| Next.js app server | Web app        | Node.js         | Serves the App Router layout, page, and `public/` assets.                     |
+| Harness CLI        | Validation job | Node.js         | Runs lint, typecheck, test, and optionally heavier checks based on diff size. |
 
 ## Data Stores
 
-| Name | Type | Used By | Notes |
-|------|------|---------|-------|
-| None | N/A | N/A | No database, cache, or other persistent store is configured. |
+| Name | Type | Used By | Notes                                                        |
+| ---- | ---- | ------- | ------------------------------------------------------------ |
+| None | N/A  | N/A     | No database, cache, or other persistent store is configured. |
 
 ## Integrations
 
-| System | Direction | Purpose | Notes |
-|--------|-----------|---------|-------|
-| Next.js | Runtime framework | Web application shell | App Router project on Next 16.2.6. |
-| React | Runtime framework | UI rendering | Used through Next.js and the app route components. |
-| Tailwind CSS v4 | Styling framework | Global styling | Imported through `app/globals.css` with `@theme inline`. |
-| ESLint / dependency-cruiser / Knip / Vitest / Madge / Lizard | Local tooling | Quality gates | Wired through `package.json` scripts and `tools/harness/index.ts`. |
+| System                                                       | Direction         | Purpose               | Notes                                                              |
+| ------------------------------------------------------------ | ----------------- | --------------------- | ------------------------------------------------------------------ |
+| Next.js                                                      | Runtime framework | Web application shell | App Router project on Next 16.2.6.                                 |
+| React                                                        | Runtime framework | UI rendering          | Used through Next.js and the app route components.                 |
+| Tailwind CSS v4                                              | Styling framework | Global styling        | Imported through `app/globals.css` with `@theme inline`.           |
+| ESLint / dependency-cruiser / Knip / Vitest / Madge / Lizard | Local tooling     | Quality gates         | Wired through `package.json` scripts and `tools/harness/index.ts`. |
 
 ## Open Questions
 

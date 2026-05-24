@@ -9,13 +9,13 @@ current source tree is intentionally small.
 
 ## Languages And Tooling
 
-| Area | Choice | Notes |
-|------|--------|-------|
-| Languages | TypeScript, TSX, CSS, JSON, MJS | App code is TypeScript-first; configs use ESM where practical. |
-| Package Managers | pnpm primary; bun lockfile also present | `package.json` scripts are written for `pnpm`, but `bun.lock` exists too, so the canonical manager is not fully settled. |
-| Frameworks | Next.js 16.2.6, React 19.2.4, Tailwind CSS 4 | App Router lives under `app/`. |
-| Linters And Formatters | ESLint 9, Prettier 3 | `eslint.config.mjs` uses typed rules; Prettier config is embedded in `package.json`. |
-| Test Tooling | Vitest 4 | Config exists, but no tests are present yet. |
+| Area                   | Choice                                       | Notes                                                                                                                    |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Languages              | TypeScript, TSX, CSS, JSON, MJS              | App code is TypeScript-first; configs use ESM where practical.                                                           |
+| Package Managers       | pnpm primary; bun lockfile also present      | `package.json` scripts are written for `pnpm`, but `bun.lock` exists too, so the canonical manager is not fully settled. |
+| Frameworks             | Next.js 16.2.6, React 19.2.4, Tailwind CSS 4 | App Router lives under `app/`.                                                                                           |
+| Linters And Formatters | ESLint 9, Prettier 3                         | `eslint.config.mjs` uses typed rules; Prettier config is embedded in `package.json`.                                     |
+| Test Tooling           | Vitest 4                                     | Config exists, but no tests are present yet.                                                                             |
 
 ## Formatting
 
@@ -65,22 +65,22 @@ current source tree is intentionally small.
 
 ## Library Patterns
 
-| Library Or Tool | Approved Usage Pattern | Avoid |
-|-----------------|------------------------|-------|
-| Next.js | Use App Router primitives (`app/layout.tsx`, `app/page.tsx`) and export `metadata` from layouts when needed. | Pages Router patterns or hidden global wrappers. |
-| Tailwind CSS | Import `tailwindcss` once in `app/globals.css` and express theme tokens with CSS variables and `@theme inline`. | Ad hoc global CSS that bypasses the theme variables. |
-| TypeScript | Keep `strict: true` assumptions in mind and use the configured path aliases for shared code. | Disabling type checking or leaning on `any` as a default escape hatch. |
-| Harness | Emit machine-readable JSON and keep check ordering explicit. | Shell scripts that only print human text. |
+| Library Or Tool | Approved Usage Pattern                                                                                          | Avoid                                                                  |
+| --------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Next.js         | Use App Router primitives (`app/layout.tsx`, `app/page.tsx`) and export `metadata` from layouts when needed.    | Pages Router patterns or hidden global wrappers.                       |
+| Tailwind CSS    | Import `tailwindcss` once in `app/globals.css` and express theme tokens with CSS variables and `@theme inline`. | Ad hoc global CSS that bypasses the theme variables.                   |
+| TypeScript      | Keep `strict: true` assumptions in mind and use the configured path aliases for shared code.                    | Disabling type checking or leaning on `any` as a default escape hatch. |
+| Harness         | Emit machine-readable JSON and keep check ordering explicit.                                                    | Shell scripts that only print human text.                              |
 
 ## Component Locations
 
-| Component Type | Preferred Location | Notes |
-|----------------|--------------------|-------|
-| App route/layout UI | `app/` | Current web surface. |
-| Global styling | `app/globals.css` | Tailwind import and theme variables live here. |
-| Static assets | `public/` | Icons and other files served by Next.js. |
-| Tooling and scripts | `tools/` | Harness and future developer automation. |
-| Future ECS/game layers | `src/game/*` | Reserved by aliases and lint rules, but not present yet. |
+| Component Type         | Preferred Location | Notes                                                    |
+| ---------------------- | ------------------ | -------------------------------------------------------- |
+| App route/layout UI    | `app/`             | Current web surface.                                     |
+| Global styling         | `app/globals.css`  | Tailwind import and theme variables live here.           |
+| Static assets          | `public/`          | Icons and other files served by Next.js.                 |
+| Tooling and scripts    | `tools/`           | Harness and future developer automation.                 |
+| Future ECS/game layers | `src/game/*`       | Reserved by aliases and lint rules, but not present yet. |
 
 ## Anti-Patterns
 

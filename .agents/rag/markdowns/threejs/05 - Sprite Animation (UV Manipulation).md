@@ -10,7 +10,7 @@ const updateAnimation = (delta, state) => {
   // Calculate current frame offset
   const uOffset = currentFrame / columns;
   const vOffset = 1 - (currentRow + 1) / rows;
-  
+
   texture.offset.set(uOffset, vOffset);
 };
 ```

@@ -31,6 +31,7 @@ loop()
 ```
 
 # Fixed Timestep
+
 For deterministic physics, use a fixed timestep with accumulator:
 
 ```JavaScript
