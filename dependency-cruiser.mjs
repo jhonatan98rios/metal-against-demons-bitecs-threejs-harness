@@ -12,7 +12,7 @@ export default {
       name: 'ecs-no-rendering',
       severity: 'error',
       from: {
-        path: '^src/game/ecs'
+        path: '^src/game/core'
       },
       to: {
         path: '^src/game/rendering'
