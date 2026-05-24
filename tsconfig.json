@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@ecs/*": ["./src/game/ecs/*"],
+      "@gameplay/*": ["./src/game/gameplay/*"],
+      "@rendering/*": ["./src/game/rendering/*"]
     }
   },
   "include": [
