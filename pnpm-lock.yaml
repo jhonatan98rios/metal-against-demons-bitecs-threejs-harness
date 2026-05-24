@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      bitecs:
+        specifier: ^0.4.0
+        version: 0.4.0
       next:
         specifier: 16.2.6
         version: 16.2.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
+      three:
+        specifier: ^0.184.0
+        version: 0.184.0
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
@@ -3399,6 +3405,8 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.10.32: {}
+
+  bitecs@0.4.0: {}
 
   bl@4.1.0:
     dependencies:
