@@ -7,6 +7,9 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
+  renderer.outputColorSpace = THREE.SRGBColorSpace
+  renderer.toneMapping = THREE.NoToneMapping
+
   const scene = new THREE.Scene()
   const fogColor = 0xd7c1a0
   scene.background = new THREE.Color(fogColor)
@@ -18,6 +21,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
     0.1,
     2000
   )
+
   camera.position.set(30, 25, 50)
   camera.lookAt(new THREE.Vector3(30, 0, 0))
 

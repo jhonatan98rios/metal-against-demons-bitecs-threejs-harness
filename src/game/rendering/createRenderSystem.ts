@@ -1,0 +1,54 @@
+import { query, World } from 'bitecs'
+import * as THREE from 'three'
+
+import { Position } from '../core/shared/components/Position'
+import { Renderable } from '../core/shared/components/Renderable'
+import { Animation } from '../core/shared/components/Animation'
+import { Sprite } from '../core/shared/components/Sprite'
+
+import { createSpriteRender } from './createSpriteRender'
+
+const renderObjects = new Map<number, THREE.Sprite<THREE.Object3DEventMap>>()
+
+const getOrCreateRenderObject = (eid: number, scene: THREE.Scene) => {
+  const existingObject = renderObjects.get(eid)
+
+  if (existingObject) {
+    return existingObject
+  }
+
+  const newObject = createSpriteRender(eid)
+
+  renderObjects.set(eid, newObject)
+  scene.add(newObject)
+
+  return newObject
+}
+
+const updateSpriteFrame = (eid: number, object: THREE.Sprite) => {
+  const columns = Sprite.columns[eid]
+  const rows = Sprite.rows[eid]
+  const currentFrame = Animation.currentFrame[eid]
+
+  const frameX = currentFrame % columns
+  const frameY = Math.floor(currentFrame / columns)
+
+  object.material.map?.offset.set(frameX / columns, 1 - (frameY + 1) / rows)
+}
+
+const syncPosition = (eid: number, object: THREE.Sprite) => {
+  object.position.set(Position.x[eid], Position.y[eid], Position.z[eid])
+}
+
+export const createRenderSystem = (world: World, scene: THREE.Scene) => {
+  return () => {
+    const entities = query(world, [Position, Renderable])
+
+    for (const eid of entities) {
+      const object = getOrCreateRenderObject(eid, scene)
+
+      updateSpriteFrame(eid, object)
+      syncPosition(eid, object)
+    }
+  }
+}

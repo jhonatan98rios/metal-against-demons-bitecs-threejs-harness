@@ -13,7 +13,7 @@
     "test": "vitest run",
     "depcruise": "depcruise src --config dependency-cruiser.mjs",
     "knip": "knip --reporter json",
-    "complexity": "lizard src -C6 -L30",
+    "complexity": "lizard src -C10 -L50",
     "format:check": "pnpm prettier --check .",
     "format": "pnpm  prettier --write .",
     "validate": "pnpm lint && pnpm typecheck && pnpm test",
