@@ -1,4 +1,6 @@
 import { setupWorld } from './core/bootstrap/setup'
+import { setupApparition } from './core/enemies/entity'
+import { createEnemyPool } from './core/enemies/pool/enemyPool'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
 import { createAnimationSystem } from './rendering/createAnimationSystem'
@@ -14,17 +16,21 @@ export function start() {
   const world = setupWorld()
   const { renderer, scene, camera } = createRender(canvas)
 
-  const delta = {
-    last: performance.now(),
-    current: 0
-  }
+  const delta = { last: performance.now(), current: 0 }
 
   createScenario(scene, SCENARIOS.LEVEL1)
+  const enemyPool = createEnemyPool(world, 1500)
+
+  Array.from({ length: 1000 }, () => {
+    const eid = enemyPool.acquire()
+    const x = 5 + Math.random() * 50
+    const z = -15 + Math.random() * 40
+    setupApparition(eid, x, z, Math.random() > 0.5)
+  })
 
   const renderSystem = createRenderSystem(world, scene)
   const animationSystem = createAnimationSystem(world)
 
-  // Input & controller
   const input = createInput()
   const controller = createCharacterController(world, input)
 
@@ -36,12 +42,9 @@ export function start() {
     controller.update(delta.current)
     animationSystem(delta.current)
     renderSystem()
-
     renderer.render(scene, camera)
     requestAnimationFrame(loop)
   }
-
   loop()
-
   console.log({ world, scene })
 }

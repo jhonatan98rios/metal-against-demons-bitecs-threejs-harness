@@ -1,6 +1,7 @@
 import { query, World } from 'bitecs'
 import * as THREE from 'three'
 
+import { Active } from '../core/shared/components/Active'
 import { Position } from '../core/shared/components/Position'
 import { Renderable } from '../core/shared/components/Renderable'
 import { Animation } from '../core/shared/components/Animation'
@@ -49,10 +50,22 @@ const syncPosition = (eid: number, object: THREE.Mesh) => {
 
 export const createRenderSystem = (world: World, scene: THREE.Scene) => {
   return () => {
-    const entities = query(world, [Position, Renderable])
+    const entities = query(world, [Active, Position, Renderable])
 
     for (const eid of entities) {
+      if (Active.isActive[eid] === 0) {
+        const existingObject = renderObjects.get(eid)
+
+        if (existingObject) {
+          existingObject.visible = false
+        }
+
+        continue
+      }
+
       const object = getOrCreateRenderObject(eid, scene)
+
+      object.visible = true
 
       updateSpriteFrame(eid, object)
       syncPosition(eid, object)

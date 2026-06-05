@@ -2,6 +2,7 @@ import { addComponent, addEntity, World } from 'bitecs'
 
 import { Player } from './components'
 
+import { Active } from '../shared/components/Active'
 import { Health } from '../shared/components/Health'
 import { Position } from '../shared/components/Position'
 import { Velocity } from '../shared/components/Velocity'
@@ -11,6 +12,7 @@ import { Animation } from '../shared/components/Animation'
 import { AnimationRow } from '../shared/components/AnimationRow'
 
 const PLAYER_COMPONENTS = [
+  Active,
   Player,
   Health,
   Position,
@@ -71,6 +73,10 @@ const setupAnimationRow = (eid: number) => {
   AnimationRow.row[eid] = 0
 }
 
+const setupActive = (eid: number) => {
+  Active.isActive[eid] = 1
+}
+
 const setupPlayerTag = (eid: number) => {
   Player.isPlayer[eid] = 1
 }
@@ -81,6 +87,7 @@ export function createPlayer(world: World) {
   addPlayerComponents(world, playerEid)
 
   setupPlayerTag(playerEid)
+  setupActive(playerEid)
 
   setupHealth(playerEid)
   setupPosition(playerEid)
