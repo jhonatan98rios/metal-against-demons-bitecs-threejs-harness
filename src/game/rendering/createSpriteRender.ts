@@ -15,18 +15,21 @@ export function createSpriteRender(eid: number) {
 
   texture.offset.set(0, 1 - 1 / rows)
 
-  const material = new THREE.SpriteMaterial({
+  const geometry = new THREE.PlaneGeometry(
+    Sprite.width[eid],
+    Sprite.height[eid]
+  )
+
+  const material = new THREE.MeshStandardMaterial({
     map: texture,
     transparent: true,
-    alphaTest: 0.5,
-    depthWrite: false,
-    side: THREE.DoubleSide
+    alphaTest: 0.5
   })
 
-  const sprite = new THREE.Sprite(material)
-  sprite.scale.set(Sprite.width[eid], Sprite.height[eid], 1)
-  sprite.castShadow = false
-  sprite.receiveShadow = false
+  const mesh = new THREE.Mesh(geometry, material)
 
-  return sprite
+  mesh.castShadow = true
+  mesh.receiveShadow = true
+
+  return mesh
 }

@@ -7,15 +7,6 @@ export const createAnimationSystem = (world: World) => {
     const entities = query(world, [Animation, Velocity])
 
     for (const eid of entities) {
-      // console.log(entities)
-      // console.log(Animation.currentFrame[eid])
-
-      // const moving =
-      //   Math.abs(Velocity.x[eid]) > 0.01 ||
-      //   Math.abs(Velocity.z[eid]) > 0.01
-
-      // if (!moving) continue
-
       Animation.elapsed[eid] += dt
 
       const frameDuration = 1 / Animation.fps[eid]

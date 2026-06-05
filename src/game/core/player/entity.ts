@@ -8,6 +8,7 @@ import { Velocity } from '../shared/components/Velocity'
 import { Renderable } from '../shared/components/Renderable'
 import { Sprite } from '../shared/components/Sprite'
 import { Animation } from '../shared/components/Animation'
+import { AnimationRow } from '../shared/components/AnimationRow'
 
 const PLAYER_COMPONENTS = [
   Player,
@@ -16,7 +17,8 @@ const PLAYER_COMPONENTS = [
   Velocity,
   Renderable,
   Sprite,
-  Animation
+  Animation,
+  AnimationRow
 ] as const
 
 const addPlayerComponents = (world: World, eid: number) => {
@@ -65,6 +67,10 @@ const setupAnimation = (eid: number) => {
   Animation.endFrame[eid] = 3
 }
 
+const setupAnimationRow = (eid: number) => {
+  AnimationRow.row[eid] = 0
+}
+
 const setupPlayerTag = (eid: number) => {
   Player.isPlayer[eid] = 1
 }
@@ -83,6 +89,7 @@ export function createPlayer(world: World) {
   setupRenderable(playerEid)
   setupSprite(playerEid)
   setupAnimation(playerEid)
+  setupAnimationRow(playerEid)
 
   return playerEid
 }

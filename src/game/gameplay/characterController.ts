@@ -3,6 +3,7 @@ import { World } from 'bitecs'
 
 import { Position } from '../core/shared/components/Position'
 import { Velocity } from '../core/shared/components/Velocity'
+import { AnimationRow } from '../core/shared/components/AnimationRow'
 
 type Axis = {
   x: number
@@ -48,6 +49,47 @@ const updateFacing = (world: ControllerWorld, axis: Axis) => {
   world.playerFacingZ = axis.z
 }
 
+const resetToIdleRow = (playerEid: number) => {
+  if (AnimationRow.row[playerEid] === 1) {
+    AnimationRow.row[playerEid] = 0
+  } else if (AnimationRow.row[playerEid] === 3) {
+    AnimationRow.row[playerEid] = 2
+  }
+}
+
+const setWalkRowFromHorizontal = (playerEid: number, axisX: number) => {
+  if (axisX < -0.0001) {
+    AnimationRow.row[playerEid] = 1
+  } else {
+    AnimationRow.row[playerEid] = 3
+  }
+}
+
+const setVerticalWalkRow = (playerEid: number) => {
+  const currentRow = AnimationRow.row[playerEid]
+
+  if (currentRow === 0 || currentRow === 1) {
+    AnimationRow.row[playerEid] = 1
+  } else {
+    AnimationRow.row[playerEid] = 3
+  }
+}
+
+const setAnimationRowFromAxis = (playerEid: number, axis: Axis) => {
+  const moving = Math.hypot(axis.x, axis.z) > 0.0001
+
+  if (!moving) {
+    resetToIdleRow(playerEid)
+    return
+  }
+
+  if (Math.abs(axis.x) > 0.0001) {
+    setWalkRowFromHorizontal(playerEid, axis.x)
+  } else {
+    setVerticalWalkRow(playerEid)
+  }
+}
+
 const movePlayer = (
   playerEid: number,
   axis: Axis,
@@ -91,6 +133,8 @@ export function createCharacterController(
       const axis = normalizeAxis(input.getAxis())
 
       updateFacing(controllerWorld, axis)
+
+      setAnimationRowFromAxis(playerEid, axis)
 
       movePlayer(playerEid, axis, speed, delta)
 
