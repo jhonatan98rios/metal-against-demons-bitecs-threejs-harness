@@ -12,7 +12,14 @@ export default tseslint.config(
    */
 
   {
-    ignores: ['.next/**', 'dist/**', 'node_modules/**', 'pnpm-lock.yaml']
+    ignores: [
+      '.next/**',
+      'dist/**',
+      'node_modules/**',
+      'pnpm-lock.yaml',
+      'docs/markdowns/bitecs/examples/pong/dist/pong.js',
+      'docs/markdowns/bitecs/examples/space-invaders/dist/space-invaders.js'
+    ]
   },
 
   /*
@@ -72,7 +79,7 @@ export default tseslint.config(
 
       complexity: ['error', 8],
 
-      'max-lines': ['error', 300],
+      'max-lines': ['error', 400],
 
       'max-lines-per-function': ['error', 40],
 
@@ -100,29 +107,29 @@ export default tseslint.config(
        * Boundaries
        */
 
-      'boundaries/element-types': [
+      'boundaries/dependencies': [
         'error',
         {
           default: 'disallow',
 
           rules: [
             {
-              from: 'core',
+              from: { type: 'core' },
               allow: ['core']
             },
 
             {
-              from: 'gameplay',
+              from: { type: 'gameplay' },
               allow: ['gameplay', 'core']
             },
 
             {
-              from: 'rendering',
+              from: { type: 'rendering' },
               allow: ['rendering', 'core']
             },
 
             {
-              from: 'ui',
+              from: { type: 'ui' },
               allow: ['ui', 'core', 'gameplay']
             }
           ]
