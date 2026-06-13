@@ -9,6 +9,7 @@ import { Renderable } from '../shared/components/Renderable'
 import { Sprite } from '../shared/components/Sprite'
 import { Animation } from '../shared/components/Animation'
 import { AnimationRow } from '../shared/components/AnimationRow'
+import { Boids, BOIDS_DEFAULTS } from '../shared/components/Boids'
 
 import { APPARITION } from './definitions/apparition'
 
@@ -20,7 +21,8 @@ const ENEMY_COMPONENTS = [
   Renderable,
   Sprite,
   Animation,
-  AnimationRow
+  AnimationRow,
+  Boids
 ] as const
 
 const addEnemyComponents = (world: World, eid: number) => {
@@ -77,6 +79,16 @@ const setupAnimationRow = (eid: number, facingLeft: boolean) => {
   AnimationRow.row[eid] = facingLeft ? 0 : 1
 }
 
+const setupBoids = (eid: number) => {
+  Boids.maxSpeed[eid] = BOIDS_DEFAULTS.MAX_SPEED
+  Boids.perceptionRadius[eid] = BOIDS_DEFAULTS.PERCEPTION_RADIUS
+  Boids.separationRadius[eid] = BOIDS_DEFAULTS.SEPARATION_RADIUS
+  Boids.separationWeight[eid] = BOIDS_DEFAULTS.SEPARATION_WEIGHT
+  Boids.alignmentWeight[eid] = BOIDS_DEFAULTS.ALIGNMENT_WEIGHT
+  Boids.cohesionWeight[eid] = BOIDS_DEFAULTS.COHESION_WEIGHT
+  Boids.pursuitWeight[eid] = BOIDS_DEFAULTS.PURSUIT_WEIGHT
+}
+
 export function setupApparition(
   eid: number,
   x: number,
@@ -93,6 +105,7 @@ export function setupApparition(
   setupSprite(eid)
   setupAnimation(eid)
   setupAnimationRow(eid, facingLeft)
+  setupBoids(eid)
 }
 
 export function createApparition(
