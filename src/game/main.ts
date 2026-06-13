@@ -3,7 +3,7 @@ import { setupApparition } from './core/enemies/entity'
 import { createEnemyPool } from './core/enemies/pool/enemyPool'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
-import { createAnimationSystem } from './rendering/createAnimationSystem'
+import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
 import { createRenderSystem } from './rendering/createRenderSystem'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
@@ -29,7 +29,7 @@ export function start() {
   })
 
   const renderSystem = createRenderSystem(world, scene)
-  const animationSystem = createAnimationSystem(world)
+  const animationSystem = createWorkerPool(world)
 
   const input = createInput()
   const controller = createCharacterController(world, input)
@@ -40,7 +40,7 @@ export function start() {
     delta.last = now
 
     controller.update(delta.current)
-    animationSystem(delta.current)
+    animationSystem.update(delta.current)
     renderSystem()
     renderer.render(scene, camera)
     requestAnimationFrame(loop)
