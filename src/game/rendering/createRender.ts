@@ -28,13 +28,32 @@ function createCamera() {
 
 function createDirectionalLight() {
   const dirLight = new THREE.DirectionalLight(0xffffff, 2.5)
-  dirLight.position.set(-50, 100, -30)
+  /*
+   * Initial position consistent with LIGHT_DIRECTION (normalize 0.2, 3.0, 0.5).
+   * Player starts at (30, 5, 0); light at playerPos + direction * LIGHT_DISTANCE(150)
+   * = (40, 153, 25). The shadow follow system repositions this every frame.
+   */
+  dirLight.position.set(40, 153, 25)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
   dirLight.shadow.mapSize.height = 2048
   dirLight.shadow.bias = -0.0001
   return dirLight
 }
+
+/* Fill light disabled temporarily for shadow debugging */
+// function createFillLight() {
+//   /*
+//    * Secondary directional light near the camera.
+//    * Illuminates sprite fronts without casting shadows.
+//    * No shadow map — zero CPU/GPU cost for shadows.
+//    */
+//   const fillLight = new THREE.DirectionalLight(0xffffff, 0.4)
+//   fillLight.position.set(30, 25, 50)
+//   fillLight.target.position.set(30, 0, 0)
+//   fillLight.castShadow = false
+//   return fillLight
+// }
 
 function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
   shadowCam.left = -200
@@ -56,21 +75,34 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.fog = new THREE.Fog(fogColor, 0, 300)
 
   const camera = createCamera()
-  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.6)
+  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 1.0)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
   const dirLight = createDirectionalLight()
   setShadowCamera(dirLight.shadow.camera)
 
+  /*
+   * Add both the light AND its target to the scene.
+   * Three.js requires dirLight.target to be in the scene graph for
+   * matrix updates — without this, target.position.set() has no effect
+   * and the shadow camera stays at the origin.
+   */
   scene.add(dirLight)
+  scene.add(dirLight.target)
 
-  const ambient = new THREE.AmbientLight(0x404040, 0.4)
+  /* Fill light disabled temporarily for shadow debugging */
+  // const fillLight = createFillLight()
+  // scene.add(fillLight)
+  // scene.add(fillLight.target)
+
+  const ambient = new THREE.AmbientLight(0x555555, 0.6)
   scene.add(ambient)
 
   return {
     renderer,
     scene,
-    camera
+    camera,
+    dirLight
   }
 }
