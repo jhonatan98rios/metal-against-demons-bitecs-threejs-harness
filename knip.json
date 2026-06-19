@@ -1,27 +1,13 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
 
-  "entry": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    "tools/**/*.ts",
-    "next.config.*"
-  ],
+  "entry": ["src/**/*.ts", "app/**/*.tsx", "tools/**/*.ts", "next.config.*"],
 
   "project": ["**/*.{ts,tsx,js,mjs}"],
 
-  "ignore": [".next/**", "dist/**", "coverage/**"],
+  "ignore": ["docs/**"],
 
-  "ignoreDependencies": [
-    "@types/node",
-    "@types/react",
-    "@types/react-dom",
-    "eslint",
-    "prettier",
-    "tailwindcss"
-  ],
+  "ignoreDependencies": ["tailwindcss"],
 
   "ignoreBinaries": ["lizard"],
 
