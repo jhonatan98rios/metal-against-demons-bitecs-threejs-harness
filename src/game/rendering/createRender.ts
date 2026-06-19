@@ -37,12 +37,14 @@ function createDirectionalLight() {
 }
 
 function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
-  shadowCam.left = -50
-  shadowCam.right = 50
-  shadowCam.top = 50
-  shadowCam.bottom = -50
+  shadowCam.left = -200
+  shadowCam.right = 200
+  shadowCam.top = 200
+  shadowCam.bottom = -200
   shadowCam.near = 0.5
-  shadowCam.far = 500
+  shadowCam.far = 1000
+
+  shadowCam.updateProjectionMatrix()
 }
 
 export const createRender = (canvas: HTMLCanvasElement) => {

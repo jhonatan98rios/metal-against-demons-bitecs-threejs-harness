@@ -17,6 +17,7 @@ export default tseslint.config(
       'dist/**',
       'node_modules/**',
       'pnpm-lock.yaml',
+      'docs/Multithreading - bitECS 0.4_files/**',
       'docs/markdowns/bitecs/examples/pong/dist/pong.js',
       'docs/markdowns/bitecs/examples/space-invaders/dist/space-invaders.js'
     ]
