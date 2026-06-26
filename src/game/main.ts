@@ -20,9 +20,9 @@ export function start() {
   const delta = { last: performance.now(), current: 0 }
 
   createScenario(scene, SCENARIOS.LEVEL1)
-  const enemyPool = createEnemyPool(world, 1500)
+  const enemyPool = createEnemyPool(world, 750)
 
-  Array.from({ length: 1500 }, () => {
+  Array.from({ length: 750 }, () => {
     const eid = enemyPool.acquire()
     const x = 5 + Math.random() * 50
     const z = -15 + Math.random() * 40
