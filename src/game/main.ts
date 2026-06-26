@@ -4,6 +4,7 @@ import { createEnemyPool } from './core/enemies/pool/enemyPool'
 import { createBoidsSystem } from './core/enemies/systems/boidsSystem'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
+import { createVirtualJoystick } from './gameplay/virtualJoystick'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
 import { createRenderSystem } from './rendering/createRenderSystem'
@@ -33,6 +34,10 @@ export function start() {
   const renderSystem = createRenderSystem(world, scene)
   const animationSystem = createWorkerPool(world)
   const input = createInput()
+
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  const joystick = isTouchDevice ? createVirtualJoystick(input) : null
+
   const controller = createCharacterController(world, input)
   const loop = () => {
     const now = performance.now()
