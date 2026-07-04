@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { Position } from '../core/shared/components/Position'
 
 function createWebGLRenderer(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
@@ -45,6 +46,22 @@ function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
   shadowCam.far = 1000
 
   shadowCam.updateProjectionMatrix()
+}
+
+export const createFollowCamera = (
+  camera: THREE.PerspectiveCamera,
+  getPlayerEid: () => number,
+  offset = new THREE.Vector3(0, 20, 50),
+  smooth = 0.05
+) => {
+  const targetPos = new THREE.Vector3()
+  return () => {
+    const eid = getPlayerEid()
+    if (!eid) return
+    targetPos.set(Position.x[eid], Position.y[eid], Position.z[eid]).add(offset)
+    camera.position.lerp(targetPos, smooth)
+    camera.lookAt(Position.x[eid], Position.y[eid], Position.z[eid])
+  }
 }
 
 export const createRender = (canvas: HTMLCanvasElement) => {
