@@ -69,7 +69,7 @@ const setupAnimation = (eid: number) => {
   Animation.currentFrame[eid] = 0
   Animation.elapsed[eid] = 0
 
-  Animation.fps[eid] = APPARITION.FPS
+  Animation.fps[eid] = APPARITION.SPEED
 
   Animation.startFrame[eid] = APPARITION.START_FRAME
   Animation.endFrame[eid] = APPARITION.END_FRAME
@@ -80,7 +80,7 @@ const setupAnimationRow = (eid: number, facingLeft: boolean) => {
 }
 
 const setupBoids = (eid: number) => {
-  Boids.maxSpeed[eid] = BOIDS_DEFAULTS.MAX_SPEED
+  Boids.maxSpeed[eid] = BOIDS_DEFAULTS.MAX_SPEED * APPARITION.SPEED
   Boids.perceptionRadius[eid] = BOIDS_DEFAULTS.PERCEPTION_RADIUS
   Boids.separationRadius[eid] = BOIDS_DEFAULTS.SEPARATION_RADIUS
   Boids.separationWeight[eid] = BOIDS_DEFAULTS.SEPARATION_WEIGHT
