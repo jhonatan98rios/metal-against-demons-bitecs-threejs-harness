@@ -36,7 +36,7 @@ export function start() {
   const input = createInput()
 
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-  const joystick = isTouchDevice ? createVirtualJoystick(input) : null
+  if (isTouchDevice) createVirtualJoystick(input)
 
   const controller = createCharacterController(world, input)
   const loop = () => {

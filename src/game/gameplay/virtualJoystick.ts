@@ -2,9 +2,27 @@ type VirtualJoystickInput = {
   setJoystick: (x: number, z: number) => void
 }
 
+interface JoystickState {
+  touchId: number | null
+  centerX: number
+  centerY: number
+}
+
+interface JoystickContext {
+  state: JoystickState
+  container: HTMLElement
+  knob: HTMLElement
+  input: VirtualJoystickInput
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
 const JOYSTICK_SIZE = 120
 const KNOB_SIZE = 50
 const DEAD_ZONE = 0.15
+const MAX_DIST = JOYSTICK_SIZE / 2 - KNOB_SIZE / 2
 
 const createStyles = (): HTMLStyleElement => {
   const style = document.createElement('style')
@@ -43,6 +61,97 @@ const createStyles = (): HTMLStyleElement => {
   return style
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const getJoystickCenter = (
+  state: JoystickState,
+  container: HTMLElement
+): void => {
+  const rect = container.getBoundingClientRect()
+  state.centerX = rect.left + rect.width / 2
+  state.centerY = rect.top + rect.height / 2
+}
+
+const updateKnob = (knob: HTMLElement, dx: number, dy: number): void => {
+  const dist = Math.hypot(dx, dy)
+  const clampedDist = Math.min(dist, MAX_DIST)
+  const angle = Math.atan2(dy, dx)
+  const kx = Math.cos(angle) * clampedDist
+  const ky = Math.sin(angle) * clampedDist
+  knob.style.transform = `translate(calc(-50% + ${kx}px), calc(-50% + ${ky}px))`
+}
+
+const resetKnob = (knob: HTMLElement): void => {
+  knob.style.transform = 'translate(-50%, -50%)'
+}
+
+// ---------------------------------------------------------------------------
+// Touch handlers
+// ---------------------------------------------------------------------------
+
+const onTouchStart =
+  (ctx: JoystickContext) =>
+  (e: TouchEvent): void => {
+    if (ctx.state.touchId !== null) return
+    const touch = e.changedTouches[0]
+    if (!touch) return
+    if (!ctx.container.contains(e.target as HTMLElement)) return
+    e.preventDefault()
+    ctx.state.touchId = touch.identifier
+    getJoystickCenter(ctx.state, ctx.container)
+    const dx = touch.clientX - ctx.state.centerX
+    const dy = touch.clientY - ctx.state.centerY
+    updateKnob(ctx.knob, dx, dy)
+  }
+
+const onTouchMove =
+  (ctx: JoystickContext) =>
+  (e: TouchEvent): void => {
+    const { state } = ctx
+    if (state.touchId === null) return
+    const touches = Array.from(e.changedTouches)
+    const touch = touches.find((t) => t.identifier === state.touchId)
+    if (!touch) return
+    e.preventDefault()
+    const dx = touch.clientX - state.centerX
+    const dy = touch.clientY - state.centerY
+    const dist = Math.hypot(dx, dy)
+    const clampedDist = Math.min(dist, MAX_DIST)
+    const deadThreshold = DEAD_ZONE * MAX_DIST
+    const nx =
+      clampedDist > deadThreshold ? (dx / dist) * (clampedDist / MAX_DIST) : 0
+    const nz =
+      clampedDist > deadThreshold ? (-dy / dist) * (clampedDist / MAX_DIST) : 0
+    ctx.input.setJoystick(nx, nz)
+    updateKnob(ctx.knob, dx, dy)
+  }
+
+const onTouchEnd =
+  (ctx: JoystickContext) =>
+  (e: TouchEvent): void => {
+    if (ctx.state.touchId === null) return
+    const found = Array.from(e.changedTouches).some(
+      (t) => t.identifier === ctx.state.touchId
+    )
+    if (!found) return
+    e.preventDefault()
+    ctx.state.touchId = null
+    ctx.input.setJoystick(0, 0)
+    resetKnob(ctx.knob)
+  }
+
+const onTouchCancel = (ctx: JoystickContext) => (): void => {
+  ctx.state.touchId = null
+  ctx.input.setJoystick(0, 0)
+  resetKnob(ctx.knob)
+}
+
+// ---------------------------------------------------------------------------
+// Factory
+// ---------------------------------------------------------------------------
+
 export function createVirtualJoystick(input: VirtualJoystickInput) {
   const style = createStyles()
   document.head.appendChild(style)
@@ -54,134 +163,29 @@ export function createVirtualJoystick(input: VirtualJoystickInput) {
   const knob = document.createElement('div')
   knob.className = 'virtual-joystick__knob'
   container.appendChild(knob)
-
   document.body.appendChild(container)
 
-  let touchId: number | null = null
-  let centerX = 0
-  let centerY = 0
+  const state: JoystickState = { touchId: null, centerX: 0, centerY: 0 }
+  const ctx: JoystickContext = { state, container, knob, input }
 
-  const getCenter = () => {
-    const rect = container.getBoundingClientRect()
-    centerX = rect.left + rect.width / 2
-    centerY = rect.top + rect.height / 2
-  }
+  const tsHandler = onTouchStart(ctx)
+  const tmHandler = onTouchMove(ctx)
+  const teHandler = onTouchEnd(ctx)
+  const tcHandler = onTouchCancel(ctx)
 
-  const updateKnob = (dx: number, dy: number) => {
-    const maxDist = JOYSTICK_SIZE / 2 - KNOB_SIZE / 2
-    const dist = Math.hypot(dx, dy)
-    const clampedDist = Math.min(dist, maxDist)
-    const angle = Math.atan2(dy, dx)
-
-    const kx = Math.cos(angle) * clampedDist
-    const ky = Math.sin(angle) * clampedDist
-
-    knob.style.transform = `translate(calc(-50% + ${kx}px), calc(-50% + ${ky}px))`
-  }
-
-  const resetKnob = () => {
-    knob.style.transform = 'translate(-50%, -50%)'
-  }
-
-  const handleTouchStart = (e: TouchEvent) => {
-    if (touchId !== null) return
-
-    const touch = e.changedTouches[0]
-    if (!touch) return
-
-    const target = e.target as HTMLElement
-    if (!container.contains(target)) return
-
-    e.preventDefault()
-
-    touchId = touch.identifier
-    getCenter()
-
-    const dx = touch.clientX - centerX
-    const dy = touch.clientY - centerY
-
-    updateKnob(dx, dy)
-  }
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (touchId === null) return
-
-    let touch: Touch | null = null
-
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === touchId) {
-        touch = e.changedTouches[i]
-        break
-      }
-    }
-
-    if (!touch) return
-
-    e.preventDefault()
-
-    const dx = touch.clientX - centerX
-    const dy = touch.clientY - centerY
-
-    const maxDist = JOYSTICK_SIZE / 2 - KNOB_SIZE / 2
-    const dist = Math.hypot(dx, dy)
-    const clampedDist = Math.min(dist, maxDist)
-
-    let nx = 0
-    let nz = 0
-
-    if (clampedDist > DEAD_ZONE * maxDist) {
-      const normalized = clampedDist / maxDist
-      nx = (dx / dist) * normalized
-      nz = (-dy / dist) * normalized
-    }
-
-    input.setJoystick(nx, nz)
-
-    updateKnob(dx, dy)
-  }
-
-  const handleTouchEnd = (e: TouchEvent) => {
-    if (touchId === null) return
-
-    let touchFound = false
-
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === touchId) {
-        touchFound = true
-        break
-      }
-    }
-
-    if (!touchFound) return
-
-    e.preventDefault()
-
-    touchId = null
-
-    input.setJoystick(0, 0)
-    resetKnob()
-  }
-
-  const handleTouchCancel = () => {
-    touchId = null
-    input.setJoystick(0, 0)
-    resetKnob()
-  }
-
-  document.addEventListener('touchstart', handleTouchStart, { passive: false })
-  document.addEventListener('touchmove', handleTouchMove, { passive: false })
-  document.addEventListener('touchend', handleTouchEnd, { passive: false })
-  document.addEventListener('touchcancel', handleTouchCancel, { passive: false })
+  document.addEventListener('touchstart', tsHandler, { passive: false })
+  document.addEventListener('touchmove', tmHandler, { passive: false })
+  document.addEventListener('touchend', teHandler, { passive: false })
+  document.addEventListener('touchcancel', tcHandler, { passive: false })
 
   return {
     destroy() {
       style.remove()
       container.remove()
-
-      document.removeEventListener('touchstart', handleTouchStart)
-      document.removeEventListener('touchmove', handleTouchMove)
-      document.removeEventListener('touchend', handleTouchEnd)
-      document.removeEventListener('touchcancel', handleTouchCancel)
+      document.removeEventListener('touchstart', tsHandler)
+      document.removeEventListener('touchmove', tmHandler)
+      document.removeEventListener('touchend', teHandler)
+      document.removeEventListener('touchcancel', tcHandler)
     }
   }
 }

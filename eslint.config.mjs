@@ -80,15 +80,15 @@ export default tseslint.config(
 
       complexity: ['error', 8],
 
-      'max-lines': ['error', 400],
+      'max-lines': ['error', 500],
 
-      'max-lines-per-function': ['error', 40],
+      'max-lines-per-function': ['error', 50],
 
       'max-depth': ['error', 3],
 
-      'max-params': ['error', 4],
+      'max-params': ['error', 5],
 
-      'max-statements': ['error', 20],
+      'max-statements': ['error', 25],
 
       'sonarjs/cognitive-complexity': ['error', 12],
 

@@ -19,11 +19,21 @@ interface BoidsWorld extends World {
   playerEid?: number
 }
 
+interface BoidsAccumulators {
+  separationX: number
+  separationZ: number
+  alignmentX: number
+  alignmentZ: number
+  cohesionX: number
+  cohesionZ: number
+  neighborCount: number
+}
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const BOID_TERMS = [Active, Enemy, Position, Velocity, Boids] as const
+const BOID_TERMS = [Active, Enemy, Position, Velocity, Boids]
 const BOIDS_MS_PER_TICK = 50 // 20 Hz
 const MAX_ACCUM_MS = BOIDS_MS_PER_TICK * 4
 const CELL_SIZE = 8
@@ -48,64 +58,7 @@ const LOD_NEAR_SQ = LOD_NEAR * LOD_NEAR
 const LOD_MID = 35
 const LOD_MID_SQ = LOD_MID * LOD_MID
 const MIN_NEIGHBORS = 2
-
-// ---------------------------------------------------------------------------
-// Flat spatial grid
-// ---------------------------------------------------------------------------
-
-const _gridBuckets: (number[] | undefined)[] = []
-
-_gridBuckets.length = GRID_CELL_COUNT
-const _usedCells: number[] = []
-const _recycled: number[][] = []
-
-// ---------------------------------------------------------------------------
-// Force accumulators -- module-level, zero allocation per entity
-// ---------------------------------------------------------------------------
-
-// eslint-disable-next-line functional/no-let
-let _sepX = 0,
-  _sepZ = 0,
-  _alignX = 0,
-  _alignZ = 0
-// eslint-disable-next-line functional/no-let
-let _cohX = 0,
-  _cohZ = 0,
-  _neighborCount = 0
-// eslint-disable-next-line functional/no-let
-let _pursuitX = 0,
-  _pursuitZ = 0
-// eslint-disable-next-line functional/no-let
-let _alignForceX = 0,
-  _alignForceZ = 0,
-  _cohForceX = 0,
-  _cohForceZ = 0
-
-// ---------------------------------------------------------------------------
-// Accumulator state
-// ---------------------------------------------------------------------------
-
-// eslint-disable-next-line functional/no-let
-let _accumMs = 0
-// eslint-disable-next-line functional/no-let
-let _lastTime = 0
-
-// ---------------------------------------------------------------------------
-// Debug metrics state
-// ---------------------------------------------------------------------------
-
-// eslint-disable-next-line functional/no-let
-let _debugEntityCount = 0
-// eslint-disable-next-line functional/no-let
-let _debugTotalNeighbors = 0
-// eslint-disable-next-line functional/no-let
-let _debugMaxNeighbors = 0
-// eslint-disable-next-line functional/no-let
-let _debugLodSkipped = 0
-// eslint-disable-next-line functional/no-let
-let _debugDuration = 0
-// eslint-disable-next-line functional/no-let
-let _debugLastLog = 0
+const DEBUG_BOIDS = false
 
 // ---------------------------------------------------------------------------
 // processNeighborPair -- single-pair accumulation
@@ -116,7 +69,8 @@ function processNeighborPair(
   eid: number,
   nid: number,
   sepRadSq: number,
-  percRadSq: number
+  perceptionRadSq: number,
+  accumulators: BoidsAccumulators
 ): void {
   const dx = Position.x[eid] - Position.x[nid]
   const dz = Position.z[eid] - Position.z[nid]
@@ -125,95 +79,125 @@ function processNeighborPair(
   if (distSq <= 0) return
 
   if (distSq < sepRadSq) {
-    _sepX += dx / distSq
-    _sepZ += dz / distSq
+    accumulators.separationX += dx / distSq
+    accumulators.separationZ += dz / distSq
   }
 
-  if (distSq >= percRadSq) return
+  if (distSq >= perceptionRadSq) return
 
-  _alignX += Velocity.x[nid]
-  _alignZ += Velocity.z[nid]
-  _cohX += Position.x[nid]
-  _cohZ += Position.z[nid]
-  _neighborCount++
+  accumulators.alignmentX += Velocity.x[nid]
+  accumulators.alignmentZ += Velocity.z[nid]
+  accumulators.cohesionX += Position.x[nid]
+  accumulators.cohesionZ += Position.z[nid]
+  accumulators.neighborCount++
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function resetAccumulators(): void {
-  _sepX = 0
-  _sepZ = 0
-  _alignX = 0
-  _alignZ = 0
-  _cohX = 0
-  _cohZ = 0
-  _neighborCount = 0
-}
-
 /** Unit vector toward player. Uses pre-computed distance (no sqrt). */
 function computePursuitDirection(
   myX: number,
   myZ: number,
-  playerEid: number,
+  player: { x: number; z: number },
   distToPlayer: number
-): void {
-  _pursuitX = 0
-  _pursuitZ = 0
-  if (distToPlayer <= 0.01) return
-  _pursuitX = (Position.x[playerEid] - myX) / distToPlayer
-  _pursuitZ = (Position.z[playerEid] - myZ) / distToPlayer
+): { x: number; z: number } {
+  if (distToPlayer <= 0.01) return { x: 0, z: 0 }
+  return {
+    x: (player.x - myX) / distToPlayer,
+    z: (player.z - myZ) / distToPlayer
+  }
 }
 
-/** Normalise alignment+cohesion by neighbor count. Skipped below threshold. */
-function normaliseFlockingForces(eid: number, myX: number, myZ: number): void {
-  _alignForceX = 0
-  _alignForceZ = 0
-  _cohForceX = 0
-  _cohForceZ = 0
-  if (_neighborCount <= MIN_NEIGHBORS) return
-  const invCount = 1 / _neighborCount
-  _alignForceX = _alignX * invCount * Boids.alignmentWeight[eid]
-  _alignForceZ = _alignZ * invCount * Boids.alignmentWeight[eid]
-  _cohForceX = (_cohX * invCount - myX) * Boids.cohesionWeight[eid]
-  _cohForceZ = (_cohZ * invCount - myZ) * Boids.cohesionWeight[eid]
+/** Normalize alignment+cohesion by neighbor count. Skipped below threshold. */
+function normalizeFlockingForces(
+  eid: number,
+  myX: number,
+  myZ: number,
+  accumulators: BoidsAccumulators
+): {
+  align: { x: number; z: number }
+  cohesion: { x: number; z: number }
+} {
+  if (accumulators.neighborCount <= MIN_NEIGHBORS) {
+    return {
+      align: { x: 0, z: 0 },
+      cohesion: { x: 0, z: 0 }
+    }
+  }
+  const invCount = 1 / accumulators.neighborCount
+  return {
+    align: {
+      x: accumulators.alignmentX * invCount * Boids.alignmentWeight[eid],
+      z: accumulators.alignmentZ * invCount * Boids.alignmentWeight[eid]
+    },
+    cohesion: {
+      x: (accumulators.cohesionX * invCount - myX) * Boids.cohesionWeight[eid],
+      z: (accumulators.cohesionZ * invCount - myZ) * Boids.cohesionWeight[eid]
+    }
+  }
 }
 
 /** Clamp velocity to maxSpeed with squared-magnitude early exit. */
 function clampVelocity(
-  eid: number,
   totalX: number,
   totalZ: number,
   maxSpd: number
-): void {
+): { x: number; z: number } {
   const magSq = totalX * totalX + totalZ * totalZ
   if (magSq > maxSpd * maxSpd) {
     const mag = Math.sqrt(magSq)
-    Velocity.x[eid] = (totalX / mag) * maxSpd
-    Velocity.z[eid] = (totalZ / mag) * maxSpd
-    return
+    return { x: (totalX / mag) * maxSpd, z: (totalZ / mag) * maxSpd }
   }
-  Velocity.x[eid] = totalX
-  Velocity.z[eid] = totalZ
+  return { x: totalX, z: totalZ }
+}
+
+function getVelocityForces(
+  sw: number,
+  pw: number,
+  separation: { x: number; z: number },
+  pursuit: { x: number; z: number },
+  flocking: {
+    align: { x: number; z: number }
+    cohesion: { x: number; z: number }
+  }
+): { x: number; z: number } {
+  return {
+    x:
+      separation.x * sw +
+      flocking.align.x +
+      flocking.cohesion.x +
+      pursuit.x * pw,
+    z:
+      separation.z * sw +
+      flocking.align.z +
+      flocking.cohesion.z +
+      pursuit.z * pw
+  }
 }
 
 // ---------------------------------------------------------------------------
 // buildSpatialGrid -- O(N), recycled buckets
 // ---------------------------------------------------------------------------
 
-function buildSpatialGrid(entities: readonly number[]): void {
+function buildSpatialGrid(
+  entities: readonly number[],
+  gridBuckets: (number[] | undefined)[],
+  usedCells: number[],
+  recycled: number[][]
+): void {
   // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < _usedCells.length; i++) {
-    const cellIdx = _usedCells[i]
-    const bucket = _gridBuckets[cellIdx]
+  for (let i = 0; i < usedCells.length; i++) {
+    const cellIdx = usedCells[i]
+    const bucket = gridBuckets[cellIdx]
     if (bucket) {
       bucket.length = 0
-      _recycled.push(bucket)
-      _gridBuckets[cellIdx] = undefined
+      recycled.push(bucket)
+      gridBuckets[cellIdx] = undefined
     }
   }
-  _usedCells.length = 0
+  usedCells.length = 0
 
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < entities.length; i++) {
@@ -222,109 +206,216 @@ function buildSpatialGrid(entities: readonly number[]): void {
     const cx = Math.floor(Position.x[eid] / CELL_SIZE) + GRID_HALF,
       cz = Math.floor(Position.z[eid] / CELL_SIZE) + GRID_HALF,
       cellIdx = cx * GRID_SIZE + cz
-    const existing = _gridBuckets[cellIdx]
+    const existing = gridBuckets[cellIdx]
     if (existing) {
       existing.push(eid)
     } else {
-      const newBucket = _recycled.length > 0 ? _recycled.pop()! : []
-      _gridBuckets[cellIdx] = newBucket
-      _usedCells.push(cellIdx)
+      const newBucket = recycled.length > 0 ? recycled.pop()! : []
+      gridBuckets[cellIdx] = newBucket
+      usedCells.push(cellIdx)
       newBucket.push(eid)
     }
   }
 }
 
 // ---------------------------------------------------------------------------
-// processEntity -- LOD-aware boids with radius attenuation
-// ---------------------------------------------------------------------------
-
-/** Boids with LOD radii + distance-scaled pursuit. Never skips. */
-function processEntity(eid: number, playerEid: number, distSq: number): void {
-  resetAccumulators()
-  const mx = Position.x[eid],
-    mz = Position.z[eid],
-    ms = Boids.maxSpeed[eid],
-    at = distSq > LOD_MID_SQ ? 0.4 : distSq > LOD_NEAR_SQ ? 0.7 : 1.0,
-    sr2 = Boids.separationRadius[eid] * Boids.separationRadius[eid] * at * at,
-    pr2 = Boids.perceptionRadius[eid] * Boids.perceptionRadius[eid] * at * at,
-    cx = Math.floor(mx / CELL_SIZE) + GRID_HALF,
-    cz = Math.floor(mz / CELL_SIZE) + GRID_HALF
+// accumulateFlockingForces -- neighbor loop extracted from processEntity
+// to keep it under line limit.
+// ponytail: global lock, per-entity flocking if throughput matters
+function accumulateFlockingForces(
+  eid: number,
+  pos: { x: number; z: number },
+  accumulators: BoidsAccumulators,
+  gridBuckets: (number[] | undefined)[],
+  attenuation: number
+): void {
+  const sepRadSq = Boids.separationRadius[eid] * attenuation * attenuation
+  const perceptionRad = Boids.perceptionRadius[eid] * attenuation
+  const cx = Math.floor(pos.x / CELL_SIZE) + GRID_HALF
+  const cz = Math.floor(pos.z / CELL_SIZE) + GRID_HALF
   // eslint-disable-next-line functional/no-let
   for (let oi = 0; oi < NEIGHBOR_OFFSETS.length; oi++) {
     const ox = NEIGHBOR_OFFSETS[oi][0],
       oz = NEIGHBOR_OFFSETS[oi][1],
       ck = (cx + ox) * GRID_SIZE + (cz + oz)
     if (ck < 0 || ck >= GRID_CELL_COUNT) continue
-    const bucket = _gridBuckets[ck]
+    const bucket = gridBuckets[ck]
     if (!bucket) continue
     // eslint-disable-next-line functional/no-let
     for (let j = 0; j < bucket.length; j++) {
-      processNeighborPair(eid, bucket[j], sr2, pr2)
+      processNeighborPair(
+        eid,
+        bucket[j],
+        sepRadSq,
+        perceptionRad * perceptionRad,
+        accumulators
+      )
     }
   }
-  const dp = Math.sqrt(distSq),
-    pw = Boids.pursuitWeight[eid] * (1 + Math.min(3, dp / 20))
-  computePursuitDirection(mx, mz, playerEid, dp)
-  normaliseFlockingForces(eid, mx, mz)
-  const sw = Boids.separationWeight[eid]
-  clampVelocity(
-    eid,
-    _sepX * sw + _alignForceX + _cohForceX + _pursuitX * pw,
-    _sepZ * sw + _alignForceZ + _cohForceZ + _pursuitZ * pw,
-    ms
-  )
 }
 
 // ---------------------------------------------------------------------------
-// shouldTick -- frame-rate independent accumulator
+/** Utilitary function to simplify getting acumulators */
+function getBoidsAccumulators(
+  accumulators: BoidsAccumulators
+): BoidsAccumulators {
+  return {
+    separationX: accumulators.separationX,
+    separationZ: accumulators.separationZ,
+    alignmentX: accumulators.alignmentX,
+    alignmentZ: accumulators.alignmentZ,
+    cohesionX: accumulators.cohesionX,
+    cohesionZ: accumulators.cohesionZ,
+    neighborCount: accumulators.neighborCount
+  }
+}
+
+// ---------------------------------------------------------------------------
+/** Boids with LOD radii + distance-scaled pursuit. Never skips. */
+function processEntity(
+  eid: number,
+  playerEid: number,
+  distSq: number,
+  accumulators: BoidsAccumulators,
+  gridBuckets: (number[] | undefined)[]
+): void {
+  const mx = Position.x[eid],
+    mz = Position.z[eid],
+    ms = Boids.maxSpeed[eid],
+    attenuation = distSq > LOD_MID_SQ ? 0.4 : distSq > LOD_NEAR_SQ ? 0.7 : 1.0
+
+  accumulateFlockingForces(
+    eid,
+    { x: mx, z: mz },
+    accumulators,
+    gridBuckets,
+    attenuation
+  )
+  const dp = Math.sqrt(distSq),
+    pw = Boids.pursuitWeight[eid] * (1 + Math.min(3, dp / 20))
+  const pursuit = computePursuitDirection(
+    mx,
+    mz,
+    { x: Position.x[playerEid], z: Position.z[playerEid] },
+    dp
+  )
+  const flocking = normalizeFlockingForces(
+    eid,
+    mx,
+    mz,
+    getBoidsAccumulators(accumulators)
+  )
+
+  const sw = Boids.separationWeight[eid]
+  const separation = {
+    x: accumulators.separationX,
+    z: accumulators.separationZ
+  }
+  const forces = getVelocityForces(sw, pw, separation, pursuit, flocking)
+  const velocity = clampVelocity(forces.x, forces.z, ms)
+  Velocity.x[eid] = velocity.x
+  Velocity.z[eid] = velocity.z
+}
+
+// ---------------------------------------------------------------------------
+// Tick helpers
 // ---------------------------------------------------------------------------
 
 /** Returns true when it's time for a boids tick (20 Hz). */
-function shouldTick(): boolean {
+function shouldBoidsTick(state: {
+  accumMs: number
+  lastTime: number
+}): boolean {
   const now = performance.now()
-  _accumMs = Math.min(_accumMs + now - _lastTime, MAX_ACCUM_MS)
-  _lastTime = now
-  if (_accumMs < BOIDS_MS_PER_TICK) return false
-  _accumMs -= BOIDS_MS_PER_TICK
+  state.accumMs = Math.min(state.accumMs + now - state.lastTime, MAX_ACCUM_MS)
+  state.lastTime = now
+  if (state.accumMs < BOIDS_MS_PER_TICK) return false
+  state.accumMs -= BOIDS_MS_PER_TICK
   return true
 }
 
-// ---------------------------------------------------------------------------
-// Debug helpers
-// ---------------------------------------------------------------------------
-
-function resetDebugCounters(): void {
-  _debugEntityCount = 0
-  _debugTotalNeighbors = 0
-  _debugMaxNeighbors = 0
-  _debugLodSkipped = 0
+interface BoidsDebugState {
+  entityCount: number
+  totalNeighbors: number
+  maxNeighbors: number
+  duration: number
+  lastLog: number
 }
 
-function updateDebugCounters(neighborCount: number): void {
-  _debugTotalNeighbors += neighborCount
-  if (neighborCount > _debugMaxNeighbors) {
-    _debugMaxNeighbors = neighborCount
-  }
-  _debugEntityCount++
+/** Update debug counters in-place. */
+function updateBoidsDebugCounters(
+  state: BoidsDebugState,
+  neighborCount: number
+): void {
+  state.totalNeighbors += neighborCount
+  if (neighborCount > state.maxNeighbors) state.maxNeighbors = neighborCount
+  state.entityCount++
 }
 
-function logDebugMetrics(): void {
+/** Log boids metrics if a second has passed. */
+function logBoidsDebugMetrics(state: BoidsDebugState): void {
   const now = performance.now()
-  if (now - _debugLastLog < 1000) return
+  if (now - state.lastLog < 1000) return
   const avg =
-    _debugEntityCount > 0
-      ? (_debugTotalNeighbors / _debugEntityCount).toFixed(1)
+    state.entityCount > 0
+      ? (state.totalNeighbors / state.entityCount).toFixed(1)
       : '0.0'
   console.log(
-    `[boids] avg_nbrs=${avg} max=${_debugMaxNeighbors}` +
-      ` entities=${_debugEntityCount} skipped=${_debugLodSkipped}` +
-      ` duration=${_debugDuration.toFixed(2)}ms`
+    `[boids] avg_nbrs=${avg} max=${state.maxNeighbors}` +
+      ` entities=${state.entityCount}` +
+      ` duration=${state.duration.toFixed(2)}ms`
   )
-  _debugTotalNeighbors = 0
-  _debugMaxNeighbors = 0
-  _debugEntityCount = 0
-  _debugLodSkipped = 0
-  _debugLastLog = now
+  state.totalNeighbors = 0
+  state.maxNeighbors = 0
+  state.entityCount = 0
+  state.lastLog = now
+}
+
+/** Run one boids tick: grid build, per-entity process, debug capture. */
+function runBoidsTick(
+  world: World,
+  gridBuckets: (number[] | undefined)[],
+  usedCells: number[],
+  recycled: number[][],
+  debugState: BoidsDebugState
+): void {
+  const playerEid = (world as BoidsWorld).playerEid
+  if (typeof playerEid !== 'number') return
+  const entities = query(world, [...BOID_TERMS]) as readonly number[]
+  if (entities.length === 0) return
+  buildSpatialGrid(entities, gridBuckets, usedCells, recycled)
+  const tickStart = performance.now()
+  const accumulators: BoidsAccumulators = {
+    separationX: 0,
+    separationZ: 0,
+    alignmentX: 0,
+    alignmentZ: 0,
+    cohesionX: 0,
+    cohesionZ: 0,
+    neighborCount: 0
+  }
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]
+    if (Active.isActive[eid] === 0) continue
+    accumulators.separationX = 0
+    accumulators.separationZ = 0
+    accumulators.alignmentX = 0
+    accumulators.alignmentZ = 0
+    accumulators.cohesionX = 0
+    accumulators.cohesionZ = 0
+    accumulators.neighborCount = 0
+    const dx = Position.x[eid] - Position.x[playerEid],
+      dz = Position.z[eid] - Position.z[playerEid],
+      distSq = dx * dx + dz * dz
+    processEntity(eid, playerEid, distSq, accumulators, gridBuckets)
+    if (DEBUG_BOIDS)
+      updateBoidsDebugCounters(debugState, accumulators.neighborCount)
+  }
+  if (DEBUG_BOIDS) {
+    debugState.duration = performance.now() - tickStart
+    logBoidsDebugMetrics(debugState)
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -334,40 +425,25 @@ function logDebugMetrics(): void {
 /**
  * Create boids system with fixed-timestep (20 Hz), distance-based LOD that
  * attenuates neighbor radii (never disables flocking), and debug metrics.
- *
- * Every entity gets velocity recomputed each boids tick (no staggering).
- * Pursuit scales with distance to prevent stationary clusters.
- * Isolated entities (under MIN_NEIGHBORS) skip alignment/cohesion
- * but still pursue the player and avoid separation collisions.
  */
 export function createBoidsSystem(world: World) {
-  const boidsWorld = world as BoidsWorld
+  const gridBuckets: (number[] | undefined)[] = []
+  gridBuckets.length = GRID_CELL_COUNT
+  const usedCells: number[] = []
+  const recycled: number[][] = []
+  const tickState = { accumMs: 0, lastTime: 0 }
+  const debugState: BoidsDebugState = {
+    entityCount: 0,
+    totalNeighbors: 0,
+    maxNeighbors: 0,
+    duration: 0,
+    lastLog: 0
+  }
 
   return {
     update() {
-      if (!shouldTick()) return
-      const playerEid = boidsWorld.playerEid
-      if (typeof playerEid !== 'number') return
-      const entities = query(
-        world,
-        BOID_TERMS as unknown as Parameters<typeof query>[1]
-      ) as readonly number[]
-      if (entities.length === 0) return
-      buildSpatialGrid(entities)
-      resetDebugCounters()
-      const tickStart = performance.now()
-      // eslint-disable-next-line functional/no-let
-      for (let i = 0; i < entities.length; i++) {
-        const eid = entities[i]
-        if (Active.isActive[eid] === 0) continue
-        const dx = Position.x[eid] - Position.x[playerEid],
-          dz = Position.z[eid] - Position.z[playerEid],
-          distSq = dx * dx + dz * dz
-        processEntity(eid, playerEid, distSq)
-        updateDebugCounters(_neighborCount)
-      }
-      _debugDuration = performance.now() - tickStart
-      logDebugMetrics()
+      if (!shouldBoidsTick(tickState)) return
+      runBoidsTick(world, gridBuckets, usedCells, recycled, debugState)
     }
   }
 }
