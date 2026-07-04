@@ -30,7 +30,8 @@ const createStyles = (): HTMLStyleElement => {
     .virtual-joystick {
       position: fixed;
       bottom: 40px;
-      left: 40px;
+      left: 50%;
+      transform: translateX(-50%);
       width: ${JOYSTICK_SIZE}px;
       height: ${JOYSTICK_SIZE}px;
       border-radius: 50%;
@@ -123,7 +124,7 @@ const onTouchMove =
     const nx =
       clampedDist > deadThreshold ? (dx / dist) * (clampedDist / MAX_DIST) : 0
     const nz =
-      clampedDist > deadThreshold ? (-dy / dist) * (clampedDist / MAX_DIST) : 0
+      clampedDist > deadThreshold ? (dy / dist) * (clampedDist / MAX_DIST) : 0
     ctx.input.setJoystick(nx, nz)
     updateKnob(ctx.knob, dx, dy)
   }
