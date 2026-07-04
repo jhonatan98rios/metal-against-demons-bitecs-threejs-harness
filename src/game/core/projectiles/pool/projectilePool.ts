@@ -6,6 +6,7 @@ import { Velocity } from '../../shared/components/Velocity'
 import { Renderable } from '../../shared/components/Renderable'
 import { Sprite } from '../../shared/components/Sprite'
 import { Animation } from '../../shared/components/Animation'
+import { TTL } from '../../shared/components/TTL'
 import { Projectile } from '../components/Projectile'
 
 const COMPONENTS = [
@@ -15,7 +16,8 @@ const COMPONENTS = [
   Velocity,
   Renderable,
   Sprite,
-  Animation
+  Animation,
+  TTL
 ] as const
 
 const addComponents = (world: World, eid: number) => {
@@ -64,6 +66,7 @@ export function createProjectilePool(world: World, size: number) {
       Position.z[eid] = z
       Velocity.x[eid] = vx
       Velocity.z[eid] = vz
+      TTL.remaining[eid] = 1
       return eid
     },
 

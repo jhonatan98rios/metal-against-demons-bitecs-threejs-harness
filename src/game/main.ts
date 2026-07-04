@@ -23,10 +23,9 @@ export function start() {
 
   createScenario(scene, SCENARIOS.LEVEL1)
 
-  const MAX_ENEMIES = 100
-  const enemyPool = createEnemyPool(world, MAX_ENEMIES)
+  const enemyPool = createEnemyPool(world, 100)
 
-  Array.from({ length: MAX_ENEMIES }, () => {
+  Array.from({ length: 100 }, () => {
     const eid = enemyPool.acquire()
     const x = 5 + Math.random() * 50
     const z = -15 + Math.random() * 40
@@ -38,8 +37,8 @@ export function start() {
   const animationSystem = createWorkerPool(world)
   const input = createInput()
 
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-  if (isTouchDevice) createVirtualJoystick(input)
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    createVirtualJoystick(input)
 
   const projectileSystems = createProjectileSystems(world)
 
@@ -54,6 +53,7 @@ export function start() {
     projectileSystems.spawn.update()
     animationSystem.update(delta.current)
     projectileSystems.collision.update()
+    projectileSystems.despawn.update(delta.current)
     renderSystem()
     renderer.render(scene, camera)
     requestAnimationFrame(loop)

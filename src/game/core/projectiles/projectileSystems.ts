@@ -3,6 +3,7 @@ import { World } from 'bitecs'
 import { createProjectilePool } from './pool/projectilePool'
 import { createProjectileSpawnSystem } from './systems/spawnSystem'
 import { createProjectileCollisionSystem } from './systems/collisionSystem'
+import { createDespawnSystem } from './systems/despawnSystem'
 
 export function createProjectileSystems(world: World) {
   const pool = createProjectilePool(world, 200)
@@ -14,10 +15,12 @@ export function createProjectileSystems(world: World) {
   const collision = createProjectileCollisionSystem(world, (eid) =>
     pool.release(eid)
   )
+  const despawn = createDespawnSystem(world, (eid) => pool.release(eid))
 
   return {
     spawn,
     collision,
+    despawn,
     setSpawnInterval(ms: number) {
       spawn.setInterval(ms)
     }
