@@ -8,6 +8,7 @@ import { createVirtualJoystick } from './gameplay/virtualJoystick'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
 import { createRenderSystem } from './rendering/createRenderSystem'
+import { createProjectileSystems } from './core/projectiles/projectileSystems'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 
 export function start() {
@@ -40,6 +41,8 @@ export function start() {
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
   if (isTouchDevice) createVirtualJoystick(input)
 
+  const projectileSystems = createProjectileSystems(world)
+
   const controller = createCharacterController(world, input)
   const loop = () => {
     const now = performance.now()
@@ -48,7 +51,9 @@ export function start() {
 
     controller.update(delta.current)
     boidsSystem.update()
+    projectileSystems.spawn.update()
     animationSystem.update(delta.current)
+    projectileSystems.collision.update()
     renderSystem()
     renderer.render(scene, camera)
     requestAnimationFrame(loop)

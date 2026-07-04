@@ -31,7 +31,7 @@ export const APPARITION = {
   MAX_HEALTH: 5,
 
   /** Movement speed multiplier (1 = default, higher = faster) */
-  SPEED: 1.0,
+  SPEED: 0.2,
 
   /** Starting frame index for animation loop */
   START_FRAME: 0,
