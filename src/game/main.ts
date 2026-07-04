@@ -2,6 +2,7 @@ import { setupWorld } from './core/bootstrap/setup'
 import { setupApparition } from './core/enemies/entity'
 import { createEnemyPool } from './core/enemies/pool/enemyPool'
 import { createBoidsSystem } from './core/enemies/systems/boidsSystem'
+import { createEnemyDeathSystem } from './core/enemies/systems/deathSystem'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
 import { createVirtualJoystick } from './gameplay/virtualJoystick'
@@ -11,26 +12,29 @@ import { createRenderSystem } from './rendering/createRenderSystem'
 import { createProjectileSystems } from './core/projectiles/projectileSystems'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 
+function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
+  Array.from({ length: 100 }, () => {
+    const eid = pool.acquire()
+    setupApparition(
+      eid,
+      5 + Math.random() * 50,
+      -15 + Math.random() * 40,
+      Math.random() > 0.5
+    )
+  })
+}
+
 export function start() {
   const canvas = document.querySelector('#game-canvas') as HTMLCanvasElement
-
   if (!canvas || typeof window === 'undefined') return
 
   const world = setupWorld()
   const { renderer, scene, camera } = createRender(canvas)
-
   const delta = { last: performance.now(), current: 0 }
 
   createScenario(scene, SCENARIOS.LEVEL1)
-
   const enemyPool = createEnemyPool(world, 100)
-
-  Array.from({ length: 100 }, () => {
-    const eid = enemyPool.acquire()
-    const x = 5 + Math.random() * 50
-    const z = -15 + Math.random() * 40
-    setupApparition(eid, x, z, Math.random() > 0.5)
-  })
+  spawnEnemies(enemyPool)
 
   const boidsSystem = createBoidsSystem(world)
   const renderSystem = createRenderSystem(world, scene)
@@ -41,6 +45,9 @@ export function start() {
     createVirtualJoystick(input)
 
   const projectileSystems = createProjectileSystems(world)
+  const deathSystem = createEnemyDeathSystem(world, (eid) =>
+    enemyPool.release(eid)
+  )
   const controller = createCharacterController(world, input)
   const updateCamera = createFollowCamera(camera, () => world.playerEid)
   const loop = () => {
@@ -53,6 +60,7 @@ export function start() {
     projectileSystems.spawn.update()
     animationSystem.update(delta.current)
     projectileSystems.collision.update()
+    deathSystem.update()
     projectileSystems.despawn.update(delta.current)
     renderSystem()
     updateCamera()
