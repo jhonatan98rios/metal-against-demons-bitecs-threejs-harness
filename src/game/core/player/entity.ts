@@ -30,8 +30,8 @@ const addPlayerComponents = (world: World, eid: number) => {
 }
 
 const setupHealth = (eid: number) => {
-  Health.current[eid] = 20
-  Health.max[eid] = 20
+  Health.current[eid] = 100
+  Health.max[eid] = 100
 }
 
 const setupPosition = (eid: number) => {
