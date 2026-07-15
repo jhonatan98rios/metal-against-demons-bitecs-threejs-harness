@@ -68,8 +68,8 @@ export function start() {
     deathSystem.update()
     projectileSystems.despawn.update(delta.current)
     renderSystem()
-    billboardSystem.update()
     cameraSystem.update()
+    billboardSystem.update()
     renderer.render(scene, camera)
     requestAnimationFrame(loop)
   }
