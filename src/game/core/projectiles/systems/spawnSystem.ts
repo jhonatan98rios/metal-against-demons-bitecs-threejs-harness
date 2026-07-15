@@ -35,24 +35,20 @@ export function createProjectileSpawnSystem(
   speed: number
 ) {
   // eslint-disable-next-line functional/no-let
-  let accumMs = 0
+  let accumS = 0
   // eslint-disable-next-line functional/no-let
-  let lastTime = 0
-  // eslint-disable-next-line functional/no-let
-  let intervalMs = 800
+  let intervalS = 0.8
 
   return {
-    setInterval(ms: number) {
-      intervalMs = ms
+    setInterval(sec: number) {
+      intervalS = sec
     },
 
-    update() {
-      const now = performance.now()
-      accumMs += now - lastTime
-      lastTime = now
-
-      if (accumMs < intervalMs) return
-      accumMs -= intervalMs
+    update(dt: number) {
+      // ponytail: dt from main loop already clamped, prevent burst after unpause
+      accumS += dt
+      if (accumS < intervalS) return
+      accumS -= intervalS
 
       const playerEid = (world as { playerEid?: number }).playerEid
       if (playerEid === undefined) return

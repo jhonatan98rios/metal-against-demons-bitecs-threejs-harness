@@ -60,7 +60,7 @@ function createGameLoop(
     if (GameState.status[stateEid] === STATES.PLAYING) {
       systems.controller.update(delta.current)
       systems.boids.update()
-      systems.projectiles.spawn.update()
+      systems.projectiles.spawn.update(delta.current)
       systems.animation.update(delta.current)
       systems.projectiles.collision.update()
       systems.playerDamage.update(delta.current)

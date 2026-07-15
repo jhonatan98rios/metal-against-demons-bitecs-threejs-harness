@@ -21,8 +21,8 @@ export function createProjectileSystems(world: World) {
     spawn,
     collision,
     despawn,
-    setSpawnInterval(ms: number) {
-      spawn.setInterval(ms)
+    setSpawnInterval(sec: number) {
+      spawn.setInterval(sec)
     }
   }
 }
