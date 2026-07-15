@@ -20,8 +20,11 @@ export const createBillboardSystem = (
         const obj = renderObjects.get(eid)
         if (!obj) continue
 
-        // cylindrical billboard: rotate around Y to face camera
-        obj.lookAt(camPos.x, Position.y[eid], camPos.z)
+        // cylindrical billboard: face camera on XZ plane
+        obj.rotation.y = Math.atan2(
+          camPos.x - Position.x[eid],
+          camPos.z - Position.z[eid]
+        )
       }
     }
   }

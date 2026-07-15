@@ -10,6 +10,7 @@ import { Sprite } from '../../shared/components/Sprite'
 import { Animation } from '../../shared/components/Animation'
 import { AnimationRow } from '../../shared/components/AnimationRow'
 import { Boids } from '../../shared/components/Boids'
+import { Billboard } from '../../shared/components/Billboard'
 
 const POOL_COMPONENTS = [
   Active,
@@ -21,7 +22,8 @@ const POOL_COMPONENTS = [
   Sprite,
   Animation,
   AnimationRow,
-  Boids
+  Boids,
+  Billboard
 ] as const
 
 const addPoolComponents = (world: World, eid: number) => {
