@@ -10,7 +10,7 @@ import { Sprite } from '../core/shared/components/Sprite'
 
 import { createSpriteRender } from './createSpriteRender'
 
-const renderObjects = new Map<
+export const renderObjects = new Map<
   number,
   THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
 >()

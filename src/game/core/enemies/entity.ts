@@ -10,6 +10,7 @@ import { Sprite } from '../shared/components/Sprite'
 import { Animation } from '../shared/components/Animation'
 import { AnimationRow } from '../shared/components/AnimationRow'
 import { Boids, BOIDS_DEFAULTS } from '../shared/components/Boids'
+import { Billboard } from '../shared/components/Billboard'
 
 import { APPARITION } from './definitions/apparition'
 
@@ -22,7 +23,8 @@ const ENEMY_COMPONENTS = [
   Sprite,
   Animation,
   AnimationRow,
-  Boids
+  Boids,
+  Billboard
 ] as const
 
 const addEnemyComponents = (world: World, eid: number) => {
@@ -79,6 +81,10 @@ const setupAnimationRow = (eid: number, facingLeft: boolean) => {
   AnimationRow.row[eid] = facingLeft ? 0 : 1
 }
 
+const setupBillboard = (eid: number) => {
+  Billboard.isBillboard[eid] = 1
+}
+
 const setupBoids = (eid: number) => {
   Boids.maxSpeed[eid] = BOIDS_DEFAULTS.MAX_SPEED * APPARITION.SPEED
   Boids.perceptionRadius[eid] = BOIDS_DEFAULTS.PERCEPTION_RADIUS
@@ -106,6 +112,7 @@ export function setupApparition(
   setupAnimation(eid)
   setupAnimationRow(eid, facingLeft)
   setupBoids(eid)
+  setupBillboard(eid)
 }
 
 export function createApparition(

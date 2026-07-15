@@ -7,8 +7,11 @@ import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
 import { createVirtualJoystick } from './gameplay/virtualJoystick'
 import { createWorkerPool } from './systems/createWorkerPool'
-import { createRender, createFollowCamera } from './rendering/createRender'
-import { createRenderSystem } from './rendering/createRenderSystem'
+import { createRender } from './rendering/createRender'
+import { createRenderSystem, renderObjects } from './rendering/createRenderSystem'
+import { createCameraSystem } from './systems/cameraSystem'
+import { createBillboardSystem } from './systems/billboardSystem'
+import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { createProjectileSystems } from './core/projectiles/projectileSystems'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 
@@ -49,7 +52,9 @@ export function start() {
     enemyPool.release(eid)
   )
   const controller = createCharacterController(world, input)
-  const updateCamera = createFollowCamera(camera, () => world.playerEid)
+  const cameraSystem = createCameraSystem(world, camera)
+  const billboardSystem = createBillboardSystem(world, camera, renderObjects)
+  createCameraSwitcher(() => cameraSystem.toggle())
   const loop = () => {
     const now = performance.now()
     delta.current = Math.min(0.1, (now - delta.last) / 1000)
@@ -63,7 +68,8 @@ export function start() {
     deathSystem.update()
     projectileSystems.despawn.update(delta.current)
     renderSystem()
-    updateCamera()
+    billboardSystem.update()
+    cameraSystem.update()
     renderer.render(scene, camera)
     requestAnimationFrame(loop)
   }
