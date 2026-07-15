@@ -7,6 +7,7 @@ import { Renderable } from '../../shared/components/Renderable'
 import { Sprite } from '../../shared/components/Sprite'
 import { Animation } from '../../shared/components/Animation'
 import { TTL } from '../../shared/components/TTL'
+import { Billboard } from '../../shared/components/Billboard'
 import { Projectile } from '../components/Projectile'
 
 const COMPONENTS = [
@@ -17,7 +18,8 @@ const COMPONENTS = [
   Renderable,
   Sprite,
   Animation,
-  TTL
+  TTL,
+  Billboard
 ] as const
 
 const addComponents = (world: World, eid: number) => {
@@ -42,6 +44,7 @@ export function createProjectilePool(world: World, size: number) {
     Projectile.isProjectile[eid] = 1
     Projectile.damage[eid] = 1
     Renderable.isRenderable[eid] = 1
+    Billboard.isBillboard[eid] = 1
     Sprite.texture[eid] = TEXTURE
     Sprite.columns[eid] = 1
     Sprite.rows[eid] = 1
