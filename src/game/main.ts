@@ -6,6 +6,7 @@ import { createEnemyDeathSystem } from './core/enemies/systems/deathSystem'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
 import { createVirtualJoystick } from './gameplay/virtualJoystick'
+import { createCameraTouchController } from './gameplay/cameraTouchController'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
 import { createRenderSystem, renderObjects } from './rendering/createRenderSystem'
@@ -47,12 +48,13 @@ export function start() {
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0)
     createVirtualJoystick(input)
 
+  const cameraTouch = createCameraTouchController()
   const projectileSystems = createProjectileSystems(world)
   const deathSystem = createEnemyDeathSystem(world, (eid) =>
     enemyPool.release(eid)
   )
   const controller = createCharacterController(world, input)
-  const cameraSystem = createCameraSystem(world, camera)
+  const cameraSystem = createCameraSystem(world, camera, () => cameraTouch.getAngle())
   const billboardSystem = createBillboardSystem(world, camera, renderObjects)
   createCameraSwitcher(() => cameraSystem.toggle())
   const loop = () => {

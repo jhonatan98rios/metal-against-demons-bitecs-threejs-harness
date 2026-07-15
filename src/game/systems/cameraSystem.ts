@@ -9,20 +9,27 @@ type CameraWorld = World & {
 
 const TOPDOWN_OFFSET = new THREE.Vector3(0, 20, 50)
 const FP_EYE_Y = 3
-const FP_NORTH = new THREE.Vector3(0, 0, -1)
 const FP_LOOK_AHEAD = 20
+
+const getLookDir = (angle: number): [number, number] => [
+  Math.sin(angle),
+  -Math.cos(angle)
+]
 
 const updateFirstPerson = (
   playerEid: number,
   camera: THREE.PerspectiveCamera,
-  targetPos: THREE.Vector3
+  targetPos: THREE.Vector3,
+  getAngle: () => number
 ) => {
+  const angle = getAngle()
+  const [dx, dz] = getLookDir(angle)
   targetPos.set(Position.x[playerEid], Position.y[playerEid] + FP_EYE_Y, Position.z[playerEid])
   camera.position.copy(targetPos)
   camera.lookAt(
-    Position.x[playerEid] + FP_NORTH.x * FP_LOOK_AHEAD,
+    Position.x[playerEid] + dx * FP_LOOK_AHEAD,
     Position.y[playerEid] + FP_EYE_Y * 0.5,
-    Position.z[playerEid] + FP_NORTH.z * FP_LOOK_AHEAD
+    Position.z[playerEid] + dz * FP_LOOK_AHEAD
   )
 }
 
@@ -43,7 +50,8 @@ const getMode = (world: World) => {
 
 export const createCameraSystem = (
   world: CameraWorld,
-  camera: THREE.PerspectiveCamera
+  camera: THREE.PerspectiveCamera,
+  getAngle: () => number = () => 0
 ) => {
   const targetPos = new THREE.Vector3()
   return {
@@ -51,7 +59,7 @@ export const createCameraSystem = (
       const playerEid = world.playerEid
       if (!playerEid) return
       if (getMode(world) === 1)
-        updateFirstPerson(playerEid, camera, targetPos)
+        updateFirstPerson(playerEid, camera, targetPos, getAngle)
       else
         updateTopDown(playerEid, camera, targetPos)
     },
