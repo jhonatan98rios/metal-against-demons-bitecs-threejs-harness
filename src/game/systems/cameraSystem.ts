@@ -5,29 +5,24 @@ import { Position } from '../core/shared/components/Position'
 
 type CameraWorld = World & {
   playerEid?: number
-  playerFacingX?: number
-  playerFacingZ?: number
 }
 
 const TOPDOWN_OFFSET = new THREE.Vector3(0, 20, 50)
 const FP_EYE_Y = 3
+const FP_NORTH = new THREE.Vector3(0, 0, -1)
 const FP_LOOK_AHEAD = 20
 
 const updateFirstPerson = (
   playerEid: number,
-  world: CameraWorld,
   camera: THREE.PerspectiveCamera,
   targetPos: THREE.Vector3
 ) => {
-  const fx = world.playerFacingX ?? 0
-  const fz = world.playerFacingZ ?? 0
-  const hasFacing = Math.hypot(fx, fz) > 0.0001
   targetPos.set(Position.x[playerEid], Position.y[playerEid] + FP_EYE_Y, Position.z[playerEid])
   camera.position.copy(targetPos)
   camera.lookAt(
-    Position.x[playerEid] + (hasFacing ? fx * FP_LOOK_AHEAD : 1),
+    Position.x[playerEid] + FP_NORTH.x * FP_LOOK_AHEAD,
     Position.y[playerEid] + FP_EYE_Y * 0.5,
-    Position.z[playerEid] + (hasFacing ? fz * FP_LOOK_AHEAD : 0)
+    Position.z[playerEid] + FP_NORTH.z * FP_LOOK_AHEAD
   )
 }
 
@@ -56,7 +51,7 @@ export const createCameraSystem = (
       const playerEid = world.playerEid
       if (!playerEid) return
       if (getMode(world) === 1)
-        updateFirstPerson(playerEid, world, camera, targetPos)
+        updateFirstPerson(playerEid, camera, targetPos)
       else
         updateTopDown(playerEid, camera, targetPos)
     },
