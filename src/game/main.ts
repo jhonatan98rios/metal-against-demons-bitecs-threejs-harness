@@ -53,8 +53,8 @@ export function start() {
   const deathSystem = createEnemyDeathSystem(world, (eid) =>
     enemyPool.release(eid)
   )
-  const controller = createCharacterController(world, input)
   const cameraSystem = createCameraSystem(world, camera, () => cameraTouch.getAngle())
+  const controller = createCharacterController(world, input, 20, () => cameraSystem.isFirstPerson() ? cameraTouch.getAngle() : 0)
   const billboardSystem = createBillboardSystem(world, camera, renderObjects)
   createCameraSwitcher(() => cameraSystem.toggle())
   const loop = () => {

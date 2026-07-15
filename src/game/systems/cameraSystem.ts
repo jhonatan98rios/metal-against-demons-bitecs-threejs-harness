@@ -67,6 +67,7 @@ export const createCameraSystem = (
       const modes = query(world, [CameraMode])
       if (modes.length > 0)
         CameraMode.mode[modes[0]] = CameraMode.mode[modes[0]] === 0 ? 1 : 0
-    }
+    },
+    isFirstPerson: () => getMode(world) === 1
   }
 }

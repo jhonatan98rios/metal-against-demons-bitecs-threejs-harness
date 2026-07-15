@@ -25,6 +25,15 @@ type ControllerWorld = World & {
   playerFacingZ?: number
 }
 
+const rotateAxis = (axis: Axis, angle: number): Axis => {
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+  return {
+    x: axis.x * cos - axis.z * sin,
+    z: axis.x * sin + axis.z * cos
+  }
+}
+
 const normalizeAxis = (axis: Axis): Axis => {
   const length = Math.hypot(axis.x, axis.z)
 
@@ -118,7 +127,8 @@ const updateAnimation = (
 export function createCharacterController(
   world: World,
   input: ControllerInput,
-  speed = 20
+  speed = 20,
+  getCameraAngle: () => number = () => 0
 ) {
   const controllerWorld = world as ControllerWorld
 
@@ -130,7 +140,8 @@ export function createCharacterController(
         return new THREE.Vector3(0, 0, 0)
       }
 
-      const axis = normalizeAxis(input.getAxis())
+      const rawAxis = normalizeAxis(input.getAxis())
+      const axis = rotateAxis(rawAxis, getCameraAngle())
 
       updateFacing(controllerWorld, axis)
 
