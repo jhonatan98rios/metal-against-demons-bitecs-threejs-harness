@@ -45,7 +45,8 @@ function createPauseButton(onToggle: () => void): HTMLButtonElement {
     alignItems: 'center',
     justifyContent: 'center',
     lineHeight: '1',
-    flexShrink: '0'
+    flexShrink: '0',
+    pointerEvents: 'auto'
   })
   btn.addEventListener('click', (e) => {
     e.stopPropagation()
