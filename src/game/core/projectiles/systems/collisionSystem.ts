@@ -3,6 +3,7 @@ import { query, World } from 'bitecs'
 import { Active } from '../../shared/components/Active'
 import { Enemy } from '../../enemies/components/Enemy'
 import { Health } from '../../shared/components/Health'
+import { HitEffect } from '../../shared/components/HitEffect'
 import { Position } from '../../shared/components/Position'
 import { Projectile } from '../components/Projectile'
 
@@ -44,6 +45,7 @@ export function createProjectileCollisionSystem(
           if (dx * dx + dz * dz > HIT_RADIUS_SQ) continue
 
           Health.current[eid] -= Projectile.damage[pid]
+          HitEffect.timer[eid] = 0.15
           release(pid)
           break
         }

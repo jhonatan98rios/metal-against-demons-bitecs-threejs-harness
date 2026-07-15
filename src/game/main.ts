@@ -69,7 +69,7 @@ export function start() {
     projectileSystems.collision.update()
     deathSystem.update()
     projectileSystems.despawn.update(delta.current)
-    renderSystem()
+    renderSystem(delta.current)
     cameraSystem.update()
     billboardSystem.update()
     renderer.render(scene, camera)
