@@ -7,7 +7,7 @@ interface PlayerDeathWorld extends World {
   playerEid?: number
 }
 
-export function createPlayerDeathSystem(world: World) {
+export function createPlayerDeathSystem(world: World, onGameOver: () => void) {
   const w = world as PlayerDeathWorld
 
   return {
@@ -17,8 +17,7 @@ export function createPlayerDeathSystem(world: World) {
       if (Active.isActive[playerEid] === 0) return
 
       if (Health.current[playerEid] <= 0) {
-        // ponytail: respawn at full health, add game-over screen when needed
-        Health.current[playerEid] = Health.max[playerEid]
+        onGameOver()
       }
     }
   }

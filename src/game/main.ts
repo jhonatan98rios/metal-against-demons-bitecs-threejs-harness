@@ -20,6 +20,9 @@ import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { createProjectileSystems } from './core/projectiles/projectileSystems'
 import { Health } from './core/shared/components/Health'
+import { Position } from './core/shared/components/Position'
+import { GameState, STATES } from './core/shared/components/GameState'
+import { createGameStateSystem } from './systems/gameStateSystem'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 
 function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
@@ -34,48 +37,92 @@ function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
   })
 }
 
-export function start() {
-  const canvas = document.querySelector('#game-canvas') as HTMLCanvasElement
-  if (!canvas || typeof window === 'undefined') return
+type GameSystems = ReturnType<typeof createGameSystems>
+type RenderCtx = ReturnType<typeof createRender>
 
-  const world = setupWorld()
-  const { renderer, scene, camera } = createRender(canvas)
+function createGameLoop(
+  systems: GameSystems,
+  world: ReturnType<typeof setupWorld>,
+  renderCtx: RenderCtx,
+  hud: PlayerHUD | null
+) {
   const delta = { last: performance.now(), current: 0 }
+  const { renderer, scene, camera } = renderCtx
+  const { stateEid, playerEid } = world
 
-  createScenario(scene, SCENARIOS.LEVEL1)
-  const enemyPool = createEnemyPool(world, 100)
-  spawnEnemies(enemyPool)
-
-  const systems = createGameSystems(world, scene, camera, enemyPool)
-
-  const hudContainer = document.querySelector('#hud-container')
-  const hud = hudContainer ? new PlayerHUD(hudContainer as HTMLElement) : null
-
-  const loop = () => {
+  return function loop() {
     const now = performance.now()
     delta.current = Math.min(0.1, (now - delta.last) / 1000)
     delta.last = now
 
-    systems.controller.update(delta.current)
-    systems.boids.update()
-    systems.projectiles.spawn.update()
-    systems.animation.update(delta.current)
-    systems.projectiles.collision.update()
-    systems.playerDamage.update(delta.current)
-    systems.death.update()
-    systems.playerDeath.update()
-    systems.projectiles.despawn.update(delta.current)
+    systems.gameState.update()
+
+    if (GameState.status[stateEid] === STATES.PLAYING) {
+      systems.controller.update(delta.current)
+      systems.boids.update()
+      systems.projectiles.spawn.update()
+      systems.animation.update(delta.current)
+      systems.projectiles.collision.update()
+      systems.playerDamage.update(delta.current)
+      systems.death.update()
+      systems.playerDeath.update()
+      systems.projectiles.despawn.update(delta.current)
+    }
+
+    // ponytail: render/camera always run so overlays and camera follow during pause/gameover
     systems.render(delta.current)
     systems.camera.update()
     systems.billboard.update()
 
     if (hud) {
-      hud.update(Health.current[world.playerEid], Health.max[world.playerEid])
+      hud.update(
+        Health.current[playerEid],
+        Health.max[playerEid],
+        GameState.status[stateEid] as (typeof STATES)[keyof typeof STATES]
+      )
     }
 
     renderer.render(scene, camera)
     requestAnimationFrame(loop)
   }
+}
+
+export function start() {
+  const canvas = document.querySelector('#game-canvas') as HTMLCanvasElement
+  if (!canvas || typeof window === 'undefined') return
+
+  const world = setupWorld()
+  const renderCtx = createRender(canvas)
+  const input = createInput()
+
+  createScenario(renderCtx.scene, SCENARIOS.LEVEL1)
+  const enemyPool = createEnemyPool(world, 100)
+  spawnEnemies(enemyPool)
+
+  const gameState = createGameStateSystem(
+    world,
+    () => input.consumePressed('escape'),
+    () => input.consumePressed('enter'),
+    () => {
+      const pid = world.playerEid
+      Health.current[pid] = Health.max[pid]
+      Position.x[pid] = 30
+      Position.y[pid] = 5
+      Position.z[pid] = 0
+    }
+  )
+
+  const systems = createGameSystems(
+    world, renderCtx.scene, renderCtx.camera, enemyPool,
+    { input, gameState }
+  )
+
+  const hudContainer = document.querySelector('#hud-container')
+  const hud = hudContainer
+    ? new PlayerHUD(hudContainer as HTMLElement, () => gameState.togglePause())
+    : null
+
+  const loop = createGameLoop(systems, world, renderCtx, hud)
   loop()
 }
 
@@ -83,9 +130,13 @@ function createGameSystems(
   world: ReturnType<typeof setupWorld>,
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  enemyPool: ReturnType<typeof createEnemyPool>
+  enemyPool: ReturnType<typeof createEnemyPool>,
+  ctx: {
+    input: ReturnType<typeof createInput>
+    gameState: ReturnType<typeof createGameStateSystem>
+  }
 ) {
-  const input = createInput()
+  const { input, gameState } = ctx
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0)
     createVirtualJoystick(input)
 
@@ -103,13 +154,14 @@ function createGameSystems(
   createCameraSwitcher(() => cameraSystem.toggle())
 
   return {
+    gameState,
     boids: createBoidsSystem(world),
     render: createRenderSystem(world, scene),
     animation: createWorkerPool(world),
     projectiles: createProjectileSystems(world),
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
     playerDamage: createPlayerDamageSystem(world),
-    playerDeath: createPlayerDeathSystem(world),
+    playerDeath: createPlayerDeathSystem(world, () => gameState.setGameOver()),
     camera: cameraSystem,
     controller,
     billboard: createBillboardSystem(world, camera, renderObjects)

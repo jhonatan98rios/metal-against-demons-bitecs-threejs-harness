@@ -1,17 +1,12 @@
 import { addComponent, addEntity, createWorld, World } from 'bitecs'
 import { createPlayer } from '../player/entity'
 import { CameraMode } from '../shared/components/CameraMode'
-
-enum Status {
-  PLAYING,
-  PAUSED,
-  GAMEOVER
-}
+import { GameState, STATES } from '../shared/components/GameState'
 
 type WorldSetup = World & {
-  status: Status
   playerEid: number
   cameraEid: number
+  stateEid: number
 }
 
 export const setupWorld = () => {
@@ -22,6 +17,11 @@ export const setupWorld = () => {
   addComponent(world, cameraEid, CameraMode)
   CameraMode.mode[cameraEid] = 0
   world.cameraEid = cameraEid
+
+  const stateEid = addEntity(world)
+  addComponent(world, stateEid, GameState)
+  GameState.status[stateEid] = STATES.PLAYING
+  world.stateEid = stateEid
 
   return world
 }
