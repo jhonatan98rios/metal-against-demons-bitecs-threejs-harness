@@ -32,8 +32,8 @@ function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
     const eid = pool.acquire()
     setupApparition(
       eid,
-      5 + Math.random() * 50,
-      -15 + Math.random() * 40,
+      -75 + Math.random() * 150,
+      -60 + Math.random() * 120,
       Math.random() > 0.5
     )
   })
