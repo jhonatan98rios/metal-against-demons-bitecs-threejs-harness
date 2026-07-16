@@ -95,6 +95,10 @@ const setupBoids = (eid: number) => {
   Boids.pursuitWeight[eid] = BOIDS_DEFAULTS.PURSUIT_WEIGHT
 }
 
+const setupXpValue = (eid: number) => {
+  Enemy.xpValue[eid] = APPARITION.XP_VALUE
+}
+
 export function setupApparition(
   eid: number,
   x: number,
@@ -113,6 +117,7 @@ export function setupApparition(
   setupAnimationRow(eid, facingLeft)
   setupBoids(eid)
   setupBillboard(eid)
+  setupXpValue(eid)
 }
 
 export function createApparition(

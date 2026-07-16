@@ -10,6 +10,7 @@ import { Renderable } from '../shared/components/Renderable'
 import { Sprite } from '../shared/components/Sprite'
 import { Animation } from '../shared/components/Animation'
 import { AnimationRow } from '../shared/components/AnimationRow'
+import { XP } from '../shared/components/XP'
 
 const PLAYER_COMPONENTS = [
   Active,
@@ -20,7 +21,8 @@ const PLAYER_COMPONENTS = [
   Renderable,
   Sprite,
   Animation,
-  AnimationRow
+  AnimationRow,
+  XP
 ] as const
 
 const addPlayerComponents = (world: World, eid: number) => {
@@ -81,6 +83,12 @@ const setupPlayerTag = (eid: number) => {
   Player.isPlayer[eid] = 1
 }
 
+const setupXP = (eid: number) => {
+  XP.level[eid] = 1
+  XP.current[eid] = 0
+  XP.next[eid] = 100
+}
+
 export function createPlayer(world: World) {
   const playerEid = addEntity(world)
 
@@ -89,6 +97,7 @@ export function createPlayer(world: World) {
   setupPlayerTag(playerEid)
   setupActive(playerEid)
 
+  setupXP(playerEid)
   setupHealth(playerEid)
   setupPosition(playerEid)
   setupVelocity(playerEid)

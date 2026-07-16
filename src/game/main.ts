@@ -17,11 +17,13 @@ import { createRenderSystem, renderObjects } from './rendering/createRenderSyste
 import { createCameraSystem } from './systems/cameraSystem'
 import { createBillboardSystem } from './systems/billboardSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
+import { createLevelUpSystem } from './core/player/levelUpSystem'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { createProjectileSystems } from './core/projectiles/projectileSystems'
 import { Health } from './core/shared/components/Health'
 import { Position } from './core/shared/components/Position'
 import { GameState, STATES } from './core/shared/components/GameState'
+import { XP } from './core/shared/components/XP'
 import { createGameStateSystem } from './systems/gameStateSystem'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 
@@ -66,6 +68,7 @@ function createGameLoop(
       systems.playerDamage.update(delta.current)
       systems.death.update()
       systems.playerDeath.update()
+      systems.levelUp.update()
       systems.projectiles.despawn.update(delta.current)
     }
 
@@ -75,11 +78,14 @@ function createGameLoop(
     systems.billboard.update()
 
     if (hud) {
-      hud.update(
-        Health.current[playerEid],
-        Health.max[playerEid],
-        GameState.status[stateEid] as (typeof STATES)[keyof typeof STATES]
-      )
+      hud.update({
+        hp: Health.current[playerEid],
+        hpMax: Health.max[playerEid],
+        xp: XP.current[playerEid],
+        xpNext: XP.next[playerEid],
+        level: XP.level[playerEid],
+        state: GameState.status[stateEid] as (typeof STATES)[keyof typeof STATES]
+      })
     }
 
     renderer.render(scene, camera)
@@ -159,6 +165,7 @@ function createGameSystems(
     render: createRenderSystem(world, scene),
     animation: createWorkerPool(world),
     projectiles: createProjectileSystems(world),
+    levelUp: createLevelUpSystem(world, () => gameState.setLevelUp()),
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
     playerDamage: createPlayerDamageSystem(world),
     playerDeath: createPlayerDeathSystem(world, () => gameState.setGameOver()),

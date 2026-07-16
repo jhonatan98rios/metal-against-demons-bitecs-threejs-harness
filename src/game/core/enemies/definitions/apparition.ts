@@ -37,5 +37,8 @@ export const APPARITION = {
   START_FRAME: 0,
 
   /** Ending frame index for animation loop */
-  END_FRAME: 1
+  END_FRAME: 1,
+
+  /** XP granted to player on kill */
+  XP_VALUE: 10
 } as const
