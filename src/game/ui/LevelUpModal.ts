@@ -70,7 +70,10 @@ export class LevelUpModal {
     })
     const clickHandler = (e: Event) => {
       e.stopPropagation()
-      if (this.selectedIndex >= 0) onConfirm(this.selectedIndex)
+      if (this.selectedIndex >= 0) {
+        this.hide()
+        onConfirm(this.selectedIndex)
+      }
     }
     this.confirmBtn.addEventListener('click', clickHandler)
     this.confirmBtn.addEventListener('pointerenter', () => {
@@ -152,6 +155,12 @@ export class LevelUpModal {
   }
 
   hide() {
+    if (this.selectedIndex >= 0) {
+      const card = this.cards[this.selectedIndex]
+      card.style.borderColor = '#444'
+      card.style.background = 'rgba(255,255,255,0.06)'
+      card.style.transform = 'scale(1)'
+    }
     if (this.overlay.parentNode) this.overlay.remove()
   }
 }
