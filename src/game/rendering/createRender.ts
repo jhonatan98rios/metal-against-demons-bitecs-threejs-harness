@@ -29,11 +29,24 @@ function createCamera() {
 
 function createDirectionalLight() {
   const dirLight = new THREE.DirectionalLight(0xffffff, 2.5)
-  // ponytail: blob shadows no chão; luz de cima-frente ilumina bem os sprites billboard
-  dirLight.position.set(30, 100, 80)
-  // ponytail: blob shadows handle ground shadows; directional shadow map not needed
-  dirLight.castShadow = false
+  // ponytail: luz lateral pura (+X) — sombra projeta -X, visível na top-down; ambient/hemi compensam iluminação lateral
+  dirLight.position.set(140, 100, 30)
+  dirLight.castShadow = true
+  dirLight.shadow.mapSize.width = 2048
+  dirLight.shadow.mapSize.height = 2048
+  dirLight.shadow.bias = -0.0001
   return dirLight
+}
+
+function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
+  shadowCam.left = -200
+  shadowCam.right = 200
+  shadowCam.top = 200
+  shadowCam.bottom = -200
+  shadowCam.near = 0.5
+  shadowCam.far = 1000
+
+  shadowCam.updateProjectionMatrix()
 }
 
 export const createFollowCamera = (
@@ -61,14 +74,19 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.fog = new THREE.Fog(fogColor, 0, 300)
 
   const camera = createCamera()
-  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.6)
+  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.9)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
   const dirLight = createDirectionalLight()
+  // ponytail: target centralizado no play area pra shadow camera cobrir tudo
+  dirLight.target.position.set(30, 5, 30)
+  scene.add(dirLight.target)
+  setShadowCamera(dirLight.shadow.camera)
+
   scene.add(dirLight)
 
-  const ambient = new THREE.AmbientLight(0x404040, 0.4)
+  const ambient = new THREE.AmbientLight(0x404040, 0.6)
   scene.add(ambient)
 
   return {
