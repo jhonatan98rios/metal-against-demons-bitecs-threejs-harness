@@ -64,26 +64,24 @@ export class LevelUpModal {
     Object.assign(this.confirmBtn.style, {
       padding: '10px 40px', fontSize: '16px', fontWeight: 'bold',
       fontFamily: 'monospace', cursor: 'pointer',
-      background: '#4a4', color: '#fff', border: 'none',
-      borderRadius: '4px', visibility: 'hidden',
-      transition: 'background 0.15s'
+      background: '#4a4', color: '#fff', border: '2px solid #fff',
+      borderRadius: '4px', display: 'none'
     })
-    const confirm = (e: Event) => {
+    this.confirmBtn.onpointerdown = (e) => {
       e.stopPropagation()
       e.preventDefault()
+      console.log('[LevelUpModal] confirm clicked, index:', this.selectedIndex)
       if (this.selectedIndex >= 0) {
         this.hide()
         onConfirm(this.selectedIndex)
       }
     }
-    this.confirmBtn.addEventListener('click', confirm)
-    this.confirmBtn.addEventListener('touchend', confirm)
-    this.confirmBtn.addEventListener('pointerenter', () => {
+    this.confirmBtn.onpointerenter = () => {
       this.confirmBtn.style.background = '#6c6'
-    })
-    this.confirmBtn.addEventListener('pointerleave', () => {
+    }
+    this.confirmBtn.onpointerleave = () => {
       this.confirmBtn.style.background = '#4a4'
-    })
+    }
     panel.appendChild(this.confirmBtn)
     return panel
   }
@@ -147,13 +145,13 @@ export class LevelUpModal {
     card.style.transform = 'scale(1.05)'
 
     this.detailText.textContent = this.options[index].detail
-    this.confirmBtn.style.visibility = 'visible'
+    this.confirmBtn.style.display = 'inline-block'
   }
 
   show() {
     this.selectedIndex = -1
     this.detailText.textContent = ''
-    this.confirmBtn.style.visibility = 'hidden'
+    this.confirmBtn.style.display = 'none'
     this.parent.appendChild(this.overlay)
   }
 
