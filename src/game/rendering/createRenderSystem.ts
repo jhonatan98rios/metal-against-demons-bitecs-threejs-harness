@@ -59,15 +59,19 @@ const createHealthBar = (): { bg: THREE.Mesh; fill: THREE.Mesh } => {
   const fillMat = new THREE.MeshBasicMaterial({
     color: 0x00ff00,
     depthTest: false,
+    depthWrite: false,
     transparent: true
   })
   const fill = new THREE.Mesh(fillGeo, fillMat)
   fill.userData.healthBarFill = true
+  // ponytail: renderOrder garante fill sobre bg; z-offset sozinho é instável com depthTest false
+  fill.renderOrder = 1
 
   const bgGeo = new THREE.PlaneGeometry(BAR_W, BAR_H)
   const bgMat = new THREE.MeshBasicMaterial({
     color: 0x333333,
     depthTest: false,
+    depthWrite: false,
     transparent: true
   })
   const bg = new THREE.Mesh(bgGeo, bgMat)
