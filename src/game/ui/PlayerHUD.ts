@@ -78,9 +78,21 @@ export interface HUDData {
 
 // ponytail: placeholder options, real data comes from upgrade definitions later
 const PLACEHOLDER_OPTIONS: LevelUpOption[] = [
-  { label: '⚔️ Power Up', description: 'Increase attack damage' },
-  { label: '🛡️ Fortify', description: 'Increase max health' },
-  { label: '⚡ Swift', description: 'Increase movement speed' }
+  {
+    icon: '⚔️', label: 'Power Up',
+    description: 'More damage',
+    detail: 'Increases attack damage by 25%. Your projectiles hit harder and clear enemies faster.'
+  },
+  {
+    icon: '🛡️', label: 'Fortify',
+    description: 'More health',
+    detail: 'Increases max health by 30%. Survive longer against swarms of demons.'
+  },
+  {
+    icon: '⚡', label: 'Swift',
+    description: 'More speed',
+    detail: 'Increases movement speed by 20%. Dodge enemy attacks with greater agility.'
+  }
 ]
 
 export class PlayerHUD {

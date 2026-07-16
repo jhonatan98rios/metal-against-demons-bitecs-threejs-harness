@@ -1,91 +1,153 @@
 export interface LevelUpOption {
+  icon: string
   label: string
   description: string
+  detail: string
 }
 
 export class LevelUpModal {
   private overlay: HTMLDivElement
-  private buttons: HTMLButtonElement[] = []
+  private detailText!: HTMLParagraphElement
+  private confirmBtn!: HTMLButtonElement
+  private cards: HTMLDivElement[] = []
+  private selectedIndex = -1
 
   constructor(
     private parent: HTMLElement,
     private options: LevelUpOption[],
-    onSelect: (index: number) => void
+    onConfirm: (index: number) => void
   ) {
     this.overlay = document.createElement('div')
     Object.assign(this.overlay.style, {
       position: 'absolute', inset: '0', display: 'flex',
       flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(0,0,0,0.7)', color: '#fff', fontFamily: 'monospace',
-      zIndex: '100', gap: '24px'
+      background: 'rgba(0,0,0,0.75)', color: '#fff', fontFamily: 'monospace',
+      zIndex: '100', gap: '20px'
     })
 
     const title = document.createElement('div')
     title.textContent = 'LEVEL UP!'
     Object.assign(title.style, {
-      fontSize: '48px', textShadow: '2px 2px 4px #000'
+      fontSize: '42px', textShadow: '2px 2px 4px #000', marginBottom: '4px'
     })
     this.overlay.appendChild(title)
 
     const row = document.createElement('div')
     Object.assign(row.style, {
-      display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center'
+      display: 'flex', gap: '12px', justifyContent: 'center'
     })
-
     options.forEach((opt, i) => {
-      row.appendChild(this.createCard(opt, i, onSelect))
+      row.appendChild(this.createCard(opt, i))
     })
     this.overlay.appendChild(row)
+    this.overlay.appendChild(this.createDetailPanel(onConfirm))
   }
 
-  private createCard(
-    opt: LevelUpOption,
-    index: number,
-    onSelect: (index: number) => void
+  private createDetailPanel(
+    onConfirm: (index: number) => void
   ): HTMLDivElement {
+    const panel = document.createElement('div')
+    Object.assign(panel.style, {
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: '12px', minHeight: '60px', maxWidth: '420px'
+    })
+
+    this.detailText = document.createElement('p')
+    Object.assign(this.detailText.style, {
+      margin: '0', fontSize: '13px', opacity: '0.85',
+      textAlign: 'center', lineHeight: '1.5', minHeight: '20px'
+    })
+    panel.appendChild(this.detailText)
+
+    this.confirmBtn = document.createElement('button')
+    this.confirmBtn.textContent = 'Confirm'
+    Object.assign(this.confirmBtn.style, {
+      padding: '10px 40px', fontSize: '16px', fontWeight: 'bold',
+      fontFamily: 'monospace', cursor: 'pointer',
+      background: '#4a4', color: '#fff', border: 'none',
+      borderRadius: '4px', visibility: 'hidden',
+      transition: 'background 0.15s'
+    })
+    const clickHandler = (e: Event) => {
+      e.stopPropagation()
+      if (this.selectedIndex >= 0) onConfirm(this.selectedIndex)
+    }
+    this.confirmBtn.addEventListener('click', clickHandler)
+    this.confirmBtn.addEventListener('pointerenter', () => {
+      this.confirmBtn.style.background = '#6c6'
+    })
+    this.confirmBtn.addEventListener('pointerleave', () => {
+      this.confirmBtn.style.background = '#4a4'
+    })
+    panel.appendChild(this.confirmBtn)
+    return panel
+  }
+
+  private createCard(opt: LevelUpOption, index: number): HTMLDivElement {
     const card = document.createElement('div')
     Object.assign(card.style, {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      gap: '10px', padding: '24px 20px',
-      background: 'rgba(255,255,255,0.08)', borderRadius: '8px',
-      border: '2px solid #555', minWidth: '160px',
+      gap: '6px', padding: '14px 18px',
+      background: 'rgba(255,255,255,0.06)', borderRadius: '8px',
+      border: '2px solid #444', minWidth: '120px',
       pointerEvents: 'auto', cursor: 'pointer',
-      transition: 'border-color 0.15s, background 0.15s'
+      transition: 'border-color 0.12s, background 0.12s, transform 0.12s'
     })
 
-    const btn = document.createElement('button')
-    btn.textContent = opt.label
-    Object.assign(btn.style, {
-      padding: '10px 24px', fontSize: '18px', fontWeight: 'bold',
-      fontFamily: 'monospace', cursor: 'pointer',
-      background: '#555', color: '#fff', border: 'none',
-      borderRadius: '4px', width: '100%'
-    })
-    btn.addEventListener('click', (e) => { e.stopPropagation(); onSelect(index) })
-    this.buttons.push(btn)
-    card.appendChild(btn)
+    const icon = document.createElement('span')
+    icon.textContent = opt.icon
+    Object.assign(icon.style, { fontSize: '28px' })
+
+    const label = document.createElement('span')
+    label.textContent = opt.label
+    Object.assign(label.style, { fontSize: '14px', fontWeight: 'bold' })
 
     const desc = document.createElement('span')
     desc.textContent = opt.description
-    Object.assign(desc.style, {
-      fontSize: '12px', opacity: '0.7', textAlign: 'center'
-    })
-    card.appendChild(desc)
+    Object.assign(desc.style, { fontSize: '11px', opacity: '0.6', textAlign: 'center' })
 
-    // hover effect
+    card.append(icon, label, desc)
+
+    card.addEventListener('click', (e) => { e.stopPropagation(); this.select(index) })
     card.addEventListener('pointerenter', () => {
-      card.style.borderColor = '#aaa'
-      card.style.background = 'rgba(255,255,255,0.14)'
+      if (this.selectedIndex !== index) {
+        card.style.borderColor = '#777'
+        card.style.background = 'rgba(255,255,255,0.10)'
+      }
     })
     card.addEventListener('pointerleave', () => {
-      card.style.borderColor = '#555'
-      card.style.background = 'rgba(255,255,255,0.08)'
+      if (this.selectedIndex !== index) {
+        card.style.borderColor = '#444'
+        card.style.background = 'rgba(255,255,255,0.06)'
+      }
     })
 
+    this.cards.push(card)
     return card
   }
 
+  private select(index: number) {
+    if (this.selectedIndex >= 0) {
+      const prev = this.cards[this.selectedIndex]
+      prev.style.borderColor = '#444'
+      prev.style.background = 'rgba(255,255,255,0.06)'
+      prev.style.transform = 'scale(1)'
+    }
+
+    this.selectedIndex = index
+    const card = this.cards[index]
+    card.style.borderColor = '#ca0'
+    card.style.background = 'rgba(255,200,0,0.12)'
+    card.style.transform = 'scale(1.05)'
+
+    this.detailText.textContent = this.options[index].detail
+    this.confirmBtn.style.visibility = 'visible'
+  }
+
   show() {
+    this.selectedIndex = -1
+    this.detailText.textContent = ''
+    this.confirmBtn.style.visibility = 'hidden'
     this.parent.appendChild(this.overlay)
   }
 
