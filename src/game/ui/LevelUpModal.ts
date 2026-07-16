@@ -7,8 +7,7 @@ export interface LevelUpOption {
 
 export class LevelUpModal {
   private overlay: HTMLDivElement
-  private detailText!: HTMLParagraphElement
-  private confirmBtn!: HTMLButtonElement
+  private detailText: HTMLParagraphElement
   private cards: HTMLDivElement[] = []
   private selectedIndex = -1
 
@@ -37,56 +36,24 @@ export class LevelUpModal {
       display: 'flex', gap: '12px', justifyContent: 'center'
     })
     options.forEach((opt, i) => {
-      row.appendChild(this.createCard(opt, i))
+      row.appendChild(this.createCard(opt, i, onConfirm))
     })
     this.overlay.appendChild(row)
-    this.overlay.appendChild(this.createDetailPanel(onConfirm))
-  }
-
-  private createDetailPanel(
-    onConfirm: (index: number) => void
-  ): HTMLDivElement {
-    const panel = document.createElement('div')
-    Object.assign(panel.style, {
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      gap: '12px', minHeight: '60px', maxWidth: '420px'
-    })
 
     this.detailText = document.createElement('p')
     Object.assign(this.detailText.style, {
       margin: '0', fontSize: '13px', opacity: '0.85',
-      textAlign: 'center', lineHeight: '1.5', minHeight: '20px'
+      textAlign: 'center', lineHeight: '1.5', minHeight: '40px',
+      maxWidth: '420px'
     })
-    panel.appendChild(this.detailText)
-
-    this.confirmBtn = document.createElement('button')
-    this.confirmBtn.textContent = 'Confirm'
-    Object.assign(this.confirmBtn.style, {
-      padding: '10px 40px', fontSize: '16px', fontWeight: 'bold',
-      fontFamily: 'monospace', cursor: 'pointer',
-      background: '#4a4', color: '#fff', border: '2px solid #fff',
-      borderRadius: '4px', display: 'none'
-    })
-    this.confirmBtn.onpointerdown = (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      console.log('[LevelUpModal] confirm clicked, index:', this.selectedIndex)
-      if (this.selectedIndex >= 0) {
-        this.hide()
-        onConfirm(this.selectedIndex)
-      }
-    }
-    this.confirmBtn.onpointerenter = () => {
-      this.confirmBtn.style.background = '#6c6'
-    }
-    this.confirmBtn.onpointerleave = () => {
-      this.confirmBtn.style.background = '#4a4'
-    }
-    panel.appendChild(this.confirmBtn)
-    return panel
+    this.overlay.appendChild(this.detailText)
   }
 
-  private createCard(opt: LevelUpOption, index: number): HTMLDivElement {
+  private createCard(
+    opt: LevelUpOption,
+    index: number,
+    onConfirm: (index: number) => void
+  ): HTMLDivElement {
     const card = document.createElement('div')
     Object.assign(card.style, {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -96,23 +63,21 @@ export class LevelUpModal {
       pointerEvents: 'auto', cursor: 'pointer',
       transition: 'border-color 0.12s, background 0.12s, transform 0.12s'
     })
-
     const icon = document.createElement('span')
     icon.textContent = opt.icon
     Object.assign(icon.style, { fontSize: '28px' })
-
     const label = document.createElement('span')
     label.textContent = opt.label
     Object.assign(label.style, { fontSize: '14px', fontWeight: 'bold' })
-
     const desc = document.createElement('span')
     desc.textContent = opt.description
     Object.assign(desc.style, { fontSize: '11px', opacity: '0.6', textAlign: 'center' })
-
     card.append(icon, label, desc)
-
-    card.addEventListener('click', (e) => { e.stopPropagation(); this.select(index) })
-    card.addEventListener('touchend', (e) => { e.stopPropagation(); this.select(index) })
+    // ponytail: second click on same card confirms, first click selects
+    const handleClick = () =>
+      this.selectedIndex === index ? (this.hide(), onConfirm(index)) : this.select(index)
+    card.addEventListener('click', handleClick)
+    card.addEventListener('touchend', (e) => { e.stopPropagation(); handleClick() })
     card.addEventListener('pointerenter', () => {
       if (this.selectedIndex !== index) {
         card.style.borderColor = '#777'
@@ -125,7 +90,6 @@ export class LevelUpModal {
         card.style.background = 'rgba(255,255,255,0.06)'
       }
     })
-
     this.cards.push(card)
     return card
   }
@@ -145,13 +109,11 @@ export class LevelUpModal {
     card.style.transform = 'scale(1.05)'
 
     this.detailText.textContent = this.options[index].detail
-    this.confirmBtn.style.display = 'inline-block'
   }
 
   show() {
     this.selectedIndex = -1
     this.detailText.textContent = ''
-    this.confirmBtn.style.display = 'none'
     this.parent.appendChild(this.overlay)
   }
 
