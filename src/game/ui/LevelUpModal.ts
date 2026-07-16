@@ -22,7 +22,7 @@ export class LevelUpModal {
       position: 'absolute', inset: '0', display: 'flex',
       flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       background: 'rgba(0,0,0,0.75)', color: '#fff', fontFamily: 'monospace',
-      zIndex: '100', gap: '20px'
+      zIndex: '1001', gap: '20px', paddingBottom: '160px'
     })
 
     const title = document.createElement('div')
@@ -68,14 +68,16 @@ export class LevelUpModal {
       borderRadius: '4px', visibility: 'hidden',
       transition: 'background 0.15s'
     })
-    const clickHandler = (e: Event) => {
+    const confirm = (e: Event) => {
       e.stopPropagation()
+      e.preventDefault()
       if (this.selectedIndex >= 0) {
         this.hide()
         onConfirm(this.selectedIndex)
       }
     }
-    this.confirmBtn.addEventListener('click', clickHandler)
+    this.confirmBtn.addEventListener('click', confirm)
+    this.confirmBtn.addEventListener('touchend', confirm)
     this.confirmBtn.addEventListener('pointerenter', () => {
       this.confirmBtn.style.background = '#6c6'
     })
@@ -112,6 +114,7 @@ export class LevelUpModal {
     card.append(icon, label, desc)
 
     card.addEventListener('click', (e) => { e.stopPropagation(); this.select(index) })
+    card.addEventListener('touchend', (e) => { e.stopPropagation(); this.select(index) })
     card.addEventListener('pointerenter', () => {
       if (this.selectedIndex !== index) {
         card.style.borderColor = '#777'
