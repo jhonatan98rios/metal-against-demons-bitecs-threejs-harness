@@ -9,8 +9,8 @@ interface BarElements {
 function createBar(color: string): BarElements {
   const wrapper = document.createElement('div')
   Object.assign(wrapper.style, {
-    position: 'relative', width: '160px', height: '16px',
-    background: '#444', borderRadius: '3px', overflow: 'hidden',
+    position: 'relative', width: '120px', height: '12px',
+    background: '#444', borderRadius: '2px', overflow: 'hidden',
     border: '1px solid #666'
   })
 
@@ -22,7 +22,7 @@ function createBar(color: string): BarElements {
   })
 
   const label = document.createElement('span')
-  Object.assign(label.style, { minWidth: '52px', textAlign: 'right' })
+  Object.assign(label.style, { minWidth: '52px', textAlign: 'right', fontSize: '11px' })
 
   wrapper.appendChild(fill)
   return { wrapper, fill, label }
@@ -32,9 +32,9 @@ function createPauseButton(onToggle: () => void): HTMLButtonElement {
   const btn = document.createElement('button')
   btn.textContent = '⏸'
   Object.assign(btn.style, {
-    width: '32px', height: '32px', padding: '0',
-    border: '1px solid #666', borderRadius: '4px',
-    background: '#333', color: '#fff', fontSize: '18px',
+    width: '24px', height: '24px', padding: '0',
+    border: '1px solid #666', borderRadius: '3px',
+    background: '#333', color: '#fff', fontSize: '14px',
     cursor: 'pointer', display: 'flex', alignItems: 'center',
     justifyContent: 'center', lineHeight: '1', flexShrink: '0',
     pointerEvents: 'auto'
@@ -90,35 +90,37 @@ export class PlayerHUD {
     this.hpBar = createBar('#4c4')
     this.xpBar = createBar('#48c')
     this.levelLabel = document.createElement('span')
-    Object.assign(this.levelLabel.style, { minWidth: '40px' })
+    Object.assign(this.levelLabel.style, { fontSize: '13px', fontWeight: 'bold' })
 
     const container = document.createElement('div')
     Object.assign(container.style, {
       position: 'absolute', top: '16px', left: '16px',
-      fontFamily: 'monospace', fontSize: '14px', color: '#fff',
+      fontFamily: 'monospace', fontSize: '12px', color: '#fff',
       textShadow: '1px 1px 2px #000', display: 'flex',
-      flexDirection: 'column', gap: '4px',
+      flexDirection: 'column', gap: '2px',
       pointerEvents: 'none', zIndex: '10'
     })
 
-    // Top row: pause + level + HP bar + HP label
+    // Row: pause + level
     const topRow = document.createElement('div')
-    Object.assign(topRow.style, { display: 'flex', alignItems: 'center', gap: '8px' })
+    Object.assign(topRow.style, { display: 'flex', alignItems: 'center', gap: '6px' })
     topRow.appendChild(this.pauseBtn)
     topRow.appendChild(this.levelLabel)
-    topRow.appendChild(this.hpBar.wrapper)
-    topRow.appendChild(this.hpBar.label)
 
-    // XP row: indented to align with HP bar
+    // Row: HP bar + label
+    const hpRow = document.createElement('div')
+    Object.assign(hpRow.style, { display: 'flex', alignItems: 'center', gap: '6px' })
+    hpRow.appendChild(this.hpBar.wrapper)
+    hpRow.appendChild(this.hpBar.label)
+
+    // Row: XP bar + label
     const xpRow = document.createElement('div')
-    Object.assign(xpRow.style, {
-      display: 'flex', alignItems: 'center', gap: '8px',
-      paddingLeft: '80px'
-    })
+    Object.assign(xpRow.style, { display: 'flex', alignItems: 'center', gap: '6px' })
     xpRow.appendChild(this.xpBar.wrapper)
     xpRow.appendChild(this.xpBar.label)
 
     container.appendChild(topRow)
+    container.appendChild(hpRow)
     container.appendChild(xpRow)
     parent.appendChild(container)
   }
