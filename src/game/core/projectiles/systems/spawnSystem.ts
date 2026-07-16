@@ -45,8 +45,8 @@ export function createProjectileSpawnSystem(
     },
 
     update(dt: number) {
-      // ponytail: dt from main loop already clamped, prevent burst after unpause
-      accumS += dt
+      // ponytail: cap accumulation so background resume spawns at most 1 projectile
+      accumS = Math.min(accumS + dt, intervalS)
       if (accumS < intervalS) return
       accumS -= intervalS
 
