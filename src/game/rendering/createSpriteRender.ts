@@ -28,8 +28,5 @@ export function createSpriteRender(eid: number) {
 
   const mesh = new THREE.Mesh(geometry, material)
 
-  mesh.castShadow = true
-  mesh.receiveShadow = true
-
   return mesh
 }
