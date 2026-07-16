@@ -29,8 +29,8 @@ function createCamera() {
 
 function createDirectionalLight() {
   const dirLight = new THREE.DirectionalLight(0xffffff, 2.5)
-  // ponytail: luz na frente (+Z) ilumina face visível dos sprites billboard; sombra projeta pra trás (-Z)
-  dirLight.position.set(30, 120, 100)
+  // ponytail: luz diagonal (+X+Z) ilumina frente dos sprites e projeta sombra visível na top-down
+  dirLight.position.set(140, 100, 80)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
   dirLight.shadow.mapSize.height = 2048
