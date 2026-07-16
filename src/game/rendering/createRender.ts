@@ -27,22 +27,15 @@ function createCamera() {
   return camera
 }
 
-// ponytail: key light atrás (-Z) só pra sombra; fill light na frente (+Z) ilumina sprites
-function createKeyLight(): THREE.DirectionalLight {
-  const light = new THREE.DirectionalLight(0xffffff, 1.2)
-  light.position.set(30, 80, -60)
-  light.castShadow = true
-  light.shadow.mapSize.width = 2048
-  light.shadow.mapSize.height = 2048
-  light.shadow.bias = -0.0002
-  return light
-}
-
-function createFillLight(): THREE.DirectionalLight {
-  const light = new THREE.DirectionalLight(0xfff5e8, 2.0)
-  light.position.set(30, 80, 80)
-  light.castShadow = false
-  return light
+function createDirectionalLight() {
+  const dirLight = new THREE.DirectionalLight(0xffffff, 2.5)
+  // ponytail: luz lateral pura (+X) — sombra projeta -X, visível na top-down; ambient/hemi compensam iluminação lateral
+  dirLight.position.set(140, 100, 30)
+  dirLight.castShadow = true
+  dirLight.shadow.mapSize.width = 2048
+  dirLight.shadow.mapSize.height = 2048
+  dirLight.shadow.bias = -0.0001
+  return dirLight
 }
 
 function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
@@ -81,22 +74,19 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.fog = new THREE.Fog(fogColor, 0, 300)
 
   const camera = createCamera()
-  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.5)
+  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.9)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
-  // key light: atrás (-Z), projeta sombra visível na top-down (direção +Z, em direção à câmera)
-  const keyLight = createKeyLight()
-  keyLight.target.position.set(30, 5, 30)
-  scene.add(keyLight.target)
-  setShadowCamera(keyLight.shadow.camera)
-  scene.add(keyLight)
+  const dirLight = createDirectionalLight()
+  // ponytail: target centralizado no play area pra shadow camera cobrir tudo
+  dirLight.target.position.set(30, 5, 30)
+  scene.add(dirLight.target)
+  setShadowCamera(dirLight.shadow.camera)
 
-  // fill light: frente (+Z), ilumina face visível dos sprites, sem sombra
-  const fillLight = createFillLight()
-  scene.add(fillLight)
+  scene.add(dirLight)
 
-  const ambient = new THREE.AmbientLight(0x404040, 0.3)
+  const ambient = new THREE.AmbientLight(0x404040, 0.6)
   scene.add(ambient)
 
   return {
