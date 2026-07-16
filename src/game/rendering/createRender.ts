@@ -29,8 +29,8 @@ function createCamera() {
 
 function createDirectionalLight() {
   const dirLight = new THREE.DirectionalLight(0xffffff, 2.5)
-  // ponytail: luz diagonal (+X+Z) ilumina frente dos sprites e projeta sombra visível na top-down
-  dirLight.position.set(140, 100, 80)
+  // ponytail: luz lateral pura (+X) — sombra projeta -X, visível na top-down; ambient/hemi compensam iluminação lateral
+  dirLight.position.set(140, 100, 30)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
   dirLight.shadow.mapSize.height = 2048
@@ -74,7 +74,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.fog = new THREE.Fog(fogColor, 0, 300)
 
   const camera = createCamera()
-  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.6)
+  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.9)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
@@ -86,7 +86,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
 
   scene.add(dirLight)
 
-  const ambient = new THREE.AmbientLight(0x404040, 0.4)
+  const ambient = new THREE.AmbientLight(0x404040, 0.6)
   scene.add(ambient)
 
   return {
