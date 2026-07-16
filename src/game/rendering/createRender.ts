@@ -79,6 +79,9 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.add(hemi)
 
   const dirLight = createDirectionalLight()
+  // ponytail: target centralizado no play area pra shadow camera cobrir tudo
+  dirLight.target.position.set(30, 5, 30)
+  scene.add(dirLight.target)
   setShadowCamera(dirLight.shadow.camera)
 
   scene.add(dirLight)
