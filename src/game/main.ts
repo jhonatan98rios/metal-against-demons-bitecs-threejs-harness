@@ -125,7 +125,11 @@ export function start() {
 
   const hudContainer = document.querySelector('#hud-container')
   const hud = hudContainer
-    ? new PlayerHUD(hudContainer as HTMLElement, () => gameState.togglePause())
+    ? new PlayerHUD(
+        hudContainer as HTMLElement,
+        () => gameState.togglePause(),
+        () => gameState.resumeFromLevelUp()
+      )
     : null
 
   const loop = createGameLoop(systems, world, renderCtx, hud)

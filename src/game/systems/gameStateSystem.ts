@@ -48,7 +48,6 @@ export function createGameStateSystem(
 ) {
   const w = world as GameStateWorld
   const debounce = { pause: false, restart: false }
-
   return {
     update() {
       const eid = getEid(w)
@@ -60,12 +59,10 @@ export function createGameStateSystem(
       }
       handlePauseToggle(eid, state, getPauseInput, debounce)
     },
-
     setGameOver() {
       const eid = getEid(w)
       if (eid >= 0) GameState.status[eid] = STATES.GAME_OVER
     },
-
     togglePause() {
       const eid = getEid(w)
       if (eid < 0) return
@@ -74,15 +71,19 @@ export function createGameStateSystem(
         GameState.status[eid] =
           state === STATES.PLAYING ? STATES.PAUSED : STATES.PLAYING
     },
-
     setLevelUp() {
       const eid = getEid(w)
       if (eid >= 0) GameState.status[eid] = STATES.LEVEL_UP
     },
-
     getState(): number {
       const eid = getEid(w)
       return eid >= 0 ? GameState.status[eid] : STATES.PLAYING
+    },
+    // ponytail: only resume if actually in LEVEL_UP, prevents accidental unpause
+    resumeFromLevelUp() {
+      const eid = getEid(w)
+      if (eid >= 0 && GameState.status[eid] === STATES.LEVEL_UP)
+        GameState.status[eid] = STATES.PLAYING
     }
   }
 }

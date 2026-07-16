@@ -1,4 +1,5 @@
 import { STATES, type GameStatus } from '../core/shared/components/GameState'
+import { LevelUpModal, type LevelUpOption } from './LevelUpModal'
 
 interface BarElements {
   wrapper: HTMLDivElement
@@ -75,16 +76,28 @@ export interface HUDData {
   state: GameStatus
 }
 
+// ponytail: placeholder options, real data comes from upgrade definitions later
+const PLACEHOLDER_OPTIONS: LevelUpOption[] = [
+  { label: '⚔️ Power Up', description: 'Increase attack damage' },
+  { label: '🛡️ Fortify', description: 'Increase max health' },
+  { label: '⚡ Swift', description: 'Increase movement speed' }
+]
+
 export class PlayerHUD {
   private hpBar: BarElements
   private xpBar: BarElements
   private levelLabel: HTMLSpanElement
   private pauseBtn: HTMLButtonElement
   private overlay: HTMLDivElement | null = null
+  private levelUpModal: LevelUpModal | null = null
   private parent: HTMLElement
   private currentState: GameStatus = STATES.PLAYING
 
-  constructor(parent: HTMLElement, onTogglePause: () => void) {
+  constructor(
+    parent: HTMLElement,
+    onTogglePause: () => void,
+    onLevelUpSelect?: (index: number) => void
+  ) {
     this.parent = parent
     this.pauseBtn = createPauseButton(onTogglePause)
     this.hpBar = createBar('#4c4')
@@ -123,6 +136,11 @@ export class PlayerHUD {
     container.appendChild(hpRow)
     container.appendChild(xpRow)
     parent.appendChild(container)
+
+    if (onLevelUpSelect)
+      this.levelUpModal = new LevelUpModal(
+        parent, PLACEHOLDER_OPTIONS, onLevelUpSelect
+      )
   }
 
   update(data: HUDData) {
@@ -148,12 +166,15 @@ export class PlayerHUD {
 
   private updateOverlay(state: GameStatus) {
     if (this.overlay) { this.overlay.remove(); this.overlay = null }
+    this.levelUpModal?.hide()
+
     if (state === STATES.PAUSED)
       this.overlay = createOverlay('PAUSED', 'Press Escape or tap ▶ to resume')
     else if (state === STATES.GAME_OVER)
       this.overlay = createOverlay('GAME OVER', 'Press Enter to restart')
-    else if (state === STATES.LEVEL_UP)
-      this.overlay = createOverlay('LEVEL UP!', 'Press Enter to continue')
+    else if (state === STATES.LEVEL_UP && this.levelUpModal)
+      this.levelUpModal.show()
+
     if (this.overlay) this.parent.appendChild(this.overlay)
   }
 }
