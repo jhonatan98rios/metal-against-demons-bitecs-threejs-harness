@@ -79,8 +79,10 @@ function processNeighborPair(
   if (distSq <= 0) return
 
   if (distSq < sepRadSq) {
-    accumulators.separationX += dx / distSq
-    accumulators.separationZ += dz / distSq
+    // ponytail: 1/dist instead of 1/distSq — stronger mid-range push for flock spread
+    const invDist = 1 / Math.sqrt(distSq)
+    accumulators.separationX += dx * invDist
+    accumulators.separationZ += dz * invDist
   }
 
   if (distSq >= perceptionRadSq) return
