@@ -17,6 +17,60 @@ export const renderObjects = new Map<
   THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
 >()
 
+// -- blob shadow -----------------------------------------------------------
+
+// ponytail: mutable cache via object property avoids functional/no-let
+const shadowTexCache = { tex: null as THREE.CanvasTexture | null }
+const SHADOW_Y = -0.95 // ground is at y=-1, blob slightly above to avoid z-fighting
+
+const getShadowTexture = (): THREE.CanvasTexture => {
+  if (shadowTexCache.tex) return shadowTexCache.tex
+
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  gradient.addColorStop(0, 'rgba(0,0,0,0.45)')
+  gradient.addColorStop(0.6, 'rgba(0,0,0,0.25)')
+  gradient.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, size, size)
+
+  shadowTexCache.tex = new THREE.CanvasTexture(canvas)
+  shadowTexCache.tex.needsUpdate = true
+  return shadowTexCache.tex
+}
+
+const shadowGeo = new THREE.PlaneGeometry(1, 1)
+
+const shadowObjects = new Map<number, THREE.Mesh>()
+
+const getOrCreateShadow = (eid: number, scene: THREE.Scene): THREE.Mesh => {
+  const existing = shadowObjects.get(eid)
+  if (existing) return existing
+
+  const mat = new THREE.MeshBasicMaterial({
+    map: getShadowTexture(),
+    transparent: true,
+    depthWrite: false
+  })
+  const mesh = new THREE.Mesh(shadowGeo, mat)
+  mesh.rotation.x = -Math.PI / 2 // horizontal
+  mesh.renderOrder = -1 // below sprites
+
+  shadowObjects.set(eid, mesh)
+  scene.add(mesh)
+  return mesh
+}
+
+const syncShadow = (eid: number, shadow: THREE.Mesh) => {
+  const w = Sprite.width[eid] || 2
+  shadow.position.set(Position.x[eid], SHADOW_Y, Position.z[eid])
+  shadow.scale.setScalar(w * 0.8)
+}
+
 const getOrCreateRenderObject = (eid: number, scene: THREE.Scene) => {
   const existingObject = renderObjects.get(eid)
 
@@ -165,6 +219,9 @@ export const createRenderSystem = (world: World, scene: THREE.Scene) => {
           existingObject.visible = false
         }
 
+        const inactiveShadow = shadowObjects.get(eid)
+        if (inactiveShadow) inactiveShadow.visible = false
+
         continue
       }
 
@@ -176,6 +233,10 @@ export const createRenderSystem = (world: World, scene: THREE.Scene) => {
       syncPosition(eid, object)
       applyHitFlash(object, eid, delta)
       applyHealthBar(object, eid)
+
+      const shadow = getOrCreateShadow(eid, scene)
+      syncShadow(eid, shadow)
+      shadow.visible = true
     }
   }
 }
