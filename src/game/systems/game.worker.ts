@@ -89,8 +89,9 @@ function collectRemoves(
   removeQueue: Uint32Array,
   counts: { remove: number; move: number }
 ): void {
-  for (const idx of Array.from({ length: entities.length }, (_, i) => i)) {
-    const eid = entities[idx]
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]
 
     if (c.Active.isActive[eid] === 0) continue
     if (c.Health.current[eid] > 0) continue
@@ -108,8 +109,9 @@ function collectMoves(
   moveQueue: Float32Array,
   counts: { remove: number; move: number }
 ): void {
-  for (const idx of Array.from({ length: entities.length }, (_, i) => i)) {
-    const eid = entities[idx]
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]
 
     if (c.Active.isActive[eid] === 0) continue
     if (counts.move + 3 > moveQueue.length) continue
@@ -126,8 +128,9 @@ function processAndCollect(
   dt: number,
   c: ComponentViews
 ): { removeCount: number; moveCount: number } {
-  for (const idx of Array.from({ length: entities.length }, (_, i) => i)) {
-    const eid = entities[idx]
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]
 
     if (c.Active.isActive[eid] === 0) continue
 

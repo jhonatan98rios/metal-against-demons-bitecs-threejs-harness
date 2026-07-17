@@ -90,8 +90,9 @@ export function updateAnimations(input: AnimationInput): void {
   const { entities, active, animation, dt } = input
   const len = entities.length
 
-  for (const idx of Array.from({ length: len }, (_, i) => i)) {
-    const eid = entities[idx]
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < len; i++) {
+    const eid = entities[i]
 
     if (active.isActive[eid] === 0) continue
 
@@ -126,8 +127,9 @@ function updateOneMovement(input: MovementInput, eid: number): void {
 export function updateMovement(input: MovementInput): void {
   const { entities } = input
 
-  for (const idx of Array.from({ length: entities.length }, (_, i) => i)) {
-    updateOneMovement(input, entities[idx])
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    updateOneMovement(input, entities[i])
   }
 }
 
@@ -140,8 +142,9 @@ export function collectRemoveQueue(input: RemoveQueueInput): void {
 
   if (!health) return
 
-  for (const idx of Array.from({ length: entities.length }, (_, i) => i)) {
-    const eid = entities[idx]
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]
 
     if (!isActive({ eid, active })) continue
     if (health.current[eid] <= 0) {
@@ -156,8 +159,9 @@ export function collectRemoveQueue(input: RemoveQueueInput): void {
 export function collectMoveQueue(input: MoveQueueInput): void {
   const { entities, active, position, out } = input
 
-  for (const idx of Array.from({ length: entities.length }, (_, i) => i)) {
-    const eid = entities[idx]
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]
 
     if (!isActive({ eid, active })) continue
 

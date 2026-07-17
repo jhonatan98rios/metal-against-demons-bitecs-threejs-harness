@@ -6,17 +6,16 @@ import { Position } from '../../shared/components/Position'
 
 function findNearestEnemy(world: World, px: number, pz: number): number | null {
   const enemies = query(world, [Active, Enemy, Position]) as readonly number[]
-  const active = enemies.filter((e) => Active.isActive[e] === 1)
-  if (active.length === 0) return null
 
   // eslint-disable-next-line functional/no-let
-  let nearest = active[0]
+  let nearest = -1
   // eslint-disable-next-line functional/no-let
   let nearestDistSq = Infinity
 
   // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < active.length; i++) {
-    const eid = active[i]
+  for (let i = 0; i < enemies.length; i++) {
+    const eid = enemies[i]
+    if (Active.isActive[eid] === 0) continue
     const dx = Position.x[eid] - px
     const dz = Position.z[eid] - pz
     const dsq = dx * dx + dz * dz
@@ -26,7 +25,7 @@ function findNearestEnemy(world: World, px: number, pz: number): number | null {
     }
   }
 
-  return nearest
+  return nearest === -1 ? null : nearest
 }
 
 export function createProjectileSpawnSystem(

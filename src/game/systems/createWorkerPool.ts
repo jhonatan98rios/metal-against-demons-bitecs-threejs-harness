@@ -47,8 +47,9 @@ type PerWorkerQueues = {
 }
 
 function flushRemoveQueue(world: World, eids: Readonly<Uint32Array>): void {
-  for (const idx of Array.from({ length: eids.length }, (_, i) => i)) {
-    removeEntity(world, eids[idx])
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < eids.length; i++) {
+    removeEntity(world, eids[i])
   }
 }
 
@@ -65,11 +66,12 @@ type PoolState = {
 function processAllQueues(state: PoolState): void {
   const { completedWorkers, removeCounts, perWorkerQueues, world } = state
 
-  for (const wii of Array.from({ length: completedWorkers }, (_, i) => i)) {
-    if (removeCounts[wii] > 0) {
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < completedWorkers; i++) {
+    if (removeCounts[i] > 0) {
       flushRemoveQueue(
         world,
-        perWorkerQueues[wii].remove.subarray(0, removeCounts[wii])
+        perWorkerQueues[i].remove.subarray(0, removeCounts[i])
       )
     }
   }
@@ -140,20 +142,17 @@ function makePoolUpdater(
 
     const partitionSize = Math.ceil(entities.length / workerCount)
 
-    Array.from({ length: workerCount }, (_, i) => i).reduce((startIdx, wi) => {
-      const start = startIdx
+    // eslint-disable-next-line functional/no-let
+    for (let wi = 0, start = 0; wi < workerCount; wi++) {
       const end = Math.min(start + partitionSize, entities.length)
-
-      if (start >= entities.length) return startIdx
-
+      if (start >= entities.length) break
       workers[wi].postMessage({
         type: 'update',
         entities: entities.subarray(start, end),
         dt
       } satisfies WorkerMessage)
-
-      return end
-    }, 0)
+      start = end
+    }
   }
 }
 
@@ -182,8 +181,9 @@ function createWorkerPoolImpl(world: World): WorkerPool {
     workerCount
   }
 
-  for (const wi of Array.from({ length: workerCount }, (_, i) => i)) {
-    const worker = createSingleWorker(wi, perWorkerQueues, state)
+  // eslint-disable-next-line functional/no-let
+  for (let i = 0; i < workerCount; i++) {
+    const worker = createSingleWorker(i, perWorkerQueues, state)
 
     state.workers.push(worker)
   }
@@ -213,8 +213,9 @@ function createFallbackPool(world: World): WorkerPool {
         moveQueue: []
       })
 
-      for (const idx of Array.from({ length: removeAcc.length }, (_, i) => i)) {
-        removeEntity(world, removeAcc[idx])
+      // eslint-disable-next-line functional/no-let
+      for (let i = 0; i < removeAcc.length; i++) {
+        removeEntity(world, removeAcc[i])
       }
     },
 
