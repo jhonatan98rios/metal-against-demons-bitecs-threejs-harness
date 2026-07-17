@@ -11,6 +11,7 @@ import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
 import { createVirtualJoystick } from './gameplay/virtualJoystick'
 import { createCameraTouchController } from './gameplay/cameraTouchController'
+import { createCameraMouseController } from './gameplay/cameraMouseController'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
 import {
@@ -222,12 +223,22 @@ function createGameSystems(
     destroyables.push(() => joystick.destroy())
   }
 
-  const cameraTouch = createCameraTouchController()
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+  const gameCanvas = document.querySelector('#game-canvas') as HTMLCanvasElement
+  const cameraCtrl = isTouch
+    ? createCameraTouchController()
+    : (() => {
+        const ctrl = createCameraMouseController(gameCanvas)
+        destroyables.push(() => ctrl.destroy())
+        return ctrl
+      })()
+
   const cameraSystem = createCameraSystem(world, camera, () =>
-    cameraTouch.getAngle()
+    cameraCtrl.getAngle()
   )
   const controller = createCharacterController(world, input, 20, () =>
-    cameraSystem.isFirstPerson() ? cameraTouch.getAngle() : 0
+    cameraSystem.isFirstPerson() ? cameraCtrl.getAngle() : 0
   )
 
   const cameraSwitcher = createCameraSwitcher(() => cameraSystem.toggle())
