@@ -10,11 +10,8 @@ function GameCanvas() {
 
   useEffect(() => {
     const phaseId = searchParams.get('phase') ?? undefined
-    const cleanup = start(phaseId)
-    return () => {
-      cleanup?.()
-    }
-    // ponytail: run once on mount — phase param never changes during gameplay
+    start(phaseId)
+    // ponytail: run once on mount — cleanup handled by Return to Menu button
   }, [])
 
   return (

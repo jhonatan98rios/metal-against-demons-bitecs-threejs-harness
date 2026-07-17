@@ -51,6 +51,30 @@ function spawnEnemies(pool: ReturnType<typeof createEnemyPool>, count: number) {
 type GameSystems = ReturnType<typeof createGameSystems>
 type RenderCtx = ReturnType<typeof createRender>
 
+// ponytail: intercept back button → pause/resume instead of navigating away
+function setupBackButton(gameState: ReturnType<typeof createGameStateSystem>) {
+  history.pushState({ game: true }, '', location.href)
+  const onPop = () => {
+    const s = gameState.getState()
+    if (s === STATES.PLAYING || s === STATES.PAUSED) {
+      history.pushState({ game: true }, '', location.href)
+      gameState.togglePause()
+    }
+  }
+  window.addEventListener('popstate', onPop)
+}
+
+// ponytail: shared restart logic — reset player and resume
+function makeRestartCallback(world: { playerEid: number }) {
+  return () => {
+    const pid = world.playerEid
+    Health.current[pid] = Health.max[pid]
+    Position.x[pid] = 30
+    Position.y[pid] = 5
+    Position.z[pid] = 0
+  }
+}
+
 function createGameLoop(
   systems: GameSystems,
   world: ReturnType<typeof setupWorld>,
@@ -147,13 +171,7 @@ export function start(phaseId?: string) {
     world,
     () => input.consumePressed('escape'),
     () => input.consumePressed('enter'),
-    () => {
-      const pid = world.playerEid
-      Health.current[pid] = Health.max[pid]
-      Position.x[pid] = 30
-      Position.y[pid] = 5
-      Position.z[pid] = 0
-    }
+    makeRestartCallback(world)
   )
 
   const skillManager = createSkillManager(world)
@@ -168,17 +186,22 @@ export function start(phaseId?: string) {
   )
 
   const fpOverlay = createFirstPersonOverlay()
+
+  const cleanup = () => {
+    systems.destroyables.forEach((fn) => fn())
+    fpOverlay.destroy()
+    hud?.destroy?.()
+  }
+
   const hud = createHUD(gameState, skillManager, () => {
+    cleanup()
+    // ponytail: full page nav cleans up everything, no lingering DOM
     window.location.href = '/'
   })
   const loop = createGameLoop(systems, world, renderCtx, hud, fpOverlay)
   loop()
 
-  return () => {
-    systems.destroyables.forEach((fn) => fn())
-    fpOverlay.destroy()
-    hud?.destroy?.()
-  }
+  setupBackButton(gameState)
 }
 
 function createGameSystems(

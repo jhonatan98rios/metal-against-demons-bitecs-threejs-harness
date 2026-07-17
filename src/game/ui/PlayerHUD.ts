@@ -123,6 +123,61 @@ const OVERLAY_STYLE: Partial<CSSStyleDeclaration> = {
   zIndex: '100'
 }
 
+function createPauseOverlay(
+  onResume: () => void,
+  onReturn: (() => void) | null
+): HTMLDivElement {
+  const el = document.createElement('div')
+  Object.assign(el.style, OVERLAY_STYLE)
+  const h1 = document.createElement('div')
+  h1.textContent = 'PAUSED'
+  el.appendChild(h1)
+
+  const btnRow = document.createElement('div')
+  Object.assign(btnRow.style, {
+    display: 'flex',
+    gap: '16px',
+    marginTop: '24px'
+  })
+
+  const resumeBtn = document.createElement('button')
+  resumeBtn.textContent = 'Resume'
+  Object.assign(resumeBtn.style, btnStyle('#4c4', '#6c6'))
+  resumeBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    onResume()
+  })
+  btnRow.appendChild(resumeBtn)
+
+  if (onReturn) {
+    const returnBtn = document.createElement('button')
+    returnBtn.textContent = 'Return to Menu'
+    Object.assign(returnBtn.style, btnStyle('#c44', '#c66'))
+    returnBtn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      onReturn()
+    })
+    btnRow.appendChild(returnBtn)
+  }
+
+  el.appendChild(btnRow)
+  return el
+}
+
+function btnStyle(bg: string, border: string): Partial<CSSStyleDeclaration> {
+  return {
+    padding: '12px 32px',
+    fontSize: '18px',
+    fontFamily: 'monospace',
+    background: bg,
+    color: '#fff',
+    border: `2px solid ${border}`,
+    borderRadius: '4px',
+    cursor: 'pointer',
+    pointerEvents: 'auto'
+  }
+}
+
 function createOverlay(text: string, subtext?: string): HTMLDivElement {
   const el = document.createElement('div')
   Object.assign(el.style, OVERLAY_STYLE)
@@ -193,6 +248,7 @@ export class PlayerHUD {
   private getUpgradeOptions: (() => LevelUpOption[]) | null
   private onUpgradeSelect: ((index: number) => void) | null
   private onReturnToMenu: (() => void) | null
+  private onTogglePause: () => void
   private container!: HTMLDivElement
 
   constructor(
@@ -206,6 +262,7 @@ export class PlayerHUD {
     this.getUpgradeOptions = getUpgradeOptions ?? null
     this.onUpgradeSelect = onUpgradeSelect ?? null
     this.onReturnToMenu = onReturnToMenu ?? null
+    this.onTogglePause = onTogglePause
     this.pauseBtn = createPauseButton(onTogglePause)
     this.hpBar = createBar('#4c4')
     this.xpBar = createBar('#48c')
@@ -265,7 +322,10 @@ export class PlayerHUD {
     this.levelUpModal = null
 
     if (state === STATES.PAUSED) {
-      this.overlay = createOverlay('PAUSED', 'Press Escape or tap ▶ to resume')
+      this.overlay = createPauseOverlay(
+        () => this.onTogglePause(),
+        this.onReturnToMenu
+      )
     } else if (state === STATES.GAME_OVER) {
       this.overlay = createOverlay('GAME OVER', 'Press Enter to restart')
     } else if (state === STATES.VICTORY) {
