@@ -34,6 +34,7 @@ import { getPhase, DEFAULT_PHASE } from './core/phases/definitions'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 import { createSkillManager } from './core/skills/manager'
 import { SKILL_ID } from './core/skills/skillIds'
+import { getCollisionSystem } from './core/projectiles/systems/collisionSystem'
 import './core/skills/definitions/projectile'
 import './core/skills/definitions/redBolt'
 
@@ -96,6 +97,7 @@ function createGameLoop(
       systems.controller.update(delta.current)
       systems.boids.update()
       systems.skillManager.update(delta.current)
+      systems.collision.update()
       systems.animation.update(delta.current)
       systems.playerDamage.update(delta.current)
       systems.death.update()
@@ -272,6 +274,7 @@ function createGameSystems(
     skillManager,
     destroyables,
     pointerLock,
+    collision: getCollisionSystem(world),
     boids: createBoidsSystem(world),
     render: createRenderSystem(world, scene),
     animation: createWorkerPool(world),

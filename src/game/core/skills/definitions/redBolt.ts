@@ -12,7 +12,7 @@ import { Sprite } from '../../shared/components/Sprite'
 import { TTL } from '../../shared/components/TTL'
 import { Projectile } from '../../projectiles/components/Projectile'
 import { Spiral } from '../../projectiles/components/Spiral'
-import { createProjectileCollisionSystem } from '../../projectiles/systems/collisionSystem'
+import { getCollisionSystem } from '../../projectiles/systems/collisionSystem'
 import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
 import type { ProjectileSpriteConfig } from '../../projectiles/pool/projectilePool'
 
@@ -214,11 +214,7 @@ function createRedBoltSkill(world: World, _playerEid: number, level: number) {
   const pool = createSpiralPool(world, 200, BAT_SPRITE)
   const spawn = createSpiralSpawnSystem(world, pool, PROJECTILE_TTL)
   const movement = createSpiralMovementSystem(world)
-  const collision = createProjectileCollisionSystem(
-    world,
-    (eid) => pool.release(eid),
-    2
-  )
+  getCollisionSystem(world).registerPool(2, (eid) => pool.release(eid))
   const despawn = createDespawnSystem(world, (eid) => pool.release(eid))
 
   // eslint-disable-next-line functional/no-let
@@ -247,7 +243,6 @@ function createRedBoltSkill(world: World, _playerEid: number, level: number) {
     update(dt: number) {
       spawn.update(dt)
       movement.update(dt)
-      collision.update()
       despawn.update(dt)
     },
     destroy() {},

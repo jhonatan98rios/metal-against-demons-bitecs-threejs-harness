@@ -6,7 +6,7 @@ import {
   type ProjectileSpriteConfig
 } from '../../projectiles/pool/projectilePool'
 import { createProjectileSpawnSystem } from '../../projectiles/systems/spawnSystem'
-import { createProjectileCollisionSystem } from '../../projectiles/systems/collisionSystem'
+import { getCollisionSystem } from '../../projectiles/systems/collisionSystem'
 import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
 import { Projectile } from '../../projectiles/components/Projectile'
 import type { World } from 'bitecs'
@@ -73,14 +73,10 @@ function setupProjectileSystems(
   const spawn = createProjectileSpawnSystem(world, acquire, initialSpeed)
   spawn.setInterval(state.interval)
 
-  const collision = createProjectileCollisionSystem(
-    world,
-    (eid) => pool.release(eid),
-    1
-  )
+  getCollisionSystem(world).registerPool(1, (eid) => pool.release(eid))
   const despawn = createDespawnSystem(world, (eid) => pool.release(eid))
 
-  return { spawn, collision, despawn }
+  return { spawn, despawn }
 }
 
 function createProjectileSkill(
@@ -94,7 +90,7 @@ function createProjectileSkill(
     interval: BASE_INTERVAL
   }
 
-  const { spawn, collision, despawn } = setupProjectileSystems(
+  const { spawn, despawn } = setupProjectileSystems(
     world,
     state,
     BASE_SPEED
@@ -114,7 +110,6 @@ function createProjectileSkill(
   return {
     update(dt: number) {
       spawn.update(dt)
-      collision.update()
       despawn.update(dt)
     },
     destroy() {
