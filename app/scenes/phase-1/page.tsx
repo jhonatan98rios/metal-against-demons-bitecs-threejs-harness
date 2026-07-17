@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 import { start } from '@/src/game/main'
 
 function GameCanvas() {
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -15,7 +14,8 @@ function GameCanvas() {
     return () => {
       cleanup?.()
     }
-  }, [router, searchParams])
+    // ponytail: run once on mount — phase param never changes during gameplay
+  }, [])
 
   return (
     <div className="relative flex h-screen w-screen items-center justify-center">

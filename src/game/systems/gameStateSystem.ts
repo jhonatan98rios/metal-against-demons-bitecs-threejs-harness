@@ -47,11 +47,12 @@ export function createGameStateSystem(
   onRestart: () => void
 ) {
   const w = world as GameStateWorld
-  const setState = (state: number) => {
+  const setState = (s: number) => {
     const eid = getEid(w)
-    if (eid >= 0) GameState.status[eid] = state
+    if (eid >= 0) GameState.status[eid] = s
   }
   const debounce = { pause: false, restart: false }
+  // prettier-ignore
   return {
     update() {
       const eid = getEid(w)
@@ -64,35 +65,17 @@ export function createGameStateSystem(
       }
       handlePauseToggle(eid, state, getPauseInput, debounce)
     },
-    setGameOver() {
-      setState(STATES.GAME_OVER)
-    },
-    setVictory() {
-      setState(STATES.VICTORY)
-    },
+    setGameOver() { setState(STATES.GAME_OVER) },
+    setVictory() { setState(STATES.VICTORY) },
     togglePause() {
       const eid = getEid(w)
       if (eid < 0) return
       const state = GameState.status[eid]
-      if (
-        state !== STATES.GAME_OVER &&
-        state !== STATES.LEVEL_UP &&
-        state !== STATES.VICTORY
-      )
-        GameState.status[eid] =
-          state === STATES.PLAYING ? STATES.PAUSED : STATES.PLAYING
+      if (state !== STATES.GAME_OVER && state !== STATES.LEVEL_UP && state !== STATES.VICTORY)
+        GameState.status[eid] = state === STATES.PLAYING ? STATES.PAUSED : STATES.PLAYING
     },
-    setLevelUp() {
-      setState(STATES.LEVEL_UP)
-    },
-    getState(): number {
-      const eid = getEid(w)
-      return eid >= 0 ? GameState.status[eid] : STATES.PLAYING
-    },
-    resumeFromLevelUp() {
-      const eid = getEid(w)
-      if (eid >= 0 && GameState.status[eid] === STATES.LEVEL_UP)
-        GameState.status[eid] = STATES.PLAYING
-    }
+    setLevelUp() { setState(STATES.LEVEL_UP) },
+    getState(): number { const eid = getEid(w); return eid >= 0 ? GameState.status[eid] : STATES.PLAYING },
+    resumeFromLevelUp() { const eid = getEid(w); if (eid >= 0 && GameState.status[eid] === STATES.LEVEL_UP) GameState.status[eid] = STATES.PLAYING }
   }
 }

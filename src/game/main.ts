@@ -174,12 +174,11 @@ export function start(phaseId?: string) {
   const loop = createGameLoop(systems, world, renderCtx, hud, fpOverlay)
   loop()
 
-  const cleanup = () => {
+  return () => {
     systems.destroyables.forEach((fn) => fn())
     fpOverlay.destroy()
     hud?.destroy?.()
   }
-  return cleanup
 }
 
 function createGameSystems(
