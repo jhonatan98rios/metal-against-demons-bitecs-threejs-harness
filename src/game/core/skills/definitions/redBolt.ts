@@ -8,16 +8,16 @@ import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
 import { Projectile } from '../../projectiles/components/Projectile'
 import type { World } from 'bitecs'
 
-// Base stats at level 1
+// ponytail: same structure as Holy Bolt, different color + interval
 const BASE_DAMAGE = 1
-const BASE_SPEED = 25
-const BASE_INTERVAL = 0.8
+const BASE_SPEED = 30
+const BASE_INTERVAL = 0.6
 
 const UPGRADES: SkillDefinition['upgrades'] = [
   { level: 2, patch: { damage: 2, speed: 5 } },
-  { level: 3, patch: { damage: 3, interval: -0.15 } },
+  { level: 3, patch: { damage: 3, interval: -0.1 } },
   { level: 4, patch: { damage: 4, speed: 10 } },
-  { level: 5, patch: { damage: 6, interval: -0.1, speed: 5 } }
+  { level: 5, patch: { damage: 6, interval: -0.1, speed: 10 } }
 ]
 
 type ProjectileStats = { damage: number; speed: number; interval: number }
@@ -46,7 +46,7 @@ function setupProjectileSystems(
   state: ProjectileStats,
   initialSpeed: number
 ) {
-  const pool = createProjectilePool(world, 200, '#ff4400')
+  const pool = createProjectilePool(world, 200, '#ff0033')
   const poolAcquire = pool.acquire.bind(pool)
 
   const acquire = (x: number, z: number, vx: number, vz: number): number => {
@@ -66,11 +66,7 @@ function setupProjectileSystems(
   return { spawn, collision, despawn }
 }
 
-function createProjectileSkill(
-  world: World,
-  _playerEid: number,
-  level: number
-) {
+function createRedBoltSkill(world: World, _playerEid: number, level: number) {
   const state: ProjectileStats = {
     damage: BASE_DAMAGE,
     speed: BASE_SPEED,
@@ -100,19 +96,17 @@ function createProjectileSkill(
       collision.update()
       despawn.update(dt)
     },
-    destroy() {
-      // ponytail: pool entities are just tagged inactive, no per-entity cleanup needed
-    },
+    destroy() {},
     setLevel(lvl: number) {
       applyLevel(lvl)
     }
   }
 }
 
-function getProjectileDetail(lvl: number): string {
+function getRedBoltDetail(lvl: number): string {
   const stats = accumulateUpgrades(lvl)
   const lines = [
-    `Fires a holy bolt at the nearest enemy.`,
+    `Fires a crimson bolt at the nearest enemy.`,
     `Damage: ${stats.damage}`,
     `Speed: ${stats.speed}`,
     `Interval: ${stats.interval.toFixed(2)}s`
@@ -128,12 +122,12 @@ function getProjectileDetail(lvl: number): string {
 }
 
 registerSkill({
-  id: SKILL_ID.PROJECTILE,
-  name: 'Holy Bolt',
-  icon: '🔵',
-  description: 'Fires at nearest enemy',
+  id: SKILL_ID.RED_BOLT,
+  name: 'Crimson Bolt',
+  icon: '🔴',
+  description: 'Rapid red bolts',
   maxLevel: 5,
   upgrades: UPGRADES,
-  create: createProjectileSkill,
-  getDetail: getProjectileDetail
+  create: createRedBoltSkill,
+  getDetail: getRedBoltDetail
 })

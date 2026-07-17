@@ -26,13 +26,22 @@ const addComponents = (world: World, eid: number) => {
   COMPONENTS.forEach((c) => addComponent(world, eid, c))
 }
 
-const TEXTURE =
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><circle cx="4" cy="4" r="3" fill="%23ff4400"/></svg>'
+function makeTexture(hex: string): string {
+  const color = hex.replace('#', '%23')
+  return (
+    'data:image/svg+xml,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><circle cx="4" cy="4" r="3" fill="${color}"/></svg>`
+    )
   )
+}
 
-export function createProjectilePool(world: World, size: number) {
+export function createProjectilePool(
+  world: World,
+  size: number,
+  color = '#ff4400'
+) {
+  const texture = makeTexture(color)
   const free: number[] = []
 
   // eslint-disable-next-line functional/no-let
@@ -45,7 +54,7 @@ export function createProjectilePool(world: World, size: number) {
     Projectile.damage[eid] = 1
     Renderable.isRenderable[eid] = 1
     Billboard.isBillboard[eid] = 1
-    Sprite.texture[eid] = TEXTURE
+    Sprite.texture[eid] = texture
     Sprite.columns[eid] = 1
     Sprite.rows[eid] = 1
     Sprite.width[eid] = 0.5

@@ -31,6 +31,7 @@ import { createScenario, SCENARIOS } from './scenarios/createScenario'
 import { createSkillManager } from './core/skills/manager'
 import { SKILL_ID } from './core/skills/skillIds'
 import './core/skills/definitions/projectile'
+import './core/skills/definitions/redBolt'
 
 function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
   Array.from({ length: 100 }, () => {
