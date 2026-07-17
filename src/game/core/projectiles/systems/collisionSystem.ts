@@ -9,9 +9,32 @@ import { Projectile } from '../components/Projectile'
 
 const HIT_RADIUS_SQ = 2 * 2
 
+function checkProjectileAgainstEnemies(
+  pid: number,
+  enemies: readonly number[],
+  release: (eid: number) => void
+): void {
+  const px = Position.x[pid]
+  const pz = Position.z[pid]
+
+  for (const eid of enemies) {
+    if (Active.isActive[eid] === 0) continue
+
+    const dx = px - Position.x[eid]
+    const dz = pz - Position.z[eid]
+    if (dx * dx + dz * dz > HIT_RADIUS_SQ) continue
+
+    Health.current[eid] -= Projectile.damage[pid]
+    HitEffect.timer[eid] = 0.15
+    release(pid)
+    break
+  }
+}
+
 export function createProjectileCollisionSystem(
   world: World,
-  release: (eid: number) => void
+  release: (eid: number) => void,
+  poolId = 0
 ) {
   return {
     update() {
@@ -31,24 +54,9 @@ export function createProjectileCollisionSystem(
       for (let i = 0; i < projectiles.length; i++) {
         const pid = projectiles[i]
         if (Active.isActive[pid] === 0) continue
+        if (poolId !== 0 && Projectile.poolId[pid] !== poolId) continue
 
-        const px = Position.x[pid]
-        const pz = Position.z[pid]
-
-        // eslint-disable-next-line functional/no-let
-        for (let j = 0; j < enemies.length; j++) {
-          const eid = enemies[j]
-          if (Active.isActive[eid] === 0) continue
-
-          const dx = px - Position.x[eid]
-          const dz = pz - Position.z[eid]
-          if (dx * dx + dz * dz > HIT_RADIUS_SQ) continue
-
-          Health.current[eid] -= Projectile.damage[pid]
-          HitEffect.timer[eid] = 0.15
-          release(pid)
-          break
-        }
+        checkProjectileAgainstEnemies(pid, enemies, release)
       }
     }
   }

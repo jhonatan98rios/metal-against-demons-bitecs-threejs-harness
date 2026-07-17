@@ -40,6 +40,7 @@ function initEntity(world: World, eid: number, texture: string) {
   Active.isActive[eid] = 0
   Projectile.isProjectile[eid] = 1
   Projectile.damage[eid] = 1
+  Projectile.poolId[eid] = 1
   Renderable.isRenderable[eid] = 1
   Billboard.isBillboard[eid] = 1
   Sprite.texture[eid] = texture

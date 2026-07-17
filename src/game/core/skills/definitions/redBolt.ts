@@ -55,6 +55,7 @@ function createSpiralPool(world: World, size: number, color: string) {
     Active.isActive[eid] = 0
     Projectile.isProjectile[eid] = 1
     Projectile.damage[eid] = 1
+    Projectile.poolId[eid] = 2
     Renderable.isRenderable[eid] = 1
     Billboard.isBillboard[eid] = 1
     Sprite.texture[eid] = texture
@@ -154,7 +155,7 @@ function createSpiralMovementSystem(world: World) {
 const BASE_DAMAGE = 1
 const BASE_ANGULAR_SPEED = 5
 const BASE_RADIAL_SPEED = 3
-const BASE_INTERVAL = 0.15
+const BASE_INTERVAL = 1.5
 const PROJECTILE_TTL = 3
 
 const UPGRADES: SkillDefinition['upgrades'] = [
@@ -208,8 +209,10 @@ function createRedBoltSkill(world: World, _playerEid: number, level: number) {
   const pool = createSpiralPool(world, 200, '#ff0033')
   const spawn = createSpiralSpawnSystem(world, pool, PROJECTILE_TTL)
   const movement = createSpiralMovementSystem(world)
-  const collision = createProjectileCollisionSystem(world, (eid) =>
-    pool.release(eid)
+  const collision = createProjectileCollisionSystem(
+    world,
+    (eid) => pool.release(eid),
+    2
   )
   const despawn = createDespawnSystem(world, (eid) => pool.release(eid))
 
