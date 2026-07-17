@@ -36,6 +36,24 @@ function makeTexture(hex: string): string {
   )
 }
 
+function initEntity(world: World, eid: number, texture: string) {
+  Active.isActive[eid] = 0
+  Projectile.isProjectile[eid] = 1
+  Projectile.damage[eid] = 1
+  Renderable.isRenderable[eid] = 1
+  Billboard.isBillboard[eid] = 1
+  Sprite.texture[eid] = texture
+  Sprite.columns[eid] = 1
+  Sprite.rows[eid] = 1
+  Sprite.width[eid] = 0.5
+  Sprite.height[eid] = 0.5
+  Animation.currentFrame[eid] = 0
+  Animation.elapsed[eid] = 0
+  Animation.fps[eid] = 0
+  Animation.startFrame[eid] = 0
+  Animation.endFrame[eid] = 0
+}
+
 export function createProjectilePool(
   world: World,
   size: number,
@@ -48,23 +66,7 @@ export function createProjectilePool(
   for (let i = 0; i < size; i++) {
     const eid = addEntity(world)
     addComponents(world, eid)
-
-    Active.isActive[eid] = 0
-    Projectile.isProjectile[eid] = 1
-    Projectile.damage[eid] = 1
-    Renderable.isRenderable[eid] = 1
-    Billboard.isBillboard[eid] = 1
-    Sprite.texture[eid] = texture
-    Sprite.columns[eid] = 1
-    Sprite.rows[eid] = 1
-    Sprite.width[eid] = 0.5
-    Sprite.height[eid] = 0.5
-    Animation.currentFrame[eid] = 0
-    Animation.elapsed[eid] = 0
-    Animation.fps[eid] = 0
-    Animation.startFrame[eid] = 0
-    Animation.endFrame[eid] = 0
-
+    initEntity(world, eid, texture)
     free.push(eid)
   }
 
