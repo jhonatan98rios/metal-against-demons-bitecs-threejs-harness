@@ -7,7 +7,7 @@ const STYLE = `
     left: -10%;
     width: 120%;
     height: auto;
-    transform: translateY(40%);
+    transform: translateY(30%);
     pointer-events: none;
     z-index: 100;
     opacity: 0;
