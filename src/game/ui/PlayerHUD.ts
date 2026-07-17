@@ -142,6 +142,36 @@ function createOverlay(text: string, subtext?: string): HTMLDivElement {
   return el
 }
 
+function createVictoryOverlay(onReturn: (() => void) | null): HTMLDivElement {
+  const el = document.createElement('div')
+  Object.assign(el.style, OVERLAY_STYLE)
+  const h1 = document.createElement('div')
+  h1.textContent = 'VICTORY'
+  el.appendChild(h1)
+  if (onReturn) {
+    const btn = document.createElement('button')
+    btn.textContent = 'Return to Menu'
+    Object.assign(btn.style, {
+      marginTop: '24px',
+      padding: '12px 32px',
+      fontSize: '18px',
+      fontFamily: 'monospace',
+      background: '#4c4',
+      color: '#fff',
+      border: '2px solid #6c6',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      pointerEvents: 'auto'
+    })
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      onReturn()
+    })
+    el.appendChild(btn)
+  }
+  return el
+}
+
 export interface HUDData {
   hp: number
   hpMax: number
@@ -162,16 +192,19 @@ export class PlayerHUD {
   private currentState: GameStatus = STATES.PLAYING
   private getUpgradeOptions: (() => LevelUpOption[]) | null
   private onUpgradeSelect: ((index: number) => void) | null
+  private onReturnToMenu: (() => void) | null
 
   constructor(
     parent: HTMLElement,
     onTogglePause: () => void,
     getUpgradeOptions?: () => LevelUpOption[],
-    onUpgradeSelect?: (index: number) => void
+    onUpgradeSelect?: (index: number) => void,
+    onReturnToMenu?: () => void
   ) {
     this.parent = parent
     this.getUpgradeOptions = getUpgradeOptions ?? null
     this.onUpgradeSelect = onUpgradeSelect ?? null
+    this.onReturnToMenu = onReturnToMenu ?? null
     this.pauseBtn = createPauseButton(onTogglePause)
     this.hpBar = createBar('#4c4')
     this.xpBar = createBar('#48c')
@@ -234,6 +267,8 @@ export class PlayerHUD {
       this.overlay = createOverlay('PAUSED', 'Press Escape or tap ▶ to resume')
     } else if (state === STATES.GAME_OVER) {
       this.overlay = createOverlay('GAME OVER', 'Press Enter to restart')
+    } else if (state === STATES.VICTORY) {
+      this.overlay = createVictoryOverlay(this.onReturnToMenu)
     } else if (state === STATES.LEVEL_UP) {
       this.showLevelUpModal()
     }

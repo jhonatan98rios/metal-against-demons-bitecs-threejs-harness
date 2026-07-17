@@ -28,14 +28,16 @@ import { Position } from './core/shared/components/Position'
 import { GameState, STATES } from './core/shared/components/GameState'
 import { XP } from './core/shared/components/XP'
 import { createGameStateSystem } from './systems/gameStateSystem'
+import { createVictorySystem } from './systems/victorySystem'
+import { getPhase, DEFAULT_PHASE } from './core/phases/definitions'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
 import { createSkillManager } from './core/skills/manager'
 import { SKILL_ID } from './core/skills/skillIds'
 import './core/skills/definitions/projectile'
 import './core/skills/definitions/redBolt'
 
-function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
-  Array.from({ length: 100 }, () => {
+function spawnEnemies(pool: ReturnType<typeof createEnemyPool>, count: number) {
+  Array.from({ length: count }, () => {
     const eid = pool.acquire()
     setupApparition(
       eid,
@@ -57,15 +59,14 @@ function createGameLoop(
   fpOverlay: ReturnType<typeof createFirstPersonOverlay>
 ) {
   const delta = { last: performance.now(), current: 0 }
-  const { renderer, scene, camera } = renderCtx, { stateEid, playerEid } = world
-
+  const { renderer, scene, camera } = renderCtx,
+    { stateEid, playerEid } = world
   return function loop() {
     const now = performance.now()
     delta.current = Math.min(0.1, (now - delta.last) / 1000)
     delta.last = now
 
     systems.gameState.update()
-
     if (GameState.status[stateEid] === STATES.PLAYING) {
       systems.controller.update(delta.current)
       systems.boids.update()
@@ -75,13 +76,13 @@ function createGameLoop(
       systems.death.update()
       systems.playerDeath.update()
       systems.levelUp.update()
+      systems.victory.update()
     }
 
     systems.render(delta.current)
     systems.camera.update()
     fpOverlay.update(systems.camera.isFirstPerson())
     systems.billboard.update()
-
     if (hud) {
       hud.update({
         hp: Health.current[playerEid],
@@ -102,7 +103,8 @@ function createGameLoop(
 
 function createHUD(
   gameState: ReturnType<typeof createGameStateSystem>,
-  skillManager: ReturnType<typeof createSkillManager>
+  skillManager: ReturnType<typeof createSkillManager>,
+  onReturnToMenu: () => void
 ): PlayerHUD | null {
   const container = document.querySelector('#hud-container')
   if (!container) return null
@@ -123,21 +125,23 @@ function createHUD(
         skillManager.applyUpgradeChoice(currentOptions[index])
       }
       gameState.resumeFromLevelUp()
-    }
+    },
+    onReturnToMenu
   )
 }
 
-export function start() {
+export function start(phaseId?: string) {
   const canvas = document.querySelector('#game-canvas') as HTMLCanvasElement
   if (!canvas || typeof window === 'undefined') return
 
+  const phase = phaseId ? (getPhase(phaseId) ?? DEFAULT_PHASE) : DEFAULT_PHASE
   const world = setupWorld()
   const renderCtx = createRender(canvas)
   const input = createInput()
 
   createScenario(renderCtx.scene, SCENARIOS.LEVEL1)
-  const enemyPool = createEnemyPool(world, 100)
-  spawnEnemies(enemyPool)
+  const enemyPool = createEnemyPool(world, phase.poolSize)
+  spawnEnemies(enemyPool, phase.enemyCount)
 
   const gameState = createGameStateSystem(
     world,
@@ -164,7 +168,9 @@ export function start() {
   )
 
   const fpOverlay = createFirstPersonOverlay()
-  const hud = createHUD(gameState, skillManager)
+  const hud = createHUD(gameState, skillManager, () => {
+    window.location.href = '/'
+  })
   const loop = createGameLoop(systems, world, renderCtx, hud, fpOverlay)
   loop()
 }
@@ -204,6 +210,7 @@ function createGameSystems(
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
     playerDamage: createPlayerDamageSystem(world),
     playerDeath: createPlayerDeathSystem(world, () => gameState.setGameOver()),
+    victory: createVictorySystem(world, () => gameState.setVictory()),
     camera: cameraSystem,
     controller,
     billboard: createBillboardSystem(world, camera, renderObjects)

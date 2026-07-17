@@ -1,17 +1,19 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { start } from '@/src/game/main'
 
-export default function Phase1() {
+function GameCanvas() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const gameRef = useRef<ReturnType<typeof start> | null>(null)
 
   useEffect(() => {
-    gameRef.current = start()
-  }, [router])
+    const phaseId = searchParams.get('phase') ?? undefined
+    gameRef.current = start(phaseId)
+  }, [router, searchParams])
 
   return (
     <div className="relative flex h-screen w-screen items-center justify-center">
@@ -21,5 +23,13 @@ export default function Phase1() {
         className="pointer-events-none absolute inset-0 z-10"
       />
     </div>
+  )
+}
+
+export default function Phase1() {
+  return (
+    <Suspense fallback={<div />}>
+      <GameCanvas />
+    </Suspense>
   )
 }
