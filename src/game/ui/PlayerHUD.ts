@@ -193,6 +193,7 @@ export class PlayerHUD {
   private getUpgradeOptions: (() => LevelUpOption[]) | null
   private onUpgradeSelect: ((index: number) => void) | null
   private onReturnToMenu: (() => void) | null
+  private container!: HTMLDivElement
 
   constructor(
     parent: HTMLElement,
@@ -274,5 +275,13 @@ export class PlayerHUD {
     }
 
     if (this.overlay) this.parent.appendChild(this.overlay)
+  }
+
+  destroy() {
+    this.overlay?.remove()
+    this.overlay = null
+    this.levelUpModal?.hide()
+    this.levelUpModal = null
+    this.container.remove()
   }
 }

@@ -20,12 +20,14 @@ const STYLE = `
 
 export function createFirstPersonOverlay(): {
   update: (visible: boolean) => void
+  destroy: () => void
 } {
   if (document.getElementById(ID)) {
     // ponytail: already exists, reuse
     const el = document.getElementById(ID)!
     return {
-      update: (v: boolean) => el.classList.toggle('visible', v)
+      update: (v: boolean) => el.classList.toggle('visible', v),
+      destroy() {}
     }
   }
 
@@ -40,6 +42,10 @@ export function createFirstPersonOverlay(): {
   document.body.appendChild(img)
 
   return {
-    update: (visible: boolean) => img.classList.toggle('visible', visible)
+    update: (visible: boolean) => img.classList.toggle('visible', visible),
+    destroy() {
+      style.remove()
+      img.remove()
+    }
   }
 }

@@ -173,6 +173,13 @@ export function start(phaseId?: string) {
   })
   const loop = createGameLoop(systems, world, renderCtx, hud, fpOverlay)
   loop()
+
+  const cleanup = () => {
+    systems.destroyables.forEach((fn) => fn())
+    fpOverlay.destroy()
+    hud?.destroy?.()
+  }
+  return cleanup
 }
 
 function createGameSystems(
@@ -187,8 +194,11 @@ function createGameSystems(
   }
 ) {
   const { input, gameState, skillManager } = ctx
-  if ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-    createVirtualJoystick(input)
+  const destroyables: (() => void)[] = []
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    const joystick = createVirtualJoystick(input)
+    destroyables.push(() => joystick.destroy())
+  }
 
   const cameraTouch = createCameraTouchController()
   const cameraSystem = createCameraSystem(world, camera, () =>
@@ -198,11 +208,13 @@ function createGameSystems(
     cameraSystem.isFirstPerson() ? cameraTouch.getAngle() : 0
   )
 
-  createCameraSwitcher(() => cameraSystem.toggle())
+  const cameraSwitcher = createCameraSwitcher(() => cameraSystem.toggle())
+  destroyables.push(() => cameraSwitcher.destroy())
 
   return {
     gameState,
     skillManager,
+    destroyables,
     boids: createBoidsSystem(world),
     render: createRenderSystem(world, scene),
     animation: createWorkerPool(world),

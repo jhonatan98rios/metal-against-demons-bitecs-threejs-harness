@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, Suspense } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import { start } from '@/src/game/main'
@@ -8,11 +8,13 @@ import { start } from '@/src/game/main'
 function GameCanvas() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const gameRef = useRef<ReturnType<typeof start> | null>(null)
 
   useEffect(() => {
     const phaseId = searchParams.get('phase') ?? undefined
-    gameRef.current = start(phaseId)
+    const cleanup = start(phaseId)
+    return () => {
+      cleanup?.()
+    }
   }, [router, searchParams])
 
   return (

@@ -64,8 +64,12 @@ export function createGameStateSystem(
       }
       handlePauseToggle(eid, state, getPauseInput, debounce)
     },
-    setGameOver() { setState(STATES.GAME_OVER) },
-    setVictory() { setState(STATES.VICTORY) },
+    setGameOver() {
+      setState(STATES.GAME_OVER)
+    },
+    setVictory() {
+      setState(STATES.VICTORY)
+    },
     togglePause() {
       const eid = getEid(w)
       if (eid < 0) return
@@ -78,7 +82,9 @@ export function createGameStateSystem(
         GameState.status[eid] =
           state === STATES.PLAYING ? STATES.PAUSED : STATES.PLAYING
     },
-    setLevelUp() { setState(STATES.LEVEL_UP) },
+    setLevelUp() {
+      setState(STATES.LEVEL_UP)
+    },
     getState(): number {
       const eid = getEid(w)
       return eid >= 0 ? GameState.status[eid] : STATES.PLAYING
