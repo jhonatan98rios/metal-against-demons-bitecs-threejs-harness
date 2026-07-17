@@ -20,6 +20,7 @@ import {
 import { createCameraSystem } from './systems/cameraSystem'
 import { createBillboardSystem } from './systems/billboardSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
+import { createFirstPersonOverlay } from './ui/FirstPersonOverlay'
 import { createLevelUpSystem } from './core/player/levelUpSystem'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { Health } from './core/shared/components/Health'
@@ -52,11 +53,11 @@ function createGameLoop(
   systems: GameSystems,
   world: ReturnType<typeof setupWorld>,
   renderCtx: RenderCtx,
-  hud: PlayerHUD | null
+  hud: PlayerHUD | null,
+  fpOverlay: ReturnType<typeof createFirstPersonOverlay>
 ) {
   const delta = { last: performance.now(), current: 0 }
-  const { renderer, scene, camera } = renderCtx
-  const { stateEid, playerEid } = world
+  const { renderer, scene, camera } = renderCtx, { stateEid, playerEid } = world
 
   return function loop() {
     const now = performance.now()
@@ -78,6 +79,7 @@ function createGameLoop(
 
     systems.render(delta.current)
     systems.camera.update()
+    fpOverlay.update(systems.camera.isFirstPerson())
     systems.billboard.update()
 
     if (hud) {
@@ -161,8 +163,9 @@ export function start() {
     { input, gameState, skillManager }
   )
 
+  const fpOverlay = createFirstPersonOverlay()
   const hud = createHUD(gameState, skillManager)
-  const loop = createGameLoop(systems, world, renderCtx, hud)
+  const loop = createGameLoop(systems, world, renderCtx, hud, fpOverlay)
   loop()
 }
 
