@@ -3,12 +3,11 @@ const ID = 'fp-hands-overlay'
 const STYLE = `
   #${ID} {
     position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 100%;
-    transform: translateY(50%) scale(0.8);
+    bottom: 0;
+    left: -10%;
+    width: 120%;
+    height: auto;
+    transform: translateY(50%);
     pointer-events: none;
     z-index: 100;
     opacity: 0;
