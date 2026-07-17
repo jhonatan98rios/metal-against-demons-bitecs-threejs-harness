@@ -4,29 +4,19 @@ export function createCameraMouseController(canvas: HTMLCanvasElement) {
   const angle = { value: 0 }
 
   const onMouseMove = (e: MouseEvent) => {
-    if (document.pointerLockElement !== canvas) return
-    angle.value -= e.movementX * SENSITIVITY
+    angle.value += e.movementX * SENSITIVITY
   }
 
-  const onPointerLockChange = () => {
-    if (document.pointerLockElement === canvas) {
-      document.addEventListener('mousemove', onMouseMove)
-    } else {
-      document.removeEventListener('mousemove', onMouseMove)
-    }
-  }
-
-  const onClick = () => canvas.requestPointerLock()
-  canvas.addEventListener('click', onClick)
-  document.addEventListener('pointerlockchange', onPointerLockChange)
+  document.addEventListener('mousemove', onMouseMove)
 
   return {
     getAngle: () => angle.value,
+    lock: () => canvas.requestPointerLock(),
+    unlock: () => document.exitPointerLock(),
+    isLocked: () => document.pointerLockElement === canvas,
     destroy() {
       document.exitPointerLock()
-      canvas.removeEventListener('click', onClick)
       document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('pointerlockchange', onPointerLockChange)
     }
   }
 }

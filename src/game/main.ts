@@ -106,6 +106,18 @@ function createGameLoop(
 
     systems.render(delta.current)
     systems.camera.update()
+
+    // auto pointer lock: lock in first-person + playing, unlock otherwise
+    if (systems.pointerLock) {
+      const isFP = systems.camera.isFirstPerson()
+      const isPlaying = GameState.status[stateEid] === STATES.PLAYING
+      if (isFP && isPlaying && !systems.pointerLock.isLocked()) {
+        systems.pointerLock.lock()
+      } else if ((!isFP || !isPlaying) && systems.pointerLock.isLocked()) {
+        systems.pointerLock.unlock()
+      }
+    }
+
     fpOverlay.update(systems.camera.isFirstPerson())
     systems.billboard.update()
     if (hud) {
@@ -244,10 +256,22 @@ function createGameSystems(
   const cameraSwitcher = createCameraSwitcher(() => cameraSystem.toggle())
   destroyables.push(() => cameraSwitcher.destroy())
 
+  const pointerLock = isTouch
+    ? undefined
+    : (() => {
+        const m = cameraCtrl as ReturnType<typeof createCameraMouseController>
+        return {
+          lock: () => m.lock(),
+          unlock: () => m.unlock(),
+          isLocked: () => m.isLocked()
+        }
+      })()
+
   return {
     gameState,
     skillManager,
     destroyables,
+    pointerLock,
     boids: createBoidsSystem(world),
     render: createRenderSystem(world, scene),
     animation: createWorkerPool(world),
