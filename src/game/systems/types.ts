@@ -29,11 +29,16 @@ export type WorkerInitMessage = {
   components: ComponentTransfer
   removeQueueBuffer: SharedArrayBuffer
   moveQueueBuffer: SharedArrayBuffer
+  /** Shared entity-ID buffer. Workers read partitions via subarray(start, start+count). */
+  entityBuffer: SharedArrayBuffer
 }
 
 export type WorkerUpdateMessage = {
   type: 'update'
-  entities: Uint32Array
+  /** Offset into the shared entity buffer (in elements, not bytes). */
+  start: number
+  /** Number of entity IDs in this partition. */
+  count: number
   dt: number
 }
 

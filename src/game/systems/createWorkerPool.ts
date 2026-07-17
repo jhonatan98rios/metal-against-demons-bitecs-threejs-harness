@@ -6,7 +6,7 @@ import { AnimationRow } from '../core/shared/components/AnimationRow'
 import { Health } from '../core/shared/components/Health'
 import { Position } from '../core/shared/components/Position'
 import { Velocity } from '../core/shared/components/Velocity'
-import { MAX_COMMANDS } from '../core/shared/constants'
+import { MAX_COMMANDS, MAX_ENTITIES } from '../core/shared/constants'
 
 import type { ComponentTransfer, WorkerMessage, WorkerResponse } from './types'
 import { processPartition } from './processors'
@@ -44,6 +44,12 @@ export type WorkerPool = {
 type PerWorkerQueues = {
   remove: Uint32Array
   move: Float32Array
+}
+
+type SharedState = {
+  /** Shared buffer for entity-ID partitions. Main thread copies query results here once per frame. */
+  entityIds: Uint32Array
+  entitySAB: SharedArrayBuffer
 }
 
 function flushRemoveQueue(world: World, eids: Readonly<Uint32Array>): void {
@@ -91,6 +97,7 @@ function allocateQueues(count: number): PerWorkerQueues[] {
 function createSingleWorker(
   wi: number,
   perWorkerQueues: PerWorkerQueues[],
+  shared: SharedState,
   state: PoolState
 ): Worker {
   const worker = new Worker(new URL('./game.worker.ts', import.meta.url), {
@@ -102,7 +109,8 @@ function createSingleWorker(
     components: BUF,
     removeQueueBuffer: perWorkerQueues[wi]
       .remove as unknown as SharedArrayBuffer,
-    moveQueueBuffer: perWorkerQueues[wi].move as unknown as SharedArrayBuffer
+    moveQueueBuffer: perWorkerQueues[wi].move as unknown as SharedArrayBuffer,
+    entityBuffer: shared.entitySAB
   }
 
   worker.postMessage(initMsg)
@@ -125,13 +133,12 @@ function createSingleWorker(
 
 function makePoolUpdater(
   state: PoolState,
-  workerCount: number
+  workerCount: number,
+  shared: SharedState
 ): (dt: number) => void {
   const { workers, world } = state
 
   return (dt: number) => {
-    // ponytail: removed Velocity from query — entities without Velocity (e.g. spiral projectiles)
-    // still need animation processing. Velocity.x/z defaults to 0 in SAB, so position stays unchanged.
     const entities = query(
       world,
       [Active, Animation],
@@ -140,18 +147,23 @@ function makePoolUpdater(
 
     if (entities.length === 0) return
 
+    // ponytail: copy entity IDs into shared buffer once per frame.
+    // Workers read partitions via subarray() — zero structured-clone overhead.
+    shared.entityIds.set(entities)
+
     const partitionSize = Math.ceil(entities.length / workerCount)
 
     // eslint-disable-next-line functional/no-let
     for (let wi = 0, start = 0; wi < workerCount; wi++) {
-      const end = Math.min(start + partitionSize, entities.length)
-      if (start >= entities.length) break
+      const count = Math.min(partitionSize, entities.length - start)
+      if (count <= 0) break
       workers[wi].postMessage({
         type: 'update',
-        entities: entities.subarray(start, end),
+        start,
+        count,
         dt
       } satisfies WorkerMessage)
-      start = end
+      start += count
     }
   }
 }
@@ -166,6 +178,14 @@ function makePoolDestroyer(workers: readonly Worker[]): () => void {
 
 function createWorkerPoolImpl(world: World): WorkerPool {
   const workerCount = Math.max(1, (navigator.hardwareConcurrency || 2) - 1)
+
+  const entitySAB = new SharedArrayBuffer(
+    MAX_ENTITIES * Uint32Array.BYTES_PER_ELEMENT
+  )
+  const shared: SharedState = {
+    entityIds: new Uint32Array(entitySAB),
+    entitySAB
+  }
 
   const perWorkerQueues = allocateQueues(workerCount)
   const removeCounts: number[] = Array.from({ length: workerCount }, () => 0)
@@ -183,13 +203,13 @@ function createWorkerPoolImpl(world: World): WorkerPool {
 
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < workerCount; i++) {
-    const worker = createSingleWorker(i, perWorkerQueues, state)
+    const worker = createSingleWorker(i, perWorkerQueues, shared, state)
 
     state.workers.push(worker)
   }
 
   return {
-    update: makePoolUpdater(state, workerCount),
+    update: makePoolUpdater(state, workerCount, shared),
     destroy: makePoolDestroyer(state.workers)
   }
 }

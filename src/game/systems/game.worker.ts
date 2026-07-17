@@ -59,10 +59,12 @@ const state: {
   comps: ComponentViews | null
   removeQueue: Uint32Array | null
   moveQueue: Float32Array | null
+  entityBuffer: Uint32Array | null
 } = {
   comps: null,
   removeQueue: null,
-  moveQueue: null
+  moveQueue: null,
+  entityBuffer: null
 }
 
 function updateOneEntity(eid: number, dt: number, c: ComponentViews): void {
@@ -152,19 +154,22 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     state.comps = createViewsFromBuffers(msg)
     state.removeQueue = new Uint32Array(msg.removeQueueBuffer)
     state.moveQueue = new Float32Array(msg.moveQueueBuffer)
+    state.entityBuffer = new Uint32Array(msg.entityBuffer)
     return
   }
 
   if (msg.type === 'update') {
     const c = state.comps
 
-    if (!c) return
+    if (!c || !state.entityBuffer) return
 
-    const { removeCount, moveCount } = processAndCollect(
-      msg.entities,
-      msg.dt,
-      c
+    // ponytail: read entity partition from shared buffer — zero copy from main thread
+    const entities = state.entityBuffer.subarray(
+      msg.start,
+      msg.start + msg.count
     )
+
+    const { removeCount, moveCount } = processAndCollect(entities, msg.dt, c)
 
     const response: WorkerResponse = { type: 'done', removeCount, moveCount }
 
