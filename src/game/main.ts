@@ -13,19 +13,24 @@ import { createVirtualJoystick } from './gameplay/virtualJoystick'
 import { createCameraTouchController } from './gameplay/cameraTouchController'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
-import { createRenderSystem, renderObjects } from './rendering/createRenderSystem'
+import {
+  createRenderSystem,
+  renderObjects
+} from './rendering/createRenderSystem'
 import { createCameraSystem } from './systems/cameraSystem'
 import { createBillboardSystem } from './systems/billboardSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { createLevelUpSystem } from './core/player/levelUpSystem'
 import { PlayerHUD } from './ui/PlayerHUD'
-import { createProjectileSystems } from './core/projectiles/projectileSystems'
 import { Health } from './core/shared/components/Health'
 import { Position } from './core/shared/components/Position'
 import { GameState, STATES } from './core/shared/components/GameState'
 import { XP } from './core/shared/components/XP'
 import { createGameStateSystem } from './systems/gameStateSystem'
 import { createScenario, SCENARIOS } from './scenarios/createScenario'
+import { createSkillManager } from './core/skills/manager'
+import { SKILL_ID } from './core/skills/skillIds'
+import './core/skills/definitions/projectile'
 
 function spawnEnemies(pool: ReturnType<typeof createEnemyPool>) {
   Array.from({ length: 100 }, () => {
@@ -62,17 +67,14 @@ function createGameLoop(
     if (GameState.status[stateEid] === STATES.PLAYING) {
       systems.controller.update(delta.current)
       systems.boids.update()
-      systems.projectiles.spawn.update(delta.current)
+      systems.skillManager.update(delta.current)
       systems.animation.update(delta.current)
-      systems.projectiles.collision.update()
       systems.playerDamage.update(delta.current)
       systems.death.update()
       systems.playerDeath.update()
       systems.levelUp.update()
-      systems.projectiles.despawn.update(delta.current)
     }
 
-    // ponytail: render/camera always run so overlays and camera follow during pause/gameover
     systems.render(delta.current)
     systems.camera.update()
     systems.billboard.update()
@@ -84,13 +86,42 @@ function createGameLoop(
         xp: XP.current[playerEid],
         xpNext: XP.next[playerEid],
         level: XP.level[playerEid],
-        state: GameState.status[stateEid] as (typeof STATES)[keyof typeof STATES]
+        state: GameState.status[
+          stateEid
+        ] as (typeof STATES)[keyof typeof STATES]
       })
     }
 
     renderer.render(scene, camera)
     requestAnimationFrame(loop)
   }
+}
+
+function createHUD(
+  gameState: ReturnType<typeof createGameStateSystem>,
+  skillManager: ReturnType<typeof createSkillManager>
+): PlayerHUD | null {
+  const container = document.querySelector('#hud-container')
+  if (!container) return null
+
+  // ponytail: store options in closure so callback uses the SAME options shown to player
+  // eslint-disable-next-line functional/no-let
+  let currentOptions: ReturnType<typeof skillManager.getUpgradeOptions> = []
+
+  return new PlayerHUD(
+    container as HTMLElement,
+    () => gameState.togglePause(),
+    () => {
+      currentOptions = skillManager.getUpgradeOptions()
+      return currentOptions
+    },
+    (index) => {
+      if (index >= 0 && index < currentOptions.length) {
+        skillManager.applyUpgradeChoice(currentOptions[index])
+      }
+      gameState.resumeFromLevelUp()
+    }
+  )
 }
 
 export function start() {
@@ -118,20 +149,18 @@ export function start() {
     }
   )
 
+  const skillManager = createSkillManager(world)
+  skillManager.activate(SKILL_ID.PROJECTILE, 1)
+
   const systems = createGameSystems(
-    world, renderCtx.scene, renderCtx.camera, enemyPool,
-    { input, gameState }
+    world,
+    renderCtx.scene,
+    renderCtx.camera,
+    enemyPool,
+    { input, gameState, skillManager }
   )
 
-  const hudContainer = document.querySelector('#hud-container')
-  const hud = hudContainer
-    ? new PlayerHUD(
-        hudContainer as HTMLElement,
-        () => gameState.togglePause(),
-        () => gameState.resumeFromLevelUp()
-      )
-    : null
-
+  const hud = createHUD(gameState, skillManager)
   const loop = createGameLoop(systems, world, renderCtx, hud)
   loop()
 }
@@ -144,9 +173,10 @@ function createGameSystems(
   ctx: {
     input: ReturnType<typeof createInput>
     gameState: ReturnType<typeof createGameStateSystem>
+    skillManager: ReturnType<typeof createSkillManager>
   }
 ) {
-  const { input, gameState } = ctx
+  const { input, gameState, skillManager } = ctx
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0)
     createVirtualJoystick(input)
 
@@ -154,21 +184,18 @@ function createGameSystems(
   const cameraSystem = createCameraSystem(world, camera, () =>
     cameraTouch.getAngle()
   )
-  const controller = createCharacterController(
-    world,
-    input,
-    20,
-    () => (cameraSystem.isFirstPerson() ? cameraTouch.getAngle() : 0)
+  const controller = createCharacterController(world, input, 20, () =>
+    cameraSystem.isFirstPerson() ? cameraTouch.getAngle() : 0
   )
 
   createCameraSwitcher(() => cameraSystem.toggle())
 
   return {
     gameState,
+    skillManager,
     boids: createBoidsSystem(world),
     render: createRenderSystem(world, scene),
     animation: createWorkerPool(world),
-    projectiles: createProjectileSystems(world),
     levelUp: createLevelUpSystem(world, () => gameState.setLevelUp()),
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
     playerDamage: createPlayerDamageSystem(world),

@@ -27,7 +27,11 @@ export function createPlayerDamageSystem(world: World) {
       const px = Position.x[playerEid]
       const pz = Position.z[playerEid]
 
-      const enemies = query(world, [Active, Enemy, Position]) as readonly number[]
+      const enemies = query(world, [
+        Active,
+        Enemy,
+        Position
+      ]) as readonly number[]
 
       // eslint-disable-next-line functional/no-let
       for (let i = 0; i < enemies.length; i++) {

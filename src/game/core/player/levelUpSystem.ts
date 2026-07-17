@@ -13,10 +13,7 @@ interface LevelUpWorld extends World {
  */
 const XP_MULTIPLIER = 1.5
 
-export function createLevelUpSystem(
-  world: World,
-  onLevelUp: () => void
-) {
+export function createLevelUpSystem(world: World, onLevelUp: () => void) {
   const w = world as LevelUpWorld
 
   return {
@@ -29,9 +26,7 @@ export function createLevelUpSystem(
         XP.current[playerEid] -= XP.next[playerEid]
         XP.level[playerEid] += 1
         if (XP.level[playerEid] > 255) XP.level[playerEid] = 255 // u8 cap
-        XP.next[playerEid] = Math.round(
-          XP.next[playerEid] * XP_MULTIPLIER
-        )
+        XP.next[playerEid] = Math.round(XP.next[playerEid] * XP_MULTIPLIER)
         onLevelUp()
       }
     }

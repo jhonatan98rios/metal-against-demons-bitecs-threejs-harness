@@ -38,10 +38,16 @@ export function createProjectileSpawnSystem(
   let accumS = 0
   // eslint-disable-next-line functional/no-let
   let intervalS = 0.8
+  // eslint-disable-next-line functional/no-let
+  let currentSpeed = speed
 
   return {
     setInterval(sec: number) {
       intervalS = sec
+    },
+
+    setSpeed(s: number) {
+      currentSpeed = s
     },
 
     update(dt: number) {
@@ -62,7 +68,7 @@ export function createProjectileSpawnSystem(
       const dx = Position.x[nearest] - px
       const dz = Position.z[nearest] - pz
       const dist = Math.sqrt(dx * dx + dz * dz)
-      acquire(px, pz, (dx / dist) * speed, (dz / dist) * speed)
+      acquire(px, pz, (dx / dist) * currentSpeed, (dz / dist) * currentSpeed)
     }
   }
 }

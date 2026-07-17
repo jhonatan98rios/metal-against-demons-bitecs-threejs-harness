@@ -31,7 +31,14 @@ const getShadowTexture = (): THREE.CanvasTexture => {
   canvas.width = size
   canvas.height = size
   const ctx = canvas.getContext('2d')!
-  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  const gradient = ctx.createRadialGradient(
+    size / 2,
+    size / 2,
+    0,
+    size / 2,
+    size / 2,
+    size / 2
+  )
   gradient.addColorStop(0, 'rgba(0,0,0,0.45)')
   gradient.addColorStop(0.6, 'rgba(0,0,0,0.25)')
   gradient.addColorStop(1, 'rgba(0,0,0,0)')
@@ -140,9 +147,9 @@ const createHealthBar = (): { bg: THREE.Mesh; fill: THREE.Mesh } => {
 const getOrCreateHealthBar = (
   mesh: THREE.Mesh
 ): { bg: THREE.Mesh; fill: THREE.Mesh } => {
-  const existing = mesh.children.find(
-    (c) => c.userData.healthBarBg
-  ) as THREE.Mesh | undefined
+  const existing = mesh.children.find((c) => c.userData.healthBarBg) as
+    | THREE.Mesh
+    | undefined
 
   if (existing) {
     return { bg: existing, fill: existing.children[0] as THREE.Mesh }

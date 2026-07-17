@@ -24,7 +24,11 @@ const updateFirstPerson = (
 ) => {
   const angle = getAngle()
   const [dx, dz] = getLookDir(angle)
-  targetPos.set(Position.x[playerEid], Position.y[playerEid] + FP_EYE_Y, Position.z[playerEid])
+  targetPos.set(
+    Position.x[playerEid],
+    Position.y[playerEid] + FP_EYE_Y,
+    Position.z[playerEid]
+  )
   camera.position.copy(targetPos)
   camera.lookAt(
     Position.x[playerEid] + dx * FP_LOOK_AHEAD,
@@ -38,9 +42,15 @@ const updateTopDown = (
   camera: THREE.PerspectiveCamera,
   targetPos: THREE.Vector3
 ) => {
-  targetPos.set(Position.x[playerEid], Position.y[playerEid], Position.z[playerEid]).add(TOPDOWN_OFFSET)
+  targetPos
+    .set(Position.x[playerEid], Position.y[playerEid], Position.z[playerEid])
+    .add(TOPDOWN_OFFSET)
   camera.position.lerp(targetPos, 0.05)
-  camera.lookAt(Position.x[playerEid], Position.y[playerEid], Position.z[playerEid])
+  camera.lookAt(
+    Position.x[playerEid],
+    Position.y[playerEid],
+    Position.z[playerEid]
+  )
 }
 
 const getMode = (world: World) => {
@@ -60,8 +70,7 @@ export const createCameraSystem = (
       if (!playerEid) return
       if (getMode(world) === 1)
         updateFirstPerson(playerEid, camera, targetPos, getAngle)
-      else
-        updateTopDown(playerEid, camera, targetPos)
+      else updateTopDown(playerEid, camera, targetPos)
     },
     toggle() {
       const modes = query(world, [CameraMode])
