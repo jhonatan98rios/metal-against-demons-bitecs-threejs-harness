@@ -1,12 +1,27 @@
 import { registerSkill } from '../registry'
 import { SKILL_ID } from '../skillIds'
 import type { SkillDefinition } from '../types'
-import { createProjectilePool } from '../../projectiles/pool/projectilePool'
+import {
+  createProjectilePool,
+  type ProjectileSpriteConfig
+} from '../../projectiles/pool/projectilePool'
 import { createProjectileSpawnSystem } from '../../projectiles/systems/spawnSystem'
 import { createProjectileCollisionSystem } from '../../projectiles/systems/collisionSystem'
 import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
 import { Projectile } from '../../projectiles/components/Projectile'
 import type { World } from 'bitecs'
+
+// sound_attack_1.png: 104×26, 4 frames in a single row (26×26 each)
+const SOUND_SPRITE: ProjectileSpriteConfig = {
+  texture: '/sound_attack_1.png',
+  columns: 4,
+  rows: 1,
+  width: 1.0,
+  height: 1.0,
+  fps: 8,
+  startFrame: 0,
+  endFrame: 3
+}
 
 // Base stats at level 1
 const BASE_DAMAGE = 1
@@ -46,7 +61,7 @@ function setupProjectileSystems(
   state: ProjectileStats,
   initialSpeed: number
 ) {
-  const pool = createProjectilePool(world, 200, '#ff4400')
+  const pool = createProjectilePool(world, 200, SOUND_SPRITE)
   const poolAcquire = pool.acquire.bind(pool)
 
   const acquire = (x: number, z: number, vx: number, vz: number): number => {

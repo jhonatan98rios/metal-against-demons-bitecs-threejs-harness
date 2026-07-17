@@ -26,48 +26,49 @@ const addComponents = (world: World, eid: number) => {
   COMPONENTS.forEach((c) => addComponent(world, eid, c))
 }
 
-function makeTexture(hex: string): string {
-  const color = hex.replace('#', '%23')
-  return (
-    'data:image/svg+xml,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><circle cx="4" cy="4" r="3" fill="${color}"/></svg>`
-    )
-  )
+/** Spritesheet configuration for projectile pools. */
+export type ProjectileSpriteConfig = {
+  texture: string
+  columns: number
+  rows: number
+  width: number
+  height: number
+  fps: number
+  startFrame: number
+  endFrame: number
 }
 
-function initEntity(world: World, eid: number, texture: string) {
+function initEntity(world: World, eid: number, sprite: ProjectileSpriteConfig) {
   Active.isActive[eid] = 0
   Projectile.isProjectile[eid] = 1
   Projectile.damage[eid] = 1
   Projectile.poolId[eid] = 1
   Renderable.isRenderable[eid] = 1
   Billboard.isBillboard[eid] = 1
-  Sprite.texture[eid] = texture
-  Sprite.columns[eid] = 1
-  Sprite.rows[eid] = 1
-  Sprite.width[eid] = 0.5
-  Sprite.height[eid] = 0.5
-  Animation.currentFrame[eid] = 0
+  Sprite.texture[eid] = sprite.texture
+  Sprite.columns[eid] = sprite.columns
+  Sprite.rows[eid] = sprite.rows
+  Sprite.width[eid] = sprite.width
+  Sprite.height[eid] = sprite.height
+  Animation.currentFrame[eid] = sprite.startFrame
   Animation.elapsed[eid] = 0
-  Animation.fps[eid] = 0
-  Animation.startFrame[eid] = 0
-  Animation.endFrame[eid] = 0
+  Animation.fps[eid] = sprite.fps
+  Animation.startFrame[eid] = sprite.startFrame
+  Animation.endFrame[eid] = sprite.endFrame
 }
 
 export function createProjectilePool(
   world: World,
   size: number,
-  color = '#ff4400'
+  sprite: ProjectileSpriteConfig
 ) {
-  const texture = makeTexture(color)
   const free: number[] = []
 
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < size; i++) {
     const eid = addEntity(world)
     addComponents(world, eid)
-    initEntity(world, eid, texture)
+    initEntity(world, eid, sprite)
     free.push(eid)
   }
 
