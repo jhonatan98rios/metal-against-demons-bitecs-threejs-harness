@@ -272,13 +272,13 @@ export class PlayerHUD {
       fontWeight: 'bold'
     })
 
-    const container = buildHUDContainer(
+    this.container = buildHUDContainer(
       this.pauseBtn,
       this.levelLabel,
       this.hpBar,
       this.xpBar
     )
-    parent.appendChild(container)
+    parent.appendChild(this.container)
   }
 
   update(data: HUDData) {
