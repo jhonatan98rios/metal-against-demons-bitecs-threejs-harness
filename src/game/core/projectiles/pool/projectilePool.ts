@@ -43,6 +43,7 @@ function initEntity(world: World, eid: number, sprite: ProjectileSpriteConfig) {
   Projectile.isProjectile[eid] = 1
   Projectile.damage[eid] = 1
   Projectile.poolId[eid] = 1
+  Projectile.friendlyFire[eid] = 0
   Renderable.isRenderable[eid] = 1
   Billboard.isBillboard[eid] = 1
   Sprite.texture[eid] = sprite.texture

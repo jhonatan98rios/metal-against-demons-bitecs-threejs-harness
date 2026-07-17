@@ -12,13 +12,18 @@ const HIT_RADIUS_SQ = 2 * 2
 function checkProjectileAgainstEnemies(
   pid: number,
   enemies: readonly number[],
-  release: (eid: number) => void
+  release: (eid: number) => void,
+  hitThisFrame: Set<number>
 ): void {
   const px = Position.x[pid]
   const pz = Position.z[pid]
+  const friendlyFire = Projectile.friendlyFire[pid]
 
   for (const eid of enemies) {
     if (Active.isActive[eid] === 0) continue
+
+    // ponytail: friendlyFire=0 → skip enemies already hit this frame by another projectile
+    if (friendlyFire === 0 && hitThisFrame.has(eid)) continue
 
     const dx = px - Position.x[eid]
     const dz = pz - Position.z[eid]
@@ -26,6 +31,7 @@ function checkProjectileAgainstEnemies(
 
     Health.current[eid] -= Projectile.damage[pid]
     HitEffect.timer[eid] = 0.15
+    hitThisFrame.add(eid)
     release(pid)
     break
   }
@@ -36,8 +42,13 @@ export function createProjectileCollisionSystem(
   release: (eid: number) => void,
   poolId = 0
 ) {
+  // ponytail: Set reused every frame, cleared at top of update()
+  const hitThisFrame = new Set<number>()
+
   return {
     update() {
+      hitThisFrame.clear()
+
       const projectiles = query(world, [
         Active,
         Projectile,
@@ -56,7 +67,7 @@ export function createProjectileCollisionSystem(
         if (Active.isActive[pid] === 0) continue
         if (poolId !== 0 && Projectile.poolId[pid] !== poolId) continue
 
-        checkProjectileAgainstEnemies(pid, enemies, release)
+        checkProjectileAgainstEnemies(pid, enemies, release, hitThisFrame)
       }
     }
   }
