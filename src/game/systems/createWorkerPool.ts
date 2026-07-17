@@ -128,9 +128,11 @@ function makePoolUpdater(
   const { workers, world } = state
 
   return (dt: number) => {
+    // ponytail: removed Velocity from query — entities without Velocity (e.g. spiral projectiles)
+    // still need animation processing. Velocity.x/z defaults to 0 in SAB, so position stays unchanged.
     const entities = query(
       world,
-      [Active, Animation, Velocity],
+      [Active, Animation],
       asBuffer
     ) as Readonly<Uint32Array>
 
@@ -195,7 +197,7 @@ function createWorkerPoolImpl(world: World): WorkerPool {
 function createFallbackPool(world: World): WorkerPool {
   return {
     update(dt: number) {
-      const entities = query(world, [Active, Animation, Velocity])
+      const entities = query(world, [Active, Animation])
 
       const removeAcc: number[] = []
 
