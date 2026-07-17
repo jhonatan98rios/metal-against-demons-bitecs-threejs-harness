@@ -7,6 +7,8 @@ const STYLE = `
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: 50% 100%;
+    transform: translateY(50%) scale(0.8);
     pointer-events: none;
     z-index: 100;
     opacity: 0;
