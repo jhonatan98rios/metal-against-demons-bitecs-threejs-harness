@@ -14,6 +14,19 @@ import { Projectile } from '../../projectiles/components/Projectile'
 import { Spiral } from '../../projectiles/components/Spiral'
 import { createProjectileCollisionSystem } from '../../projectiles/systems/collisionSystem'
 import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
+import type { ProjectileSpriteConfig } from '../../projectiles/pool/projectilePool'
+
+// bat_attack_1.png: 96×48, 2 frames in a single row (48×48 each)
+const BAT_SPRITE: ProjectileSpriteConfig = {
+  texture: '/bat_attack_1.png',
+  columns: 2,
+  rows: 1,
+  width: 2.0,
+  height: 2.0,
+  fps: 8,
+  startFrame: 0,
+  endFrame: 1
+}
 
 // ── Spiral projectile pool ──────────────────────────────────────────────
 
@@ -29,20 +42,11 @@ const POOL_COMPONENTS = [
   Spiral
 ] as const
 
-function makeTexture(hex: string): string {
-  const color = hex.replace('#', '%23')
-  return (
-    'data:image/svg+xml,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8">
-         <circle cx="4" cy="4" r="3" fill="${color}"/>
-       </svg>`
-    )
-  )
-}
-
-function createSpiralPool(world: World, size: number, color: string) {
-  const texture = makeTexture(color)
+function createSpiralPool(
+  world: World,
+  size: number,
+  sprite: ProjectileSpriteConfig
+) {
   const free: number[] = []
   const add = (eid: number) =>
     POOL_COMPONENTS.forEach((c) => addComponent(world, eid, c))
@@ -58,16 +62,16 @@ function createSpiralPool(world: World, size: number, color: string) {
     Projectile.poolId[eid] = 2
     Renderable.isRenderable[eid] = 1
     Billboard.isBillboard[eid] = 1
-    Sprite.texture[eid] = texture
-    Sprite.columns[eid] = 1
-    Sprite.rows[eid] = 1
-    Sprite.width[eid] = 0.4
-    Sprite.height[eid] = 0.4
-    Animation.currentFrame[eid] = 0
+    Sprite.texture[eid] = sprite.texture
+    Sprite.columns[eid] = sprite.columns
+    Sprite.rows[eid] = sprite.rows
+    Sprite.width[eid] = sprite.width
+    Sprite.height[eid] = sprite.height
+    Animation.currentFrame[eid] = sprite.startFrame
     Animation.elapsed[eid] = 0
-    Animation.fps[eid] = 0
-    Animation.startFrame[eid] = 0
-    Animation.endFrame[eid] = 0
+    Animation.fps[eid] = sprite.fps
+    Animation.startFrame[eid] = sprite.startFrame
+    Animation.endFrame[eid] = sprite.endFrame
     TTL.remaining[eid] = 0
 
     free.push(eid)
@@ -206,7 +210,7 @@ function applyStatOverrides(world: World, stats: SpiralStats) {
 }
 
 function createRedBoltSkill(world: World, _playerEid: number, level: number) {
-  const pool = createSpiralPool(world, 200, '#ff0033')
+  const pool = createSpiralPool(world, 200, BAT_SPRITE)
   const spawn = createSpiralSpawnSystem(world, pool, PROJECTILE_TTL)
   const movement = createSpiralMovementSystem(world)
   const collision = createProjectileCollisionSystem(

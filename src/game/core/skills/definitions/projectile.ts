@@ -16,8 +16,8 @@ const SOUND_SPRITE: ProjectileSpriteConfig = {
   texture: '/sound_attack_1.png',
   columns: 4,
   rows: 1,
-  width: 1.0,
-  height: 1.0,
+  width: 2.0,
+  height: 2.0,
   fps: 8,
   startFrame: 0,
   endFrame: 3
