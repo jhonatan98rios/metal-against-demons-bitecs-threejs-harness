@@ -7,12 +7,12 @@ import { Position } from '../core/shared/components/Position'
 
 // -- color palette: sunset sandstorm — pink/salmon shift, diffuse light ---------
 // dust haze with pink undertone — seamless fog/background blend
-const SKY_COLOR = 0xecc8c0
+const SKY_COLOR = 0xefcac4
 // sun: sunset with red shift — warm pink, not yellow
 const SUN_COLOR = 0xffd8d2
 // hemi: sky pink-tinted white, ground rosy sand (dust-scattered)
-const HEMI_SKY = 0xffece8
-const HEMI_GROUND = 0xedc8c0
+const HEMI_SKY = 0xffeeea
+const HEMI_GROUND = 0xefcac4
 
 function createWebGLRenderer(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
@@ -123,7 +123,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const camera = createCamera()
 
   // hemisphere: sky cool blue, ground warm brown from sand bounce
-  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 2.2)
+  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 2.5)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
@@ -135,7 +135,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.add(dirLight)
 
   // ponytail: warm ambient fill — dust-scattered light reaches everywhere
-  const ambient = new THREE.AmbientLight(0x7a6258, 1.0)
+  const ambient = new THREE.AmbientLight(0x7c6458, 1.15)
   scene.add(ambient)
 
   // player fill light — prevents silhouette from disappearing in shadow
