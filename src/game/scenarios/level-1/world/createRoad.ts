@@ -27,7 +27,9 @@ function setupMaterial(): THREE.MeshStandardMaterial {
     color: 0xffffff,
     map: texture,
     roughness: 0.5,
-    metalness: 0.1
+    metalness: 0.1,
+    emissive: 0x1a1a1a,
+    emissiveIntensity: 1.0
   })
 
   return material
