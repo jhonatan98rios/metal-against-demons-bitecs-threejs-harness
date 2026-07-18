@@ -5,14 +5,14 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { Position } from '../core/shared/components/Position'
 
-// -- color palette: sandstorm at sunset — diffuse light through dust ---------
-// sand haze with pink undertone — fog and background blend seamlessly
-const SKY_COLOR = 0xe6cabc
-// sun: warm with red shift (sunset), not yellow midday
-const SUN_COLOR = 0xffddd5
-// hemi: sky near-white pink tint, ground light rosy sand (dust-scattered bounce)
-const HEMI_SKY = 0xfff0ed
-const HEMI_GROUND = 0xe8ccbb
+// -- color palette: sunset sandstorm — pink/salmon shift, diffuse light ---------
+// dust haze with pink undertone — seamless fog/background blend
+const SKY_COLOR = 0xecc8c0
+// sun: sunset with red shift — warm pink, not yellow
+const SUN_COLOR = 0xffd8d2
+// hemi: sky pink-tinted white, ground rosy sand (dust-scattered)
+const HEMI_SKY = 0xffece8
+const HEMI_GROUND = 0xedc8c0
 
 function createWebGLRenderer(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
@@ -22,7 +22,7 @@ function createWebGLRenderer(canvas: HTMLCanvasElement) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.1
+  renderer.toneMappingExposure = 0.95
 
   return renderer
 }
@@ -43,7 +43,7 @@ function createCamera() {
 }
 
 function createDirectionalLight() {
-  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 1.5)
+  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 1.2)
   dirLight.position.set(140, 120, 30)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
@@ -88,7 +88,7 @@ function createPostProcessing(
 
 // ponytail: small point light that follows player to prevent silhouette loss
 function createPlayerFillLight(): THREE.PointLight {
-  const light = new THREE.PointLight(0xffe8dd, 3.5, 50, 1.5)
+  const light = new THREE.PointLight(0xffe0d8, 2.5, 40, 1.5)
   light.castShadow = false
   light.position.set(30, 8, 0)
   return light
@@ -123,7 +123,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const camera = createCamera()
 
   // hemisphere: sky cool blue, ground warm brown from sand bounce
-  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 3.2)
+  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 2.2)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
@@ -135,7 +135,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.add(dirLight)
 
   // ponytail: warm ambient fill — dust-scattered light reaches everywhere
-  const ambient = new THREE.AmbientLight(0x77665a, 1.3)
+  const ambient = new THREE.AmbientLight(0x7a6258, 1.0)
   scene.add(ambient)
 
   // player fill light — prevents silhouette from disappearing in shadow
