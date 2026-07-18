@@ -5,14 +5,14 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { Position } from '../core/shared/components/Position'
 
-// -- color palette ----------------------------------------------------------
-// sky: cool blue, fog follows sky
-const SKY_COLOR = 0x87aac4
-// sun: warm golden
-const SUN_COLOR = 0xffeedd
-// shadow tint: subtle cool blue (applied via hemi ground + ambient)
-const HEMI_SKY = 0x8899cc
-const HEMI_GROUND = 0x554433
+// -- color palette: sandstorm desert at sunset -----------------------------
+// sand haze: warm beige — fog and background follow this
+const SKY_COLOR = 0xe8d5b0
+// sun: strong warm golden desert light
+const SUN_COLOR = 0xffe8cc
+// hemi: sky near-white warm, ground light sand (reflected bounce)
+const HEMI_SKY = 0xfff5e8
+const HEMI_GROUND = 0xd4c0a0
 
 function createWebGLRenderer(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
@@ -22,7 +22,7 @@ function createWebGLRenderer(canvas: HTMLCanvasElement) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.85
+  renderer.toneMappingExposure = 1.05
 
   return renderer
 }
@@ -43,7 +43,7 @@ function createCamera() {
 }
 
 function createDirectionalLight() {
-  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 3.5)
+  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 4.5)
   dirLight.position.set(140, 120, 30)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
@@ -115,15 +115,15 @@ export const createRender = (canvas: HTMLCanvasElement) => {
 
   const scene = new THREE.Scene()
 
-  // sky: cool blue — separates from warm sand
+  // sand haze background — warm desert atmosphere
   scene.background = new THREE.Color(SKY_COLOR)
-  // fog follows sky color, starts farther, ends farther for depth
-  scene.fog = new THREE.Fog(SKY_COLOR, 80, 600)
+  // fog: light sand dust, distant softening only — not coloring whole scene
+  scene.fog = new THREE.Fog(SKY_COLOR, 120, 800)
 
   const camera = createCamera()
 
   // hemisphere: sky cool blue, ground warm brown from sand bounce
-  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.2)
+  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.4)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
@@ -134,8 +134,8 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   setShadowCamera(dirLight.shadow.camera)
   scene.add(dirLight)
 
-  // ponytail: ambient only for deepest shadows — hemi + dir do the heavy lifting
-  const ambient = new THREE.AmbientLight(0x334466, 0.35)
+  // ponytail: warm ambient for deepest shadows — desert sand bounce, never black
+  const ambient = new THREE.AmbientLight(0x665544, 0.4)
   scene.add(ambient)
 
   // player fill light — prevents silhouette from disappearing in shadow

@@ -24,9 +24,9 @@ function setupMaterial(): THREE.MeshStandardMaterial {
   const texture = setupTexture('/world/sand.jpg')
   const displacementMap = setupTexture('/world/sand.png')
 
-  // ponytail: desaturated beige — warm but not yellow, contrasts with cool road & sky
+  // ponytail: warm light sand — dominant palette element, subtly golden
   const material = new THREE.MeshStandardMaterial({
-    color: 0xd4c5a9,
+    color: 0xe0cba8,
     map: texture,
     displacementMap: displacementMap,
     displacementScale: 3,
