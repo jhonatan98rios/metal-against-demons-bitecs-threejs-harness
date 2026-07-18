@@ -26,7 +26,7 @@ function setupMaterial(): THREE.MeshStandardMaterial {
 
   // ponytail: warm light sand — dominant palette element, subtly golden
   const material = new THREE.MeshStandardMaterial({
-    color: 0xe0cba8,
+    color: 0xe4c4b8,
     map: texture,
     displacementMap: displacementMap,
     displacementScale: 3,

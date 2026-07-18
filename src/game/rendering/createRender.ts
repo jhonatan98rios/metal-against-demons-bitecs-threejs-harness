@@ -22,7 +22,7 @@ function createWebGLRenderer(canvas: HTMLCanvasElement) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.95
+  renderer.toneMappingExposure = 0.8
 
   return renderer
 }
@@ -43,7 +43,7 @@ function createCamera() {
 }
 
 function createDirectionalLight() {
-  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 1.2)
+  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 0.35)
   dirLight.position.set(140, 120, 30)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
@@ -88,7 +88,7 @@ function createPostProcessing(
 
 // ponytail: small point light that follows player to prevent silhouette loss
 function createPlayerFillLight(): THREE.PointLight {
-  const light = new THREE.PointLight(0xffe0d8, 2.5, 40, 1.5)
+  const light = new THREE.PointLight(0xffe0d8, 0.9, 40, 1.5)
   light.castShadow = false
   light.position.set(30, 8, 0)
   return light
@@ -123,7 +123,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const camera = createCamera()
 
   // hemisphere: sky cool blue, ground warm brown from sand bounce
-  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 2.5)
+  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.2)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
@@ -135,7 +135,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.add(dirLight)
 
   // ponytail: warm ambient fill — dust-scattered light reaches everywhere
-  const ambient = new THREE.AmbientLight(0x7c6458, 1.15)
+  const ambient = new THREE.AmbientLight(0x7c6458, 0.6)
   scene.add(ambient)
 
   // player fill light — prevents silhouette from disappearing in shadow
