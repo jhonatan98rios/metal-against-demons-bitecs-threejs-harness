@@ -7,25 +7,10 @@ function setupGeometry(): THREE.PlaneGeometry {
   return geometry
 }
 
-function setupTexture(): THREE.Texture<
-  HTMLImageElement,
-  THREE.TextureEventMap
-> {
-  const texture = new THREE.TextureLoader().load('/world/road.jpg')
-  texture.anisotropy = 8
-  texture.wrapS = THREE.RepeatWrapping
-  texture.wrapT = THREE.RepeatWrapping
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.repeat.set(1, 50)
-  return texture
-}
-
 function setupMaterial(): THREE.MeshStandardMaterial {
-  const texture = setupTexture()
-  // ponytail: neutral gray asphalt — distinct from sand without cold blue cast
+  // ponytail: flat light gray — texture was too dark, masking color changes
   const material = new THREE.MeshStandardMaterial({
-    color: 0xf0f1f2,
-    map: texture,
+    color: 0xd0d2d4,
     roughness: 0.85,
     metalness: 0.05
   })
