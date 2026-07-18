@@ -7,7 +7,9 @@ type CameraWorld = World & {
   playerEid?: number
 }
 
-const TOPDOWN_OFFSET = new THREE.Vector3(0, 20, 50)
+// ponytail: raised & pushed back — ~28% higher, ~20% farther, shows more road
+const TOPDOWN_OFFSET = new THREE.Vector3(0, 28, 65)
+const TOPDOWN_LOOK_AHEAD_Z = 20 // look this far ahead of player instead of at feet
 const FP_EYE_Y = 3
 const FP_LOOK_AHEAD = 20
 
@@ -46,10 +48,11 @@ const updateTopDown = (
     .set(Position.x[playerEid], Position.y[playerEid], Position.z[playerEid])
     .add(TOPDOWN_OFFSET)
   camera.position.lerp(targetPos, 0.05)
+  // ponytail: look ahead of player — shows more road, less sand
   camera.lookAt(
     Position.x[playerEid],
     Position.y[playerEid],
-    Position.z[playerEid]
+    Position.z[playerEid] + TOPDOWN_LOOK_AHEAD_Z
   )
 }
 

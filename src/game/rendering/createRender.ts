@@ -1,14 +1,28 @@
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { Position } from '../core/shared/components/Position'
+
+// -- color palette ----------------------------------------------------------
+// sky: cool blue, fog follows sky
+const SKY_COLOR = 0x87aac4
+// sun: warm golden
+const SUN_COLOR = 0xffeedd
+// shadow tint: subtle cool blue (applied via hemi ground + ambient)
+const HEMI_SKY = 0x8899cc
+const HEMI_GROUND = 0x554433
 
 function createWebGLRenderer(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.setPixelRatio(window.devicePixelRatio || 1)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
-  renderer.toneMapping = THREE.NoToneMapping
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.toneMappingExposure = 0.85
 
   return renderer
 }
@@ -21,20 +35,22 @@ function createCamera() {
     2000
   )
 
-  camera.position.set(30, 25, 50)
-  camera.lookAt(new THREE.Vector3(30, 0, 0))
+  // ponytail: initial position ≈25% higher & farther than before
+  camera.position.set(30, 28, 65)
+  camera.lookAt(new THREE.Vector3(30, 0, 10))
 
   return camera
 }
 
 function createDirectionalLight() {
-  const dirLight = new THREE.DirectionalLight(0xffffff, 2.5)
-  // ponytail: luz lateral pura (+X) — sombra projeta -X, visível na top-down; ambient/hemi compensam iluminação lateral
-  dirLight.position.set(140, 100, 30)
+  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 3.5)
+  dirLight.position.set(140, 120, 30)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
   dirLight.shadow.mapSize.height = 2048
-  dirLight.shadow.bias = -0.0001
+  dirLight.shadow.bias = -0.0003
+  dirLight.shadow.normalBias = 0.02
+  dirLight.shadow.radius = 2 // soft shadows
   return dirLight
 }
 
@@ -47,6 +63,35 @@ function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
   shadowCam.far = 1000
 
   shadowCam.updateProjectionMatrix()
+}
+
+function createPostProcessing(
+  renderer: THREE.WebGLRenderer,
+  scene: THREE.Scene,
+  camera: THREE.PerspectiveCamera
+) {
+  const composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
+
+  // ponytail: bloom barely perceptible — only softens emissive / bright highlights
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.15,
+    0.4,
+    0.85
+  )
+  composer.addPass(bloomPass)
+  composer.addPass(new OutputPass())
+
+  return composer
+}
+
+// ponytail: small point light that follows player to prevent silhouette loss
+function createPlayerFillLight(): THREE.PointLight {
+  const light = new THREE.PointLight(0xffeedd, 1.5, 30, 1.5)
+  light.castShadow = false
+  light.position.set(30, 8, 0)
+  return light
 }
 
 export const createFollowCamera = (
@@ -69,29 +114,41 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const renderer = createWebGLRenderer(canvas)
 
   const scene = new THREE.Scene()
-  const fogColor = 0xd7c1a0
-  scene.background = new THREE.Color(fogColor)
-  scene.fog = new THREE.Fog(fogColor, 0, 300)
+
+  // sky: cool blue — separates from warm sand
+  scene.background = new THREE.Color(SKY_COLOR)
+  // fog follows sky color, starts farther, ends farther for depth
+  scene.fog = new THREE.Fog(SKY_COLOR, 80, 600)
 
   const camera = createCamera()
-  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x443322, 0.9)
+
+  // hemisphere: sky cool blue, ground warm brown from sand bounce
+  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.2)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
+  // sun: warm golden directional
   const dirLight = createDirectionalLight()
-  // ponytail: target centralizado no play area pra shadow camera cobrir tudo
   dirLight.target.position.set(30, 5, 30)
   scene.add(dirLight.target)
   setShadowCamera(dirLight.shadow.camera)
-
   scene.add(dirLight)
 
-  const ambient = new THREE.AmbientLight(0x404040, 0.6)
+  // ponytail: ambient only for deepest shadows — hemi + dir do the heavy lifting
+  const ambient = new THREE.AmbientLight(0x334466, 0.35)
   scene.add(ambient)
+
+  // player fill light — prevents silhouette from disappearing in shadow
+  const playerFill = createPlayerFillLight()
+  scene.add(playerFill)
+
+  const composer = createPostProcessing(renderer, scene, camera)
 
   return {
     renderer,
     scene,
-    camera
+    camera,
+    composer,
+    playerFill
   }
 }

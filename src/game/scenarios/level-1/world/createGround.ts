@@ -24,14 +24,15 @@ function setupMaterial(): THREE.MeshStandardMaterial {
   const texture = setupTexture('/world/sand.jpg')
   const displacementMap = setupTexture('/world/sand.png')
 
+  // ponytail: desaturated beige — warm but not yellow, contrasts with cool road & sky
   const material = new THREE.MeshStandardMaterial({
-    color: 0xe2c6a3,
+    color: 0xd4c5a9,
     map: texture,
     displacementMap: displacementMap,
     displacementScale: 3,
     bumpMap: displacementMap,
     bumpScale: 3,
-    roughness: 0.8,
+    roughness: 0.85,
     metalness: 0
   })
 

@@ -5,7 +5,11 @@ import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 
 function findNearestEnemy(world: World, px: number, pz: number): number | null {
-  const enemies = query(world, [Enemy, Position, Not(Inactive)]) as readonly number[]
+  const enemies = query(world, [
+    Enemy,
+    Position,
+    Not(Inactive)
+  ]) as readonly number[]
 
   // eslint-disable-next-line functional/no-let
   let nearest = -1

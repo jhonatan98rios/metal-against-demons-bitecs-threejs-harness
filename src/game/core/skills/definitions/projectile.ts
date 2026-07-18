@@ -90,11 +90,7 @@ function createProjectileSkill(
     interval: BASE_INTERVAL
   }
 
-  const { spawn, despawn } = setupProjectileSystems(
-    world,
-    state,
-    BASE_SPEED
-  )
+  const { spawn, despawn } = setupProjectileSystems(world, state, BASE_SPEED)
 
   function applyLevel(lvl: number): void {
     const stats = accumulateUpgrades(lvl)

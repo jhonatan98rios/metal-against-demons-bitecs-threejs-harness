@@ -1,4 +1,11 @@
-import { addComponent, addEntity, Not, query, removeComponent, World } from 'bitecs'
+import {
+  addComponent,
+  addEntity,
+  Not,
+  query,
+  removeComponent,
+  World
+} from 'bitecs'
 
 import { registerSkill } from '../registry'
 import { SKILL_ID } from '../skillIds'

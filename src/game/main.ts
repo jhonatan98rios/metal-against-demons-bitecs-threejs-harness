@@ -77,6 +77,67 @@ function makeRestartCallback(world: { playerEid: number }) {
   }
 }
 
+// ponytail: per-frame helpers extracted to keep loop complexity low
+function tickGameplay(systems: GameSystems, _eid: number, dt: number) {
+  systems.controller.update(dt)
+  systems.boids.update()
+  systems.skillManager.update(dt)
+  systems.collision.update()
+  systems.animation.update(dt)
+  systems.playerDamage.update(dt)
+  systems.death.update()
+  systems.playerDeath.update()
+  systems.levelUp.update()
+  systems.victory.update()
+}
+
+function handlePointerLock(systems: GameSystems, stateEid: number) {
+  if (!systems.pointerLock) return
+  const isFP = systems.camera.isFirstPerson()
+  const isPlaying = GameState.status[stateEid] === STATES.PLAYING
+  if (isFP && isPlaying && !systems.pointerLock.isLocked())
+    void systems.pointerLock.lock()
+  else if ((!isFP || !isPlaying) && systems.pointerLock.isLocked())
+    systems.pointerLock.unlock()
+}
+
+function tickVisuals(
+  systems: GameSystems,
+  renderCtx: RenderCtx,
+  world: ReturnType<typeof setupWorld>,
+  hud: PlayerHUD | null,
+  fpOverlay: ReturnType<typeof createFirstPersonOverlay>
+) {
+  const { composer, playerFill } = renderCtx
+  const { stateEid, playerEid } = world
+
+  systems.camera.update()
+  handlePointerLock(systems, stateEid)
+  fpOverlay.update(systems.camera.isFirstPerson())
+  systems.billboard.update()
+
+  if (hud) {
+    hud.update({
+      hp: Health.current[playerEid],
+      hpMax: Health.max[playerEid],
+      xp: XP.current[playerEid],
+      xpNext: XP.next[playerEid],
+      level: XP.level[playerEid],
+      state: GameState.status[stateEid] as (typeof STATES)[keyof typeof STATES]
+    })
+  }
+
+  if (playerFill && playerEid) {
+    playerFill.position.set(
+      Position.x[playerEid],
+      Position.y[playerEid] + 6,
+      Position.z[playerEid]
+    )
+  }
+
+  composer.render()
+}
+
 function createGameLoop(
   systems: GameSystems,
   world: ReturnType<typeof setupWorld>,
@@ -85,57 +146,23 @@ function createGameLoop(
   fpOverlay: ReturnType<typeof createFirstPersonOverlay>
 ) {
   const delta = { last: performance.now(), current: 0 }
-  const { renderer, scene, camera } = renderCtx,
-    { stateEid, playerEid } = world
+
+  window.addEventListener('resize', () =>
+    renderCtx.composer.setSize(window.innerWidth, window.innerHeight)
+  )
+
   return function loop() {
     const now = performance.now()
     delta.current = Math.min(0.1, (now - delta.last) / 1000)
     delta.last = now
 
     systems.gameState.update()
-    if (GameState.status[stateEid] === STATES.PLAYING) {
-      systems.controller.update(delta.current)
-      systems.boids.update()
-      systems.skillManager.update(delta.current)
-      systems.collision.update()
-      systems.animation.update(delta.current)
-      systems.playerDamage.update(delta.current)
-      systems.death.update()
-      systems.playerDeath.update()
-      systems.levelUp.update()
-      systems.victory.update()
+    if (GameState.status[world.stateEid] === STATES.PLAYING) {
+      tickGameplay(systems, world.stateEid, delta.current)
     }
 
     systems.render(delta.current)
-    systems.camera.update()
-
-    // auto pointer lock: lock in first-person + playing, unlock otherwise
-    if (systems.pointerLock) {
-      const isFP = systems.camera.isFirstPerson()
-      const isPlaying = GameState.status[stateEid] === STATES.PLAYING
-      if (isFP && isPlaying && !systems.pointerLock.isLocked()) {
-        systems.pointerLock.lock()
-      } else if ((!isFP || !isPlaying) && systems.pointerLock.isLocked()) {
-        systems.pointerLock.unlock()
-      }
-    }
-
-    fpOverlay.update(systems.camera.isFirstPerson())
-    systems.billboard.update()
-    if (hud) {
-      hud.update({
-        hp: Health.current[playerEid],
-        hpMax: Health.max[playerEid],
-        xp: XP.current[playerEid],
-        xpNext: XP.next[playerEid],
-        level: XP.level[playerEid],
-        state: GameState.status[
-          stateEid
-        ] as (typeof STATES)[keyof typeof STATES]
-      })
-    }
-
-    renderer.render(scene, camera)
+    tickVisuals(systems, renderCtx, world, hud, fpOverlay)
     requestAnimationFrame(loop)
   }
 }
