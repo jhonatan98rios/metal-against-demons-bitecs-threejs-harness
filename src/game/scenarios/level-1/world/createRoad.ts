@@ -22,12 +22,12 @@ function setupTexture(): THREE.Texture<
 
 function setupMaterial(): THREE.MeshStandardMaterial {
   const texture = setupTexture()
-  // ponytail: neutral gray asphalt — distinct from sand without cold blue cast
+  // ponytail: dark gray asphalt with light reflectivity — env map provides highlights
   const material = new THREE.MeshStandardMaterial({
-    color: 0x808890,
+    color: 0x2a2a2a,
     map: texture,
-    roughness: 0.85,
-    metalness: 0.05
+    roughness: 0.5,
+    metalness: 0.1
   })
 
   return material
