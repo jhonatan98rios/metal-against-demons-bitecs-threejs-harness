@@ -110,17 +110,6 @@ export const createFollowCamera = (
   }
 }
 
-// ponytail: procedural env map from sky color — gives PBR materials something
-// to reflect so dark surfaces don't go pitch black. replaces external .hdr file.
-function createEnvMap(renderer: THREE.WebGLRenderer): THREE.Texture {
-  const pmrem = new THREE.PMREMGenerator(renderer)
-  const envScene = new THREE.Scene()
-  envScene.background = new THREE.Color(SKY_COLOR)
-  const envMap = pmrem.fromScene(envScene, 0.04).texture
-  pmrem.dispose()
-  return envMap
-}
-
 export const createRender = (canvas: HTMLCanvasElement) => {
   const renderer = createWebGLRenderer(canvas)
 
@@ -130,9 +119,6 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.background = new THREE.Color(SKY_COLOR)
   // fog: dust haze — starts closer, blends horizon with sky
   scene.fog = new THREE.Fog(SKY_COLOR, 70, 550)
-
-  // procedural environment map — replaces external HDRI, gives PBR reflections
-  scene.environment = createEnvMap(renderer)
 
   const camera = createCamera()
 
