@@ -47,7 +47,7 @@ const updateTopDown = (
   targetPos
     .set(Position.x[playerEid], Position.y[playerEid], Position.z[playerEid])
     .add(TOPDOWN_OFFSET)
-  camera.position.lerp(targetPos, 0.05)
+  camera.position.copy(targetPos)
   // ponytail: look ahead of player — shows more road, less sand
   camera.lookAt(
     Position.x[playerEid],
