@@ -28,7 +28,7 @@ function setupMaterial(): THREE.MeshStandardMaterial {
     map: texture,
     roughness: 0.5,
     metalness: 0.1,
-    emissive: 0x1a1a1a,
+    emissive: 0x333333,
     emissiveIntensity: 1.0
   })
 
