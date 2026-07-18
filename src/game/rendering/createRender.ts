@@ -43,7 +43,7 @@ function createCamera() {
 }
 
 function createDirectionalLight() {
-  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 4.5)
+  const dirLight = new THREE.DirectionalLight(SUN_COLOR, 2.8)
   dirLight.position.set(140, 120, 30)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 2048
@@ -55,10 +55,10 @@ function createDirectionalLight() {
 }
 
 function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
-  shadowCam.left = -200
-  shadowCam.right = 200
-  shadowCam.top = 200
-  shadowCam.bottom = -200
+  shadowCam.left = -250
+  shadowCam.right = 250
+  shadowCam.top = 250
+  shadowCam.bottom = -250
   shadowCam.near = 0.5
   shadowCam.far = 1000
 
@@ -88,7 +88,7 @@ function createPostProcessing(
 
 // ponytail: small point light that follows player to prevent silhouette loss
 function createPlayerFillLight(): THREE.PointLight {
-  const light = new THREE.PointLight(0xffeedd, 1.5, 30, 1.5)
+  const light = new THREE.PointLight(0xffeedd, 2.5, 40, 1.5)
   light.castShadow = false
   light.position.set(30, 8, 0)
   return light
@@ -123,7 +123,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const camera = createCamera()
 
   // hemisphere: sky cool blue, ground warm brown from sand bounce
-  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.4)
+  const hemi = new THREE.HemisphereLight(HEMI_SKY, HEMI_GROUND, 1.8)
   hemi.position.set(0, 200, 0)
   scene.add(hemi)
 
@@ -135,7 +135,7 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   scene.add(dirLight)
 
   // ponytail: warm ambient for deepest shadows — desert sand bounce, never black
-  const ambient = new THREE.AmbientLight(0x665544, 0.4)
+  const ambient = new THREE.AmbientLight(0x665544, 0.9)
   scene.add(ambient)
 
   // player fill light — prevents silhouette from disappearing in shadow
