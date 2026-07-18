@@ -1,9 +1,9 @@
-import { query, World } from 'bitecs'
+import { Not, query, World } from 'bitecs'
 
-import { Active } from '../../shared/components/Active'
 import { Enemy } from '../../enemies/components/Enemy'
 import { Health } from '../../shared/components/Health'
 import { HitEffect } from '../../shared/components/HitEffect'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Projectile } from '../components/Projectile'
 
@@ -33,7 +33,6 @@ function checkProjectileHit(
   // eslint-disable-next-line functional/no-let
   for (let j = 0; j < enemies.length; j++) {
     const eid = enemies[j]
-    if (Active.isActive[eid] === 0) continue
     if (friendlyFire === 0 && entry.hitThisFrame.has(eid)) continue
 
     const dx = px - Position.x[eid]
@@ -56,7 +55,6 @@ function processProjectiles(
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < projectiles.length; i++) {
     const pid = projectiles[i]
-    if (Active.isActive[pid] === 0) continue
 
     const entry = pools.get(Projectile.poolId[pid])
     if (!entry) continue
@@ -79,15 +77,15 @@ function createCollisionSystem(world: World): CollisionSystem {
       for (const [, entry] of pools) entry.hitThisFrame.clear()
 
       const projectiles = query(world, [
-        Active,
         Projectile,
-        Position
+        Position,
+        Not(Inactive)
       ]) as readonly number[]
       const enemies = query(world, [
-        Active,
         Enemy,
         Position,
-        Health
+        Health,
+        Not(Inactive)
       ]) as readonly number[]
 
       processProjectiles(projectiles, enemies, pools)

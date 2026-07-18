@@ -1,8 +1,8 @@
-import { query, World } from 'bitecs'
+import { Not, query, World } from 'bitecs'
 
-import { Active } from '../../shared/components/Active'
 import { Enemy } from '../components/Enemy'
 import { Health } from '../../shared/components/Health'
+import { Inactive } from '../../shared/components/Inactive'
 import { XP } from '../../shared/components/XP'
 
 interface DeathWorld extends World {
@@ -18,12 +18,11 @@ export function createEnemyDeathSystem(
   return {
     update() {
       const playerEid = w.playerEid
-      const enemies = query(world, [Active, Enemy, Health])
+      const enemies = query(world, [Enemy, Health, Not(Inactive)])
 
       // eslint-disable-next-line functional/no-let
       for (let i = 0; i < enemies.length; i++) {
         const eid = enemies[i]
-        if (Active.isActive[eid] === 0) continue
         if (Health.current[eid] <= 0) {
           if (typeof playerEid === 'number')
             XP.current[playerEid] += Enemy.xpValue[eid]

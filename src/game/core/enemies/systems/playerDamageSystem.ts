@@ -1,9 +1,10 @@
-import { query, World } from 'bitecs'
+import { Not, query, World } from 'bitecs'
 
 import { Active } from '../../shared/components/Active'
 import { Enemy } from '../components/Enemy'
 import { Health } from '../../shared/components/Health'
 import { HitEffect } from '../../shared/components/HitEffect'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 
 const DAMAGE_RADIUS_SQ = 1.5 * 1.5
@@ -28,15 +29,14 @@ export function createPlayerDamageSystem(world: World) {
       const pz = Position.z[playerEid]
 
       const enemies = query(world, [
-        Active,
         Enemy,
-        Position
+        Position,
+        Not(Inactive)
       ]) as readonly number[]
 
       // eslint-disable-next-line functional/no-let
       for (let i = 0; i < enemies.length; i++) {
         const eid = enemies[i]
-        if (Active.isActive[eid] === 0) continue
 
         const dx = px - Position.x[eid]
         const dz = pz - Position.z[eid]

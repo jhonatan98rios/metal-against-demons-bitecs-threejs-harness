@@ -1,9 +1,10 @@
-import { query, removeEntity, asBuffer, World } from 'bitecs'
+import { Not, query, removeEntity, asBuffer, World } from 'bitecs'
 
 import { Active } from '../core/shared/components/Active'
 import { Animation } from '../core/shared/components/Animation'
 import { AnimationRow } from '../core/shared/components/AnimationRow'
 import { Health } from '../core/shared/components/Health'
+import { Inactive } from '../core/shared/components/Inactive'
 import { Position } from '../core/shared/components/Position'
 import { Velocity } from '../core/shared/components/Velocity'
 import { MAX_COMMANDS, MAX_ENTITIES } from '../core/shared/constants'
@@ -141,7 +142,7 @@ function makePoolUpdater(
   return (dt: number) => {
     const entities = query(
       world,
-      [Active, Animation],
+      [Animation, Not(Inactive)],
       asBuffer
     ) as Readonly<Uint32Array>
 
@@ -217,7 +218,7 @@ function createWorkerPoolImpl(world: World): WorkerPool {
 function createFallbackPool(world: World): WorkerPool {
   return {
     update(dt: number) {
-      const entities = query(world, [Active, Animation])
+      const entities = query(world, [Animation, Not(Inactive)])
 
       const removeAcc: number[] = []
 

@@ -7,11 +7,11 @@
  *   - Pursuit scales with distance to prevent stationary clusters
  *   - Alignment/cohesion disabled below neighbor threshold (isolated entities)
  */
-import { query, World } from 'bitecs'
+import { Not, query, World } from 'bitecs'
 
-import { Active } from '../../shared/components/Active'
 import { Boids } from '../../shared/components/Boids'
 import { Enemy } from '../components/Enemy'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Velocity } from '../../shared/components/Velocity'
 
@@ -33,7 +33,7 @@ interface BoidsAccumulators {
 // Constants
 // ---------------------------------------------------------------------------
 
-const BOID_TERMS = [Active, Enemy, Position, Velocity, Boids]
+const BOID_TERMS = [Enemy, Position, Velocity, Boids, Not(Inactive)]
 const BOIDS_MS_PER_TICK = 50 // 20 Hz
 const MAX_ACCUM_MS = BOIDS_MS_PER_TICK * 4
 const CELL_SIZE = 8
@@ -204,7 +204,6 @@ function buildSpatialGrid(
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]
-    if (Active.isActive[eid] === 0) continue
     const cx = Math.floor(Position.x[eid] / CELL_SIZE) + GRID_HALF,
       cz = Math.floor(Position.z[eid] / CELL_SIZE) + GRID_HALF,
       cellIdx = cx * GRID_SIZE + cz
@@ -399,7 +398,6 @@ function runBoidsTick(
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]
-    if (Active.isActive[eid] === 0) continue
     accumulators.separationX = 0
     accumulators.separationZ = 0
     accumulators.alignmentX = 0

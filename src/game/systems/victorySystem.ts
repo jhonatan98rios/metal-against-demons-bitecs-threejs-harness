@@ -1,19 +1,17 @@
-import { query, World } from 'bitecs'
-import { Active } from '../core/shared/components/Active'
+import { Not, query, World } from 'bitecs'
 import { Enemy } from '../core/enemies/components/Enemy'
+import { Inactive } from '../core/shared/components/Inactive'
 
 export function createVictorySystem(world: World, onVictory: () => void) {
-  // ponytail: simple query + isActive filter — no counter to drift. O(poolSize) per frame.
+  // ponytail: query(Enemy, Not(Inactive)) — bitECS filters inactive entities.
+  // Empty result means victory.
   return {
     update() {
-      const enemies = query(world, [Active, Enemy])
+      const enemies = query(world, [Enemy, Not(Inactive)])
 
-      // eslint-disable-next-line functional/no-let
-      for (let i = 0; i < enemies.length; i++) {
-        if (Active.isActive[enemies[i]] === 1) return
+      if (enemies.length === 0) {
+        onVictory()
       }
-
-      onVictory()
     }
   }
 }

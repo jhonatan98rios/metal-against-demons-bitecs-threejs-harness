@@ -1,4 +1,4 @@
-import { addComponent, addEntity, query, World } from 'bitecs'
+import { addComponent, addEntity, Not, query, removeComponent, World } from 'bitecs'
 
 import { registerSkill } from '../registry'
 import { SKILL_ID } from '../skillIds'
@@ -6,6 +6,7 @@ import type { SkillDefinition } from '../types'
 import { Active } from '../../shared/components/Active'
 import { Animation } from '../../shared/components/Animation'
 import { Billboard } from '../../shared/components/Billboard'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Renderable } from '../../shared/components/Renderable'
 import { Sprite } from '../../shared/components/Sprite'
@@ -42,6 +43,18 @@ const POOL_COMPONENTS = [
   Spiral
 ] as const
 
+// ── pool lifecycle helpers (module-level to stay under line limits) ─────
+
+function deactivatePoolEntity(world: World, eid: number): void {
+  Active.isActive[eid] = 0
+  addComponent(world, eid, Inactive)
+}
+
+function activatePoolEntity(world: World, eid: number): void {
+  Active.isActive[eid] = 1
+  removeComponent(world, eid, Inactive)
+}
+
 function createSpiralPool(
   world: World,
   size: number,
@@ -56,7 +69,7 @@ function createSpiralPool(
     const eid = addEntity(world)
     add(eid)
 
-    Active.isActive[eid] = 0
+    deactivatePoolEntity(world, eid)
     Projectile.isProjectile[eid] = 1
     Projectile.damage[eid] = 1
     Projectile.poolId[eid] = 2
@@ -82,7 +95,7 @@ function createSpiralPool(
     acquire(x: number, z: number, ttl: number) {
       const eid = free.pop()
       if (eid === undefined) return -1
-      Active.isActive[eid] = 1
+      activatePoolEntity(world, eid)
       Position.x[eid] = x
       Position.y[eid] = 4
       Position.z[eid] = z
@@ -91,7 +104,7 @@ function createSpiralPool(
       return eid
     },
     release(eid: number) {
-      Active.isActive[eid] = 0
+      deactivatePoolEntity(world, eid)
       free.push(eid)
     }
   }
@@ -128,7 +141,7 @@ function createSpiralSpawnSystem(
 
 // ── Spiral movement system ──────────────────────────────────────────────
 
-const SPIRAL_QUERY = [Active, Position, Spiral]
+const SPIRAL_QUERY = [Position, Spiral, Not(Inactive)]
 
 function createSpiralMovementSystem(world: World) {
   return {
@@ -141,8 +154,6 @@ function createSpiralMovementSystem(world: World) {
 
       const ents = query(world, SPIRAL_QUERY)
       for (const eid of ents) {
-        if (Active.isActive[eid] === 0) continue
-
         Spiral.angle[eid] -= Spiral.angularSpeed[eid] * dt
         const r =
           Math.sqrt((Position.x[eid] - pX) ** 2 + (Position.z[eid] - pZ) ** 2) +
@@ -202,9 +213,8 @@ function accumulateUpgrades(level: number): SpiralStats {
 }
 
 function applyStatOverrides(world: World, stats: SpiralStats) {
-  const ents = query(world, [Active, Spiral])
+  const ents = query(world, [Spiral, Not(Inactive)])
   for (const eid of ents) {
-    if (Active.isActive[eid] === 0) continue
     Spiral.angularSpeed[eid] = stats.angularSpeed
     Spiral.radialSpeed[eid] = stats.radialSpeed
   }

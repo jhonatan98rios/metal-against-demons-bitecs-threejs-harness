@@ -1,6 +1,7 @@
-import { addComponent, addEntity, World } from 'bitecs'
+import { addComponent, addEntity, removeComponent, World } from 'bitecs'
 
 import { Active } from '../../shared/components/Active'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Velocity } from '../../shared/components/Velocity'
 import { Renderable } from '../../shared/components/Renderable'
@@ -40,6 +41,7 @@ export type ProjectileSpriteConfig = {
 
 function initEntity(world: World, eid: number, sprite: ProjectileSpriteConfig) {
   Active.isActive[eid] = 0
+  addComponent(world, eid, Inactive)
   Projectile.isProjectile[eid] = 1
   Projectile.damage[eid] = 1
   Projectile.poolId[eid] = 1
@@ -78,6 +80,7 @@ export function createProjectilePool(
       const eid = free.pop()
       if (eid === undefined) return -1
       Active.isActive[eid] = 1
+      removeComponent(world, eid, Inactive)
       Position.x[eid] = x
       Position.y[eid] = 5
       Position.z[eid] = z
@@ -89,6 +92,7 @@ export function createProjectilePool(
 
     release(eid: number) {
       Active.isActive[eid] = 0
+      addComponent(world, eid, Inactive)
       free.push(eid)
     }
   }

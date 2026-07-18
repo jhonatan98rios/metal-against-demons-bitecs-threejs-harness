@@ -1,11 +1,11 @@
-import { query, World } from 'bitecs'
+import { Not, query, World } from 'bitecs'
 
-import { Active } from '../../shared/components/Active'
 import { Enemy } from '../../enemies/components/Enemy'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 
 function findNearestEnemy(world: World, px: number, pz: number): number | null {
-  const enemies = query(world, [Active, Enemy, Position]) as readonly number[]
+  const enemies = query(world, [Enemy, Position, Not(Inactive)]) as readonly number[]
 
   // eslint-disable-next-line functional/no-let
   let nearest = -1
@@ -15,7 +15,6 @@ function findNearestEnemy(world: World, px: number, pz: number): number | null {
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < enemies.length; i++) {
     const eid = enemies[i]
-    if (Active.isActive[eid] === 0) continue
     const dx = Position.x[eid] - px
     const dz = Position.z[eid] - pz
     const dsq = dx * dx + dz * dz

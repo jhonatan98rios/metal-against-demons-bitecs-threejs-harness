@@ -1,8 +1,9 @@
-import { addComponent, addEntity, World } from 'bitecs'
+import { addComponent, addEntity, removeComponent, World } from 'bitecs'
 
 import { Active } from '../../shared/components/Active'
 import { Enemy } from '../components/Enemy'
 import { Health } from '../../shared/components/Health'
+import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Velocity } from '../../shared/components/Velocity'
 import { Renderable } from '../../shared/components/Renderable'
@@ -45,6 +46,7 @@ export function createEnemyPool(world: World, poolSize: number) {
     Active.isActive[eid] = 0
     Enemy.isEnemy[eid] = 1
     Renderable.isRenderable[eid] = 1
+    addComponent(world, eid, Inactive)
 
     freeList.push(eid)
   })
@@ -57,12 +59,14 @@ export function createEnemyPool(world: World, poolSize: number) {
     }
 
     Active.isActive[eid] = 1
+    removeComponent(world, eid, Inactive)
 
     return eid
   }
 
   const release = (eid: number) => {
     Active.isActive[eid] = 0
+    addComponent(world, eid, Inactive)
 
     freeList.push(eid)
   }

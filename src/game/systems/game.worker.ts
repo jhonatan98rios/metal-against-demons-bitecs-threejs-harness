@@ -95,7 +95,6 @@ function collectRemoves(
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]
 
-    if (c.Active.isActive[eid] === 0) continue
     if (c.Health.current[eid] > 0) continue
 
     if (counts.remove < removeQueue.length) {
@@ -115,7 +114,6 @@ function collectMoves(
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]
 
-    if (c.Active.isActive[eid] === 0) continue
     if (counts.move + 3 > moveQueue.length) continue
 
     moveQueue[counts.move] = eid
@@ -133,8 +131,6 @@ function processAndCollect(
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]
-
-    if (c.Active.isActive[eid] === 0) continue
 
     updateOneEntity(eid, dt, c)
   }
