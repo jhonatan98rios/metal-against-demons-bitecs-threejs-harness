@@ -9,6 +9,7 @@
  */
 import { Not, query, World } from 'bitecs'
 
+import { AnimationRow } from '../../shared/components/AnimationRow'
 import { Boids } from '../../shared/components/Boids'
 import { Enemy } from '../components/Enemy'
 import { Inactive } from '../../shared/components/Inactive'
@@ -316,6 +317,9 @@ function processEntity(
   const velocity = clampVelocity(forces.x, forces.z, ms)
   Velocity.x[eid] = velocity.x
   Velocity.z[eid] = velocity.z
+
+  // ponytail: flip sprite row based on horizontal position relative to player
+  AnimationRow.row[eid] = mx < Position.x[playerEid] ? 1 : 0
 }
 
 // ---------------------------------------------------------------------------
