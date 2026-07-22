@@ -27,6 +27,13 @@ export const PHASES: PhaseDef[] = [
     description: '100 enemies — all hell breaks loose',
     enemyCount: 100,
     poolSize: 120
+  },
+  {
+    id: 'phase-4',
+    name: 'The Swarm',
+    description: '2000 enemies — the true horde arrives',
+    enemyCount: 2000,
+    poolSize: 2100
   }
 ]
 
