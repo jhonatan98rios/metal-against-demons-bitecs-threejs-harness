@@ -15,11 +15,9 @@ import { createCameraMouseController } from './gameplay/cameraMouseController'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
 import {
-  createRenderSystem,
-  renderObjects
+  createRenderSystem
 } from './rendering/createRenderSystem'
 import { createCameraSystem } from './systems/cameraSystem'
-import { createBillboardSystem } from './systems/billboardSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { createFirstPersonOverlay } from './ui/FirstPersonOverlay'
 import { createLevelUpSystem } from './core/player/levelUpSystem'
@@ -114,7 +112,6 @@ function tickVisuals(
   systems.camera.update()
   handlePointerLock(systems, stateEid)
   fpOverlay.update(systems.camera.isFirstPerson())
-  systems.billboard.update()
 
   if (hud) {
     hud.update({
@@ -303,7 +300,7 @@ function createGameSystems(
     pointerLock,
     collision: getCollisionSystem(world),
     boids: createBoidsSystem(world),
-    render: createRenderSystem(world, scene),
+    render: createRenderSystem(world, scene, camera),
     animation: createWorkerPool(world),
     levelUp: createLevelUpSystem(world, () => gameState.setLevelUp()),
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
@@ -311,7 +308,6 @@ function createGameSystems(
     playerDeath: createPlayerDeathSystem(world, () => gameState.setGameOver()),
     victory: createVictorySystem(world, () => gameState.setVictory()),
     camera: cameraSystem,
-    controller,
-    billboard: createBillboardSystem(world, camera, renderObjects)
+    controller
   }
 }

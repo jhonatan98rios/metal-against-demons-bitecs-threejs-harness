@@ -9,26 +9,25 @@ import { AnimationRow } from '../core/shared/components/AnimationRow'
 import { Sprite } from '../core/shared/components/Sprite'
 import { Health } from '../core/shared/components/Health'
 import { HitEffect } from '../core/shared/components/HitEffect'
+import { Enemy } from '../core/enemies/components/Enemy'
 
 import { createSpriteRender } from './createSpriteRender'
+import { createEnemyInstancedMesh } from './createEnemyInstancedMesh'
 
-export const renderObjects = new Map<
+const renderObjects = new Map<
   number,
   THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>
 >()
 
+// -- non-enemy mesh management (player, projectiles) -----------------------
+
 const getOrCreateRenderObject = (eid: number, scene: THREE.Scene) => {
   const existingObject = renderObjects.get(eid)
-
-  if (existingObject) {
-    return existingObject
-  }
+  if (existingObject) return existingObject
 
   const newObject = createSpriteRender(eid)
-
   renderObjects.set(eid, newObject)
   scene.add(newObject)
-
   return newObject
 }
 
@@ -50,6 +49,8 @@ const syncPosition = (eid: number, object: THREE.Mesh) => {
   object.position.set(Position.x[eid], Position.y[eid], Position.z[eid])
 }
 
+// -- health bars -----------------------------------------------------------
+
 const BAR_W = 2
 const BAR_H = 0.2
 const BAR_Y = 3.5
@@ -64,7 +65,6 @@ const createHealthBar = (): { bg: THREE.Mesh; fill: THREE.Mesh } => {
   })
   const fill = new THREE.Mesh(fillGeo, fillMat)
   fill.userData.healthBarFill = true
-  // ponytail: renderOrder garante fill sobre bg; z-offset sozinho é instável com depthTest false
   fill.renderOrder = 1
 
   const bgGeo = new THREE.PlaneGeometry(BAR_W, BAR_H)
@@ -82,6 +82,8 @@ const createHealthBar = (): { bg: THREE.Mesh; fill: THREE.Mesh } => {
 
   return { bg, fill }
 }
+
+// -- non-enemy health bars (attached to mesh) ------------------------------
 
 const getOrCreateHealthBar = (
   mesh: THREE.Mesh
@@ -123,6 +125,53 @@ const updateHealthBar = (mesh: THREE.Mesh, eid: number) => {
   }
 }
 
+// -- enemy health bars (standalone, not attached to instanced mesh) --------
+
+const enemyHealthBars = new Map<
+  number,
+  { bg: THREE.Mesh; fill: THREE.Mesh }
+>()
+
+const syncEnemyHealthBar = (eid: number, scene: THREE.Scene) => {
+  const current = Health.current[eid]
+  const max = Health.max[eid]
+
+  if (current >= max) {
+    const existing = enemyHealthBars.get(eid)
+    if (existing) existing.bg.visible = false
+    return
+  }
+
+  const bar = enemyHealthBars.get(eid) ?? (() => {
+    const hb = createHealthBar()
+    scene.add(hb.bg)
+    enemyHealthBars.set(eid, hb)
+    return hb
+  })()
+
+  bar.bg.visible = true
+  bar.bg.position.set(
+    Position.x[eid],
+    Position.y[eid] + BAR_Y,
+    Position.z[eid]
+  )
+
+  const ratio = Math.max(0, current / max)
+  bar.fill.scale.x = ratio
+  bar.fill.position.x = (BAR_W * (ratio - 1)) / 2
+
+  const fillMat = bar.fill.material as THREE.MeshBasicMaterial
+  if (ratio > 0.5) {
+    fillMat.color.setHSL(0.33, 1, 0.5)
+  } else if (ratio > 0.25) {
+    fillMat.color.setHSL(0.15, 1, 0.5)
+  } else {
+    fillMat.color.setHSL(0, 1, 0.5)
+  }
+}
+
+// -- non-enemy hit flash ---------------------------------------------------
+
 const applyHitFlash = (
   object: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>,
   eid: number,
@@ -144,39 +193,109 @@ const applyHitFlash = (
   }
 }
 
-const applyHealthBar = (
-  object: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>,
-  eid: number
-) => {
-  if (Health.max[eid] > 0) {
-    updateHealthBar(object, eid)
+// -- per-frame helpers (reuse allocations) ---------------------------------
+
+const _pos = new THREE.Vector3()
+const _rot = new THREE.Quaternion()
+const _scl = new THREE.Vector3(1, 1, 1)
+const _mat = new THREE.Matrix4()
+const _up = new THREE.Vector3(0, 1, 0)
+
+interface EnemyIM {
+  mesh: THREE.InstancedMesh
+  uvBuffer: Float32Array
+  colorBuffer: Float32Array
+}
+
+function updateEnemyInstance(
+  eid: number,
+  index: number,
+  im: EnemyIM,
+  cam: { x: number; z: number },
+  delta: number
+) {
+  const columns = Sprite.columns[eid]
+  const rows = Sprite.rows[eid]
+  const frame = Animation.currentFrame[eid]
+  const row = AnimationRow.row[eid] ?? 0
+  im.uvBuffer[index * 2] = (frame % columns) / columns
+  im.uvBuffer[index * 2 + 1] = 1 - (row + 1) / rows
+
+  const hitTimer = HitEffect.timer[eid]
+  if (hitTimer > 0) {
+    HitEffect.timer[eid] = Math.max(0, hitTimer - delta)
+    const flash = hitTimer / 0.15
+    im.colorBuffer[index * 3] = 1
+    im.colorBuffer[index * 3 + 1] = 1 - flash
+    im.colorBuffer[index * 3 + 2] = 1 - flash
+  } else {
+    im.colorBuffer[index * 3] = 1
+    im.colorBuffer[index * 3 + 1] = 1
+    im.colorBuffer[index * 3 + 2] = 1
+  }
+
+  _pos.set(Position.x[eid], Position.y[eid], Position.z[eid])
+  _rot.setFromAxisAngle(
+    _up,
+    Math.atan2(cam.x - Position.x[eid], cam.z - Position.z[eid])
+  )
+  _mat.compose(_pos, _rot, _scl)
+  im.mesh.setMatrixAt(index, _mat)
+}
+
+function renderNonEnemy(
+  eid: number,
+  scene: THREE.Scene,
+  delta: number
+) {
+  const object = getOrCreateRenderObject(eid, scene)
+  object.visible = true
+  updateSpriteFrame(eid, object)
+  syncPosition(eid, object)
+  applyHitFlash(object, eid, delta)
+  updateHealthBar(object, eid)
+}
+
+function handleInactive(eid: number) {
+  if (!Enemy.isEnemy[eid]) {
+    const obj = renderObjects.get(eid)
+    if (obj) obj.visible = false
   }
 }
 
-export const createRenderSystem = (world: World, scene: THREE.Scene) => {
+export const createRenderSystem = (
+  world: World,
+  scene: THREE.Scene,
+  camera: THREE.PerspectiveCamera
+) => {
+  const enemyIm = createEnemyInstancedMesh(scene)
+  const { mesh: enemyMesh } = enemyIm
+  // ponytail: mutable ref via array to avoid functional/no-let
+  const enemyIdx = [0]
+
   return (delta: number) => {
     const entities = query(world, [Active, Position, Renderable])
+    const cam = { x: camera.position.x, z: camera.position.z }
+    enemyIdx[0] = 0
 
     for (const eid of entities) {
       if (Active.isActive[eid] === 0) {
-        const existingObject = renderObjects.get(eid)
-
-        if (existingObject) {
-          existingObject.visible = false
-        }
-
+        handleInactive(eid)
         continue
       }
 
-      const object = getOrCreateRenderObject(eid, scene)
-
-      object.visible = true
-
-      updateSpriteFrame(eid, object)
-      syncPosition(eid, object)
-      applyHitFlash(object, eid, delta)
-      applyHealthBar(object, eid)
-
+      if (Enemy.isEnemy[eid] === 1) {
+        updateEnemyInstance(eid, enemyIdx[0], enemyIm, cam, delta)
+        syncEnemyHealthBar(eid, scene)
+        enemyIdx[0]++
+      } else {
+        renderNonEnemy(eid, scene, delta)
+      }
     }
+
+    enemyMesh.count = enemyIdx[0]
+    enemyMesh.instanceMatrix.needsUpdate = true
+    enemyMesh.geometry.attributes.instanceUVOffset.needsUpdate = true
+    enemyMesh.geometry.attributes.instanceColor.needsUpdate = true
   }
 }
