@@ -52,7 +52,6 @@ export function createRoad(): THREE.Mesh {
   road.rotation.x = -Math.PI / 2
   road.position.x = 30
   road.position.y = 1
-  road.receiveShadow = true
   road.name = 'Road'
   return road
 }

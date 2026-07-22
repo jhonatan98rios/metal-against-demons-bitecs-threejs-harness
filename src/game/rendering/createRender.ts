@@ -18,8 +18,6 @@ function createWebGLRenderer(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 0.9
@@ -45,24 +43,7 @@ function createCamera() {
 function createDirectionalLight() {
   const dirLight = new THREE.DirectionalLight(SUN_COLOR, 0.5)
   dirLight.position.set(140, 120, 30)
-  dirLight.castShadow = true
-  dirLight.shadow.mapSize.width = 2048
-  dirLight.shadow.mapSize.height = 2048
-  dirLight.shadow.bias = -0.0005
-  dirLight.shadow.normalBias = 0.05
-  dirLight.shadow.radius = 5 // ponytail: extremely soft — light diffused by dust
   return dirLight
-}
-
-function setShadowCamera(shadowCam: THREE.OrthographicCamera) {
-  shadowCam.left = -250
-  shadowCam.right = 250
-  shadowCam.top = 250
-  shadowCam.bottom = -250
-  shadowCam.near = 0.5
-  shadowCam.far = 1000
-
-  shadowCam.updateProjectionMatrix()
 }
 
 function createPostProcessing(
@@ -131,7 +112,6 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const dirLight = createDirectionalLight()
   dirLight.target.position.set(30, 5, 30)
   scene.add(dirLight.target)
-  setShadowCamera(dirLight.shadow.camera)
   scene.add(dirLight)
 
   // ponytail: warm ambient fill — dust-scattered light reaches everywhere

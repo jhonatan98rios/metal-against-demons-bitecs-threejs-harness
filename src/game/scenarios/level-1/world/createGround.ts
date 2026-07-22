@@ -45,7 +45,6 @@ export function createGround(): THREE.Mesh {
   const ground = new THREE.Mesh(geometry, material)
 
   ground.rotation.x = -Math.PI / 2
-  ground.receiveShadow = true
   ground.name = 'Ground'
 
   ground.position.y = -1
