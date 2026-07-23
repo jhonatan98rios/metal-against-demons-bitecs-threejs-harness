@@ -18,7 +18,7 @@ Create the Crawler enemy type — a ground-level melee enemy with a 4-frame walk
   - Row 1 = walking left (4 frames, frames 0-3)
   - Each frame: 3 units wide × 2 units tall (~1.76:1 ratio matching sprite 65×37px).
 - [ ] **AC5**: Animation defaults: `startFrame=0`, `endFrame=3`, `fps=0.15`.
-- [ ] **AC6**: `AnimationRow.row` set based on spawn facing direction (0 for right, 1 for left) — note: opposite of Apparition.
+- [ ] **AC6**: `AnimationRow.row` set based on spawn facing direction (0 for left, 1 for right) — same as Apparition.
 - [ ] **AC7**: Health: `current=3`, `max=3` (lower than Apparition — crawlers are faster but weaker).
 - [ ] **AC8**: Speed multiplier: 0.35 (faster than Apparition's 0.2).
 - [ ] **AC9**: XP value: 7 (less than Apparition's 10).
@@ -32,7 +32,7 @@ Create the Crawler enemy type — a ground-level melee enemy with a 4-frame walk
 - Must reuse the existing `setupX` / `createX` pattern from Apparition.
 - Uses the same entity components: `Enemy`, `Health`, `Position`, `Velocity`, `Renderable`, `Sprite`, `Animation`, `AnimationRow`, `Boids`, `Billboard`.
 - Reuses the same enemy pool (`createEnemyPool`) — no per-type pool needed.
-- Row mapping is **opposite** of Apparition: row 0 = right, row 1 = left (apparition: row 0 = left, row 1 = right).
+- Row mapping is **same** as Apparition: row 0 = left, row 1 = right.
 - Spritesheet is at `public/enemies/crawler.png` (same folder as Apparition).
 - Frame aspect ratio 65:37 ≈ 1.76:1 → world units 3:2 (slightly squished horizontally for gameplay readability).
 

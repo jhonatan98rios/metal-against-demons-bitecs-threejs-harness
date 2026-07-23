@@ -3,8 +3,8 @@
  * Spritesheet: /enemies/crawler.png (260×74px, 4 cols × 2 rows).
  *
  * Row mapping:
- *   0 = walking right (frames 0-3)
- *   1 = walking left (frames 0-3)
+ *   0 = walking left (frames 0-3)
+ *   1 = walking right (frames 0-3)
  *
  * Each frame: 65×37px → 3×2 world units (~1.76:1 ratio).
  */
@@ -19,10 +19,10 @@ export const CRAWLER = {
   ROWS: 2,
 
   /** Frame width in world units */
-  WIDTH: 3,
+  WIDTH: 6,
 
   /** Frame height in world units */
-  HEIGHT: 2,
+  HEIGHT: 4,
 
   /** Starting health value */
   HEALTH: 3,
@@ -31,7 +31,7 @@ export const CRAWLER = {
   MAX_HEALTH: 3,
 
   /** Movement speed multiplier (1 = default, higher = faster) */
-  SPEED: 0.35,
+  SPEED: 0.7,
 
   /** Starting frame index for animation loop */
   START_FRAME: 0,

@@ -159,9 +159,8 @@ const setupCrawlerAnimation = (eid: number) => {
   Animation.endFrame[eid] = CRAWLER.END_FRAME
 }
 
-// ponytail: row 0 = right, row 1 = left (opposite of apparition)
 const setupCrawlerAnimationRow = (eid: number, facingLeft: boolean) => {
-  AnimationRow.row[eid] = facingLeft ? 1 : 0
+  AnimationRow.row[eid] = facingLeft ? 0 : 1
 }
 
 const setupCrawlerBoids = (eid: number) => {
