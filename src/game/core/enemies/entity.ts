@@ -13,6 +13,7 @@ import { Boids, BOIDS_DEFAULTS } from '../shared/components/Boids'
 import { Billboard } from '../shared/components/Billboard'
 
 import { APPARITION } from './definitions/apparition'
+import { CRAWLER } from './definitions/crawler'
 
 const ENEMY_COMPONENTS = [
   Enemy,
@@ -132,5 +133,78 @@ export function createApparition(
 
   setupApparition(eid, x, z, facingLeft)
 
+  return eid
+}
+
+// -- Crawler ----------------------------------------------------------------
+
+const setupCrawlerHealth = (eid: number) => {
+  Health.current[eid] = CRAWLER.HEALTH
+  Health.max[eid] = CRAWLER.MAX_HEALTH
+}
+
+const setupCrawlerSprite = (eid: number) => {
+  Sprite.texture[eid] = CRAWLER.TEXTURE
+  Sprite.columns[eid] = CRAWLER.COLUMNS
+  Sprite.rows[eid] = CRAWLER.ROWS
+  Sprite.width[eid] = CRAWLER.WIDTH
+  Sprite.height[eid] = CRAWLER.HEIGHT
+}
+
+const setupCrawlerAnimation = (eid: number) => {
+  Animation.currentFrame[eid] = 0
+  Animation.elapsed[eid] = 0
+  Animation.fps[eid] = CRAWLER.SPEED
+  Animation.startFrame[eid] = CRAWLER.START_FRAME
+  Animation.endFrame[eid] = CRAWLER.END_FRAME
+}
+
+// ponytail: row 0 = right, row 1 = left (opposite of apparition)
+const setupCrawlerAnimationRow = (eid: number, facingLeft: boolean) => {
+  AnimationRow.row[eid] = facingLeft ? 1 : 0
+}
+
+const setupCrawlerBoids = (eid: number) => {
+  Boids.maxSpeed[eid] = BOIDS_DEFAULTS.MAX_SPEED * CRAWLER.SPEED
+  Boids.perceptionRadius[eid] = BOIDS_DEFAULTS.PERCEPTION_RADIUS
+  Boids.separationRadius[eid] = BOIDS_DEFAULTS.SEPARATION_RADIUS
+  Boids.separationWeight[eid] = BOIDS_DEFAULTS.SEPARATION_WEIGHT
+  Boids.alignmentWeight[eid] = BOIDS_DEFAULTS.ALIGNMENT_WEIGHT
+  Boids.cohesionWeight[eid] = BOIDS_DEFAULTS.COHESION_WEIGHT
+  Boids.pursuitWeight[eid] = BOIDS_DEFAULTS.PURSUIT_WEIGHT
+}
+
+const setupCrawlerXpValue = (eid: number) => {
+  Enemy.xpValue[eid] = CRAWLER.XP_VALUE
+}
+
+export function setupCrawler(
+  eid: number,
+  x: number,
+  z: number,
+  facingLeft = true
+) {
+  setupEnemyTag(eid)
+  setupCrawlerHealth(eid)
+  setupPosition(eid, x, z)
+  setupVelocity(eid)
+  setupRenderable(eid)
+  setupCrawlerSprite(eid)
+  setupCrawlerAnimation(eid)
+  setupCrawlerAnimationRow(eid, facingLeft)
+  setupCrawlerBoids(eid)
+  setupBillboard(eid)
+  setupCrawlerXpValue(eid)
+}
+
+export function createCrawler(
+  world: World,
+  x: number,
+  z: number,
+  facingLeft = true
+) {
+  const eid = addEntity(world)
+  addEnemyComponents(world, eid)
+  setupCrawler(eid, x, z, facingLeft)
   return eid
 }

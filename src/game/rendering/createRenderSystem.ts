@@ -12,7 +12,9 @@ import { HitEffect } from '../core/shared/components/HitEffect'
 import { Enemy } from '../core/enemies/components/Enemy'
 
 import { createSpriteRender } from './createSpriteRender'
-import { createEnemyInstancedMesh } from './createEnemyInstancedMesh'
+import { createEnemyIM, EnemyInstancedMesh } from './createEnemyInstancedMesh'
+import { APPARITION } from '../core/enemies/definitions/apparition'
+import { CRAWLER } from '../core/enemies/definitions/crawler'
 
 const renderObjects = new Map<
   number,
@@ -127,10 +129,7 @@ const updateHealthBar = (mesh: THREE.Mesh, eid: number) => {
 
 // -- enemy health bars (standalone, not attached to instanced mesh) --------
 
-const enemyHealthBars = new Map<
-  number,
-  { bg: THREE.Mesh; fill: THREE.Mesh }
->()
+const enemyHealthBars = new Map<number, { bg: THREE.Mesh; fill: THREE.Mesh }>()
 
 const syncEnemyHealthBar = (eid: number, scene: THREE.Scene) => {
   const current = Health.current[eid]
@@ -142,19 +141,17 @@ const syncEnemyHealthBar = (eid: number, scene: THREE.Scene) => {
     return
   }
 
-  const bar = enemyHealthBars.get(eid) ?? (() => {
-    const hb = createHealthBar()
-    scene.add(hb.bg)
-    enemyHealthBars.set(eid, hb)
-    return hb
-  })()
+  const bar =
+    enemyHealthBars.get(eid) ??
+    (() => {
+      const hb = createHealthBar()
+      scene.add(hb.bg)
+      enemyHealthBars.set(eid, hb)
+      return hb
+    })()
 
   bar.bg.visible = true
-  bar.bg.position.set(
-    Position.x[eid],
-    Position.y[eid] + BAR_Y,
-    Position.z[eid]
-  )
+  bar.bg.position.set(Position.x[eid], Position.y[eid] + BAR_Y, Position.z[eid])
 
   const ratio = Math.max(0, current / max)
   bar.fill.scale.x = ratio
@@ -201,16 +198,17 @@ const _scl = new THREE.Vector3(1, 1, 1)
 const _mat = new THREE.Matrix4()
 const _up = new THREE.Vector3(0, 1, 0)
 
-interface EnemyIM {
-  mesh: THREE.InstancedMesh
-  uvBuffer: Float32Array
-  colorBuffer: Float32Array
+// -- enemy instanced mesh routing ------------------------------------------
+
+interface EnemyIMSlot {
+  im: EnemyInstancedMesh
+  counter: number
 }
 
 function updateEnemyInstance(
   eid: number,
   index: number,
-  im: EnemyIM,
+  im: EnemyInstancedMesh,
   cam: { x: number; z: number },
   delta: number
 ) {
@@ -243,11 +241,14 @@ function updateEnemyInstance(
   im.mesh.setMatrixAt(index, _mat)
 }
 
-function renderNonEnemy(
-  eid: number,
-  scene: THREE.Scene,
-  delta: number
-) {
+function finalizeEnemyIM(slot: EnemyIMSlot) {
+  slot.im.mesh.count = slot.counter
+  slot.im.mesh.instanceMatrix.needsUpdate = true
+  slot.im.mesh.geometry.attributes.instanceUVOffset.needsUpdate = true
+  slot.im.mesh.geometry.attributes.instanceColor.needsUpdate = true
+}
+
+function renderNonEnemy(eid: number, scene: THREE.Scene, delta: number) {
   const object = getOrCreateRenderObject(eid, scene)
   object.visible = true
   updateSpriteFrame(eid, object)
@@ -266,20 +267,61 @@ function handleInactive(eid: number) {
   if (obj) obj.visible = false
 }
 
+// ponytail: one InstancedMesh per texture, pre-created at system init
+function createEnemyIMSlots(scene: THREE.Scene): Map<string, EnemyIMSlot> {
+  const map = new Map<string, EnemyIMSlot>()
+
+  const makeSlot = (
+    texture: string,
+    columns: number,
+    rows: number,
+    width: number,
+    height: number
+  ) => {
+    map.set(texture, {
+      im: createEnemyIM(scene, {
+        texturePath: texture,
+        columns,
+        rows,
+        width,
+        height
+      }),
+      counter: 0
+    })
+  }
+
+  makeSlot(
+    APPARITION.TEXTURE,
+    APPARITION.COLUMNS,
+    APPARITION.ROWS,
+    APPARITION.WIDTH,
+    APPARITION.HEIGHT
+  )
+  makeSlot(
+    CRAWLER.TEXTURE,
+    CRAWLER.COLUMNS,
+    CRAWLER.ROWS,
+    CRAWLER.WIDTH,
+    CRAWLER.HEIGHT
+  )
+
+  return map
+}
+
 export const createRenderSystem = (
   world: World,
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera
 ) => {
-  const enemyIm = createEnemyInstancedMesh(scene)
-  const { mesh: enemyMesh } = enemyIm
-  // ponytail: mutable ref via array to avoid functional/no-let
-  const enemyIdx = [0]
+  const enemyIMByTexture = createEnemyIMSlots(scene)
 
   return (delta: number) => {
     const entities = query(world, [Active, Position, Renderable])
     const cam = { x: camera.position.x, z: camera.position.z }
-    enemyIdx[0] = 0
+
+    enemyIMByTexture.forEach((s) => {
+      s.counter = 0
+    })
 
     for (const eid of entities) {
       if (Active.isActive[eid] === 0) {
@@ -288,17 +330,15 @@ export const createRenderSystem = (
       }
 
       if (Enemy.isEnemy[eid] === 1) {
-        updateEnemyInstance(eid, enemyIdx[0], enemyIm, cam, delta)
+        const slot = enemyIMByTexture.get(Sprite.texture[eid])!
+        updateEnemyInstance(eid, slot.counter, slot.im, cam, delta)
         syncEnemyHealthBar(eid, scene)
-        enemyIdx[0]++
+        slot.counter++
       } else {
         renderNonEnemy(eid, scene, delta)
       }
     }
 
-    enemyMesh.count = enemyIdx[0]
-    enemyMesh.instanceMatrix.needsUpdate = true
-    enemyMesh.geometry.attributes.instanceUVOffset.needsUpdate = true
-    enemyMesh.geometry.attributes.instanceColor.needsUpdate = true
+    enemyIMByTexture.forEach((slot) => finalizeEnemyIM(slot))
   }
 }

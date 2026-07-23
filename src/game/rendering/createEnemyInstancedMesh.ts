@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-// ponytail: single InstancedMesh for all enemies — N draw calls → 1
+// ponytail: single InstancedMesh per texture — N textures → N draw calls
 // per-instance: matrix (position + billboard rotation), UV offset (sprite frame), color (hit flash)
 
 const VERTEX_SHADER = /* glsl */ `
@@ -38,11 +38,11 @@ void main() {
 // ponytail: hardcoded capacity, bump if more enemies needed
 const ENEMY_CAPACITY = 5000
 
-function createMaterial(texture: THREE.Texture) {
+function createMaterial(texture: THREE.Texture, columns: number, rows: number) {
   return new THREE.ShaderMaterial({
     uniforms: {
       map: { value: texture },
-      spritesheetSize: { value: new THREE.Vector2(2, 2) }
+      spritesheetSize: { value: new THREE.Vector2(columns, rows) }
     },
     vertexShader: VERTEX_SHADER,
     fragmentShader: FRAGMENT_SHADER,
@@ -72,17 +72,34 @@ function initOffScreenInstances(
   mesh.instanceMatrix.needsUpdate = true
 }
 
-export function createEnemyInstancedMesh(scene: THREE.Scene) {
-  const geometry = new THREE.PlaneGeometry(3, 6) // APPARITION.WIDTH, APPARITION.HEIGHT
+export interface EnemyInstancedMesh {
+  mesh: THREE.InstancedMesh
+  uvBuffer: Float32Array
+  colorBuffer: Float32Array
+}
 
-  const texture = new THREE.TextureLoader().load('/enemies/apparition.png')
+export interface EnemyIMConfig {
+  texturePath: string
+  columns: number
+  rows: number
+  width: number
+  height: number
+}
+
+export function createEnemyIM(
+  scene: THREE.Scene,
+  config: EnemyIMConfig
+): EnemyInstancedMesh {
+  const geometry = new THREE.PlaneGeometry(config.width, config.height)
+
+  const texture = new THREE.TextureLoader().load(config.texturePath)
   texture.magFilter = THREE.NearestFilter
   texture.minFilter = THREE.NearestFilter
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
 
-  const material = createMaterial(texture)
+  const material = createMaterial(texture, config.columns, config.rows)
   const mesh = new THREE.InstancedMesh(geometry, material, ENEMY_CAPACITY)
   mesh.frustumCulled = false
 
@@ -102,4 +119,16 @@ export function createEnemyInstancedMesh(scene: THREE.Scene) {
   scene.add(mesh)
 
   return { mesh, uvBuffer, colorBuffer }
+}
+
+// -- legacy compat ---------------------------------------------------------
+
+export function createEnemyInstancedMesh(scene: THREE.Scene) {
+  return createEnemyIM(scene, {
+    texturePath: '/enemies/apparition.png',
+    columns: 2,
+    rows: 2,
+    width: 3,
+    height: 6
+  })
 }

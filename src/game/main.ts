@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 import { setupWorld } from './core/bootstrap/setup'
-import { setupApparition } from './core/enemies/entity'
+import { setupApparition, setupCrawler } from './core/enemies/entity'
 import { createEnemyPool } from './core/enemies/pool/enemyPool'
 import { createBoidsSystem } from './core/enemies/systems/boidsSystem'
 import { createEnemyDeathSystem } from './core/enemies/systems/deathSystem'
@@ -14,9 +14,7 @@ import { createCameraTouchController } from './gameplay/cameraTouchController'
 import { createCameraMouseController } from './gameplay/cameraMouseController'
 import { createWorkerPool } from './systems/createWorkerPool'
 import { createRender } from './rendering/createRender'
-import {
-  createRenderSystem
-} from './rendering/createRenderSystem'
+import { createRenderSystem } from './rendering/createRenderSystem'
 import { createCameraSystem } from './systems/cameraSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { createFirstPersonOverlay } from './ui/FirstPersonOverlay'
@@ -39,12 +37,22 @@ import './core/skills/definitions/redBolt'
 function spawnEnemies(pool: ReturnType<typeof createEnemyPool>, count: number) {
   Array.from({ length: count }, () => {
     const eid = pool.acquire()
-    setupApparition(
-      eid,
-      -300 + Math.random() * 600,
-      -240 + Math.random() * 480,
-      Math.random() > 0.5
-    )
+    // ponytail: 50/50 split between Apparition and Crawler
+    if (Math.random() > 0.5) {
+      setupApparition(
+        eid,
+        -300 + Math.random() * 600,
+        -240 + Math.random() * 480,
+        Math.random() > 0.5
+      )
+    } else {
+      setupCrawler(
+        eid,
+        -300 + Math.random() * 600,
+        -240 + Math.random() * 480,
+        Math.random() > 0.5
+      )
+    }
   })
 }
 
@@ -243,25 +251,19 @@ export function start(phaseId?: string) {
   setupBackButton(gameState)
 }
 
-function createGameSystems(
+// ponytail: extracted to keep createGameSystems under 50 lines
+function setupCameraAndInput(
   world: ReturnType<typeof setupWorld>,
-  scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  enemyPool: ReturnType<typeof createEnemyPool>,
-  ctx: {
-    input: ReturnType<typeof createInput>
-    gameState: ReturnType<typeof createGameStateSystem>
-    skillManager: ReturnType<typeof createSkillManager>
-  }
+  input: ReturnType<typeof createInput>,
+  destroyables: (() => void)[]
 ) {
-  const { input, gameState, skillManager } = ctx
-  const destroyables: (() => void)[] = []
-  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+  if (isTouch) {
     const joystick = createVirtualJoystick(input)
     destroyables.push(() => joystick.destroy())
   }
-
-  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
   const gameCanvas = document.querySelector('#game-canvas') as HTMLCanvasElement
   const cameraCtrl = isTouch
@@ -292,6 +294,30 @@ function createGameSystems(
           isLocked: () => m.isLocked()
         }
       })()
+
+  return { cameraSystem, controller, pointerLock }
+}
+
+function createGameSystems(
+  world: ReturnType<typeof setupWorld>,
+  scene: THREE.Scene,
+  camera: THREE.PerspectiveCamera,
+  enemyPool: ReturnType<typeof createEnemyPool>,
+  ctx: {
+    input: ReturnType<typeof createInput>
+    gameState: ReturnType<typeof createGameStateSystem>
+    skillManager: ReturnType<typeof createSkillManager>
+  }
+) {
+  const { input, gameState, skillManager } = ctx
+  const destroyables: (() => void)[] = []
+
+  const { cameraSystem, controller, pointerLock } = setupCameraAndInput(
+    world,
+    camera,
+    input,
+    destroyables
+  )
 
   return {
     gameState,

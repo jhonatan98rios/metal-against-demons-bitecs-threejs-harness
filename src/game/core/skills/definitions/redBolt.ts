@@ -62,39 +62,44 @@ function activatePoolEntity(world: World, eid: number): void {
   removeComponent(world, eid, Inactive)
 }
 
+// ponytail: extracted to keep createSpiralPool under 50 lines
+function initSpiralEntity(
+  world: World,
+  eid: number,
+  sprite: ProjectileSpriteConfig
+) {
+  POOL_COMPONENTS.forEach((c) => addComponent(world, eid, c))
+  deactivatePoolEntity(world, eid)
+  Projectile.isProjectile[eid] = 1
+  Projectile.damage[eid] = 1
+  Projectile.poolId[eid] = 2
+  Projectile.friendlyFire[eid] = 0
+  Renderable.isRenderable[eid] = 1
+  Billboard.isBillboard[eid] = 1
+  Sprite.texture[eid] = sprite.texture
+  Sprite.columns[eid] = sprite.columns
+  Sprite.rows[eid] = sprite.rows
+  Sprite.width[eid] = sprite.width
+  Sprite.height[eid] = sprite.height
+  Animation.currentFrame[eid] = sprite.startFrame
+  Animation.elapsed[eid] = 0
+  Animation.fps[eid] = sprite.fps
+  Animation.startFrame[eid] = sprite.startFrame
+  Animation.endFrame[eid] = sprite.endFrame
+  TTL.remaining[eid] = 0
+}
+
 function createSpiralPool(
   world: World,
   size: number,
   sprite: ProjectileSpriteConfig
 ) {
   const free: number[] = []
-  const add = (eid: number) =>
-    POOL_COMPONENTS.forEach((c) => addComponent(world, eid, c))
 
   // eslint-disable-next-line functional/no-let
   for (let i = 0; i < size; i++) {
     const eid = addEntity(world)
-    add(eid)
-
-    deactivatePoolEntity(world, eid)
-    Projectile.isProjectile[eid] = 1
-    Projectile.damage[eid] = 1
-    Projectile.poolId[eid] = 2
-    Projectile.friendlyFire[eid] = 0
-    Renderable.isRenderable[eid] = 1
-    Billboard.isBillboard[eid] = 1
-    Sprite.texture[eid] = sprite.texture
-    Sprite.columns[eid] = sprite.columns
-    Sprite.rows[eid] = sprite.rows
-    Sprite.width[eid] = sprite.width
-    Sprite.height[eid] = sprite.height
-    Animation.currentFrame[eid] = sprite.startFrame
-    Animation.elapsed[eid] = 0
-    Animation.fps[eid] = sprite.fps
-    Animation.startFrame[eid] = sprite.startFrame
-    Animation.endFrame[eid] = sprite.endFrame
-    TTL.remaining[eid] = 0
-
+    initSpiralEntity(world, eid, sprite)
     free.push(eid)
   }
 
