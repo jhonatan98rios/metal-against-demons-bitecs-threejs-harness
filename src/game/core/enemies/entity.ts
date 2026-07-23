@@ -72,7 +72,7 @@ const setupAnimation = (eid: number) => {
   Animation.currentFrame[eid] = 0
   Animation.elapsed[eid] = 0
 
-  Animation.fps[eid] = APPARITION.SPEED
+  Animation.fps[eid] = APPARITION.ANIM_FPS
 
   Animation.startFrame[eid] = APPARITION.START_FRAME
   Animation.endFrame[eid] = APPARITION.END_FRAME
@@ -154,7 +154,7 @@ const setupCrawlerSprite = (eid: number) => {
 const setupCrawlerAnimation = (eid: number) => {
   Animation.currentFrame[eid] = 0
   Animation.elapsed[eid] = 0
-  Animation.fps[eid] = CRAWLER.SPEED
+  Animation.fps[eid] = CRAWLER.ANIM_FPS
   Animation.startFrame[eid] = CRAWLER.START_FRAME
   Animation.endFrame[eid] = CRAWLER.END_FRAME
 }

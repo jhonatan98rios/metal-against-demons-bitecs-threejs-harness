@@ -31,7 +31,10 @@ export const CRAWLER = {
   MAX_HEALTH: 3,
 
   /** Movement speed multiplier (1 = default, higher = faster) */
-  SPEED: 2.6,
+  SPEED: 0.35,
+
+  /** Animation frame rate (frames per second) */
+  ANIM_FPS: 2.6,
 
   /** Starting frame index for animation loop */
   START_FRAME: 0,
