@@ -160,7 +160,7 @@ const setupCrawlerAnimation = (eid: number) => {
 }
 
 const setupCrawlerAnimationRow = (eid: number, facingLeft: boolean) => {
-  AnimationRow.row[eid] = facingLeft ? 0 : 1
+  AnimationRow.row[eid] = facingLeft ? 1 : 0
 }
 
 const setupCrawlerBoids = (eid: number) => {
