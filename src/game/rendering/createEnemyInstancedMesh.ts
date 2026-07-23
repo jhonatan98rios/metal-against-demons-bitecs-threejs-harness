@@ -4,6 +4,8 @@ import * as THREE from 'three'
 // per-instance: matrix (position + billboard rotation), UV offset (sprite frame), color (hit flash)
 
 const VERTEX_SHADER = /* glsl */ `
+#include <common>
+uniform vec2 spritesheetSize;
 attribute vec2 instanceUVOffset;
 attribute vec3 instanceColor;
 
@@ -11,9 +13,11 @@ varying vec2 vUv;
 varying vec3 vColor;
 
 void main() {
-    vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-    gl_Position = projectionMatrix * mvPosition;
-    vUv = uv + instanceUVOffset;
+    #include <begin_vertex>
+    #include <project_vertex>
+
+    vec2 cellSize = 1.0 / spritesheetSize;
+    vUv = uv * cellSize + instanceUVOffset;
     vColor = instanceColor;
 }
 `
@@ -36,7 +40,10 @@ const ENEMY_CAPACITY = 5000
 
 function createMaterial(texture: THREE.Texture) {
   return new THREE.ShaderMaterial({
-    uniforms: { map: { value: texture } },
+    uniforms: {
+      map: { value: texture },
+      spritesheetSize: { value: new THREE.Vector2(2, 2) }
+    },
     vertexShader: VERTEX_SHADER,
     fragmentShader: FRAGMENT_SHADER,
     transparent: true,
@@ -72,7 +79,8 @@ export function createEnemyInstancedMesh(scene: THREE.Scene) {
   texture.magFilter = THREE.NearestFilter
   texture.minFilter = THREE.NearestFilter
   texture.colorSpace = THREE.SRGBColorSpace
-  texture.repeat.set(0.5, 0.5) // 2 columns × 2 rows
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
 
   const material = createMaterial(texture)
   const mesh = new THREE.InstancedMesh(geometry, material, ENEMY_CAPACITY)
