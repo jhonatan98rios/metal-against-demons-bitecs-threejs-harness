@@ -13,6 +13,8 @@ import { AnimationRow } from '../../shared/components/AnimationRow'
 import { Boids } from '../../shared/components/Boids'
 import { Enemy } from '../components/Enemy'
 import { Inactive } from '../../shared/components/Inactive'
+import { Sprite } from '../../shared/components/Sprite'
+import { CRAWLER } from '../definitions/crawler'
 import { Position } from '../../shared/components/Position'
 import { Velocity } from '../../shared/components/Velocity'
 
@@ -319,7 +321,10 @@ function processEntity(
   Velocity.z[eid] = velocity.z
 
   // ponytail: flip sprite row based on horizontal position relative to player
-  AnimationRow.row[eid] = mx < Position.x[playerEid] ? 1 : 0
+  // crawler rows are inverted (row 0 = right, row 1 = left) vs apparition (row 0 = left, row 1 = right)
+  const rowRight = Sprite.texture[eid] === CRAWLER.TEXTURE ? 0 : 1
+  const rowLeft = Sprite.texture[eid] === CRAWLER.TEXTURE ? 1 : 0
+  AnimationRow.row[eid] = mx < Position.x[playerEid] ? rowRight : rowLeft
 }
 
 // ---------------------------------------------------------------------------
