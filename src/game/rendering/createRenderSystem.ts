@@ -257,10 +257,13 @@ function renderNonEnemy(
 }
 
 function handleInactive(eid: number) {
-  if (!Enemy.isEnemy[eid]) {
-    const obj = renderObjects.get(eid)
-    if (obj) obj.visible = false
+  if (Enemy.isEnemy[eid]) {
+    const bar = enemyHealthBars.get(eid)
+    if (bar) bar.bg.visible = false
+    return
   }
+  const obj = renderObjects.get(eid)
+  if (obj) obj.visible = false
 }
 
 export const createRenderSystem = (
