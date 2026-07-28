@@ -53,5 +53,6 @@ export function createRoad(): THREE.Mesh {
   road.position.x = 30
   road.position.y = -1
   road.name = 'Road'
+  road.receiveShadow = true
   return road
 }
