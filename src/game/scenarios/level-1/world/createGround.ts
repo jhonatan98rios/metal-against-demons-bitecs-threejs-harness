@@ -44,7 +44,6 @@ function createSideGround(
   mesh.rotation.x = -Math.PI / 2
   mesh.position.set(centerX, -1, 0)
   mesh.name = name
-  mesh.receiveShadow = true
   return mesh
 }
 

@@ -21,9 +21,6 @@ function createWebGLRenderer(canvas: HTMLCanvasElement) {
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 0.9
-  // ponytail: simple shadow maps — PCFSoft for soft edges
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   return renderer
 }
@@ -46,16 +43,6 @@ function createCamera() {
 function createDirectionalLight() {
   const dirLight = new THREE.DirectionalLight(SUN_COLOR, 0.5)
   dirLight.position.set(140, 120, 30)
-  // ponytail: sun casts shadows — covers ~120x120 area centered on player start
-  dirLight.castShadow = true
-  dirLight.shadow.mapSize.width = 1024
-  dirLight.shadow.mapSize.height = 1024
-  dirLight.shadow.camera.near = 1
-  dirLight.shadow.camera.far = 500
-  dirLight.shadow.camera.left = -60
-  dirLight.shadow.camera.right = 60
-  dirLight.shadow.camera.top = 60
-  dirLight.shadow.camera.bottom = -60
   return dirLight
 }
 
