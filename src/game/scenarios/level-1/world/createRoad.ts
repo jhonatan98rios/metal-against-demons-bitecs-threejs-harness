@@ -51,7 +51,7 @@ export function createRoad(): THREE.Mesh {
   const road = setupMesh()
   road.rotation.x = -Math.PI / 2
   road.position.x = 30
-  road.position.y = 1
+  road.position.y = -1
   road.name = 'Road'
   return road
 }

@@ -12,14 +12,6 @@ function setupTexture(
   return texture
 }
 
-function setupGeometry(): THREE.PlaneGeometry {
-  const width = 1000
-  const height = 1000
-  const segments = 128
-  const geometry = new THREE.PlaneGeometry(width, height, segments, segments)
-  return geometry
-}
-
 function setupMaterial(): THREE.MeshStandardMaterial {
   const texture = setupTexture('/world/sand.jpg')
   const displacementMap = setupTexture('/world/sand.png')
@@ -39,14 +31,25 @@ function setupMaterial(): THREE.MeshStandardMaterial {
   return material
 }
 
-export function createGround(): THREE.Mesh {
-  const geometry = setupGeometry()
+// ponytail: two sand planes flanking the road (x=15..45), same material/displacement
+function createSideGround(
+  width: number,
+  centerX: number,
+  name: string
+): THREE.Mesh {
+  const segments = Math.round((128 * width) / 1000)
+  const geometry = new THREE.PlaneGeometry(width, 1000, segments, 128)
   const material = setupMaterial()
-  const ground = new THREE.Mesh(geometry, material)
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.rotation.x = -Math.PI / 2
+  mesh.position.set(centerX, -1, 0)
+  mesh.name = name
+  return mesh
+}
 
-  ground.rotation.x = -Math.PI / 2
-  ground.name = 'Ground'
-
-  ground.position.y = -1
-  return ground
+export function createGround(): [THREE.Mesh, THREE.Mesh] {
+  return [
+    createSideGround(515, -242.5, 'Ground.Left'),
+    createSideGround(455, 272.5, 'Ground.Right')
+  ]
 }

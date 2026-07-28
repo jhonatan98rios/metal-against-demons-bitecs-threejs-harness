@@ -12,7 +12,9 @@ export function createScenario(
   scenario_id: SCENARIOS
 ): void {
   if (scenario_id == SCENARIOS.LEVEL1) {
-    scene.add(createGround())
+    const [leftGround, rightGround] = createGround()
+    scene.add(leftGround)
+    scene.add(rightGround)
     scene.add(createRoad())
   }
 }
