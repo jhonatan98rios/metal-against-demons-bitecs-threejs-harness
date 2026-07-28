@@ -48,8 +48,8 @@ function createDirectionalLight() {
   dirLight.position.set(140, 120, 30)
   // ponytail: sun casts shadows — covers ~120x120 area centered on player start
   dirLight.castShadow = true
-  dirLight.shadow.mapSize.width = 1024
-  dirLight.shadow.mapSize.height = 1024
+  dirLight.shadow.mapSize.width = 2048
+  dirLight.shadow.mapSize.height = 2048
   dirLight.shadow.camera.near = 1
   dirLight.shadow.camera.far = 500
   dirLight.shadow.camera.left = -60

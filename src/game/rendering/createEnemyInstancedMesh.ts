@@ -102,6 +102,13 @@ export function createEnemyIM(
   const material = createMaterial(texture, config.columns, config.rows)
   const mesh = new THREE.InstancedMesh(geometry, material, ENEMY_CAPACITY)
   mesh.frustumCulled = false
+  // ponytail: shadow pass needs custom depth material (ShaderMaterial with discard is skipped)
+  mesh.castShadow = true
+  mesh.customDepthMaterial = new THREE.MeshDepthMaterial({
+    depthPacking: THREE.RGBADepthPacking,
+    map: texture,
+    alphaTest: 0.5
+  })
 
   const uvBuffer = new Float32Array(ENEMY_CAPACITY * 2)
   const colorBuffer = new Float32Array(ENEMY_CAPACITY * 3)
