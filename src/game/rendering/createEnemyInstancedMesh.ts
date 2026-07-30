@@ -72,8 +72,26 @@ function initOffScreenInstances(
   mesh.instanceMatrix.needsUpdate = true
 }
 
+function createShadowMesh(): THREE.InstancedMesh {
+  const geometry = new THREE.CircleGeometry(1, 24)
+  geometry.rotateX(-Math.PI / 2)
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x160d0b,
+    transparent: true,
+    opacity: 0.32,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1
+  })
+  const shadow = new THREE.InstancedMesh(geometry, material, ENEMY_CAPACITY)
+  shadow.frustumCulled = false
+  return shadow
+}
+
 export interface EnemyInstancedMesh {
   mesh: THREE.InstancedMesh
+  shadow: THREE.InstancedMesh
   uvBuffer: Float32Array
   colorBuffer: Float32Array
 }
@@ -103,6 +121,8 @@ export function createEnemyIM(
   const mesh = new THREE.InstancedMesh(geometry, material, ENEMY_CAPACITY)
   mesh.frustumCulled = false
 
+  const shadow = createShadowMesh()
+
   const uvBuffer = new Float32Array(ENEMY_CAPACITY * 2)
   const colorBuffer = new Float32Array(ENEMY_CAPACITY * 3)
 
@@ -116,9 +136,11 @@ export function createEnemyIM(
   )
 
   initOffScreenInstances(mesh, colorBuffer)
+  initOffScreenInstances(shadow, colorBuffer)
   scene.add(mesh)
+  scene.add(shadow)
 
-  return { mesh, uvBuffer, colorBuffer }
+  return { mesh, shadow, uvBuffer, colorBuffer }
 }
 
 // -- legacy compat ---------------------------------------------------------

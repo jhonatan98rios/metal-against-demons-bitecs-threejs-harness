@@ -10,6 +10,7 @@ import { Sprite } from '../core/shared/components/Sprite'
 import { Health } from '../core/shared/components/Health'
 import { HitEffect } from '../core/shared/components/HitEffect'
 import { Enemy } from '../core/enemies/components/Enemy'
+import { Projectile } from '../core/projectiles/components/Projectile'
 
 import { createSpriteRender } from './createSpriteRender'
 import { createEnemyIM, EnemyInstancedMesh } from './createEnemyInstancedMesh'
@@ -28,9 +29,35 @@ const getOrCreateRenderObject = (eid: number, scene: THREE.Scene) => {
   if (existingObject) return existingObject
 
   const newObject = createSpriteRender(eid)
+  if (Projectile.isProjectile[eid] === 0) {
+    newObject.add(createFakeShadow(Sprite.width[eid], Sprite.height[eid]))
+  }
   renderObjects.set(eid, newObject)
   scene.add(newObject)
   return newObject
+}
+
+const createFakeShadow = (width: number, height: number) => {
+  const geometry = new THREE.CircleGeometry(1, 24)
+  geometry.rotateX(-Math.PI / 2)
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x160d0b,
+    transparent: true,
+    opacity: 0.32,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1
+  })
+  const shadow = new THREE.Mesh(geometry, material)
+  shadow.scale.set(
+    Math.max(0.55, width * 0.32),
+    Math.max(0.25, height * 0.08),
+    1
+  )
+  shadow.position.y = -height / 2 + 0.3
+  shadow.renderOrder = -1
+  return shadow
 }
 
 const updateSpriteFrame = (eid: number, object: THREE.Mesh) => {
@@ -233,17 +260,25 @@ function updateEnemyInstance(
   }
 
   _pos.set(Position.x[eid], Position.y[eid], Position.z[eid])
+  _scl.set(1, 1, 1)
   _rot.setFromAxisAngle(
     _up,
     Math.atan2(cam.x - Position.x[eid], cam.z - Position.z[eid])
   )
   _mat.compose(_pos, _rot, _scl)
   im.mesh.setMatrixAt(index, _mat)
+
+  _pos.y = Position.y[eid] - Sprite.height[eid] / 2 + 0.3
+  _scl.set(Math.max(0.55, Sprite.width[eid] * 0.32), 0.28, 1)
+  _mat.compose(_pos, new THREE.Quaternion(), _scl)
+  im.shadow.setMatrixAt(index, _mat)
 }
 
 function finalizeEnemyIM(slot: EnemyIMSlot) {
   slot.im.mesh.count = slot.counter
   slot.im.mesh.instanceMatrix.needsUpdate = true
+  slot.im.shadow.count = slot.counter
+  slot.im.shadow.instanceMatrix.needsUpdate = true
   slot.im.mesh.geometry.attributes.instanceUVOffset.needsUpdate = true
   slot.im.mesh.geometry.attributes.instanceColor.needsUpdate = true
 }
