@@ -297,9 +297,9 @@ function getRedBoltDetail(lvl: number): string {
 
 registerSkill({
   id: SKILL_ID.RED_BOLT,
-  name: 'Crimson Spiral',
-  icon: '🔴',
-  description: 'Spiraling red bolts',
+  name: 'Vampire Horde',
+  icon: '/bat_attack_1.png',
+  description: 'Summons a horde of bats that spiral outward from you.',
   maxLevel: 5,
   upgrades: UPGRADES,
   create: createRedBoltSkill,

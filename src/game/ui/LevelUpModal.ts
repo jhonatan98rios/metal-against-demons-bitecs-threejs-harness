@@ -85,6 +85,25 @@ function buildOverlay(
   return { overlay, detailText }
 }
 
+// ponytail: sprite sheet icon — show first frame of 2-column sheet
+function createIconSpan(icon: string): HTMLSpanElement {
+  const el = document.createElement('span')
+  if (icon.startsWith('/')) {
+    Object.assign(el.style, {
+      display: 'inline-block',
+      width: '28px',
+      height: '28px',
+      backgroundImage: `url('${icon}')`,
+      backgroundSize: '200% 100%',
+      backgroundRepeat: 'no-repeat'
+    })
+  } else {
+    el.textContent = icon
+    Object.assign(el.style, { fontSize: '28px' })
+  }
+  return el
+}
+
 export class LevelUpModal {
   private overlay: HTMLDivElement
   private detailText: HTMLParagraphElement
@@ -112,9 +131,7 @@ export class LevelUpModal {
   ): HTMLDivElement {
     const card = document.createElement('div')
     Object.assign(card.style, createCardStyle())
-    const icon = document.createElement('span')
-    icon.textContent = opt.icon
-    Object.assign(icon.style, { fontSize: '28px' })
+    const icon = createIconSpan(opt.icon)
     const label = document.createElement('span')
     label.textContent = opt.label
     Object.assign(label.style, { fontSize: '14px', fontWeight: 'bold' })
