@@ -18,11 +18,11 @@ const drawDamageText = (canvas: HTMLCanvasElement, damage: number) => {
   if (!ctx) return
 
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
-  ctx.font = 'bold 80px sans-serif'
+  ctx.font = 'bold 96px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.lineJoin = 'round'
-  ctx.lineWidth = 14
+  ctx.lineWidth = 16
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)'
   ctx.strokeText(formatDamageText(damage), CANVAS_W / 2, CANVAS_H / 2)
   ctx.fillStyle = '#ff2d2d'
@@ -46,7 +46,7 @@ export const createDamagePopupSprite = (): THREE.Sprite => {
       depthWrite: false
     })
   )
-  sprite.scale.set(2.2, 1.1, 1)
+  sprite.scale.set(2.6, 1.3, 1)
   sprite.position.y = POPUP_Y
   sprite.renderOrder = 3
   sprite.visible = false
