@@ -1,5 +1,9 @@
 import { Not, query, World } from 'bitecs'
 
+import {
+  DamagePopup,
+  DAMAGE_POPUP_DURATION_S
+} from '../../shared/components/DamagePopup'
 import { Enemy } from '../../enemies/components/Enemy'
 import { Health } from '../../shared/components/Health'
 import { HitEffect } from '../../shared/components/HitEffect'
@@ -41,6 +45,8 @@ function checkProjectileHit(
 
     Health.current[eid] -= Projectile.damage[pid]
     HitEffect.timer[eid] = 0.15
+    DamagePopup.timer[eid] = DAMAGE_POPUP_DURATION_S
+    DamagePopup.damage[eid] = Projectile.damage[pid]
     entry.hitThisFrame.add(eid)
     entry.release(pid)
     break

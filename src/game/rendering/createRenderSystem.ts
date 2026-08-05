@@ -14,7 +14,13 @@ import { Enemy } from '../core/enemies/components/Enemy'
 import { Projectile } from '../core/projectiles/components/Projectile'
 
 import { createSpriteRender } from './createSpriteRender'
-import { createDamagePopupSprite, updateDamagePopup } from './createDamagePopup'
+import {
+  createDamagePopupSprite,
+  ENEMY_POPUP_COLOR,
+  PLAYER_POPUP_COLOR,
+  updateDamagePopup,
+  updateWorldDamagePopup
+} from './createDamagePopup'
 import { createEnemyIM, EnemyInstancedMesh } from './createEnemyInstancedMesh'
 import { APPARITION } from '../core/enemies/definitions/apparition'
 import { CRAWLER } from '../core/enemies/definitions/crawler'
@@ -196,6 +202,29 @@ const syncEnemyHealthBar = (eid: number, scene: THREE.Scene) => {
   }
 }
 
+// -- enemy damage popups (scene sprites, follow enemy position) ------------
+
+const enemyPopups = new Map<number, THREE.Sprite>()
+
+const syncEnemyPopup = (eid: number, scene: THREE.Scene, delta: number) => {
+  if (DamagePopup.timer[eid] <= 0) {
+    const existing = enemyPopups.get(eid)
+    if (existing) existing.visible = false
+    return
+  }
+
+  const sprite =
+    enemyPopups.get(eid) ??
+    (() => {
+      const s = createDamagePopupSprite(ENEMY_POPUP_COLOR)
+      scene.add(s)
+      enemyPopups.set(eid, s)
+      return s
+    })()
+
+  updateWorldDamagePopup(sprite, eid, delta)
+}
+
 // -- non-enemy hit flash ---------------------------------------------------
 
 const applyHitFlash = (
@@ -307,7 +336,7 @@ const getOrCreateDamagePopup = (object: THREE.Mesh): THREE.Sprite => {
     | undefined
   if (existing) return existing
 
-  const sprite = createDamagePopupSprite()
+  const sprite = createDamagePopupSprite(PLAYER_POPUP_COLOR)
   sprite.userData.damagePopup = true
   object.add(sprite)
   return sprite
@@ -329,6 +358,9 @@ function handleInactive(eid: number) {
   if (Enemy.isEnemy[eid]) {
     const bar = enemyHealthBars.get(eid)
     if (bar) bar.bg.visible = false
+    const popup = enemyPopups.get(eid)
+    if (popup) popup.visible = false
+    DamagePopup.timer[eid] = 0
     return
   }
   const obj = renderObjects.get(eid)
@@ -401,6 +433,7 @@ export const createRenderSystem = (
         const slot = enemyIMByTexture.get(Sprite.texture[eid])!
         updateEnemyInstance(eid, slot.counter, slot.im, cam, delta)
         syncEnemyHealthBar(eid, scene)
+        syncEnemyPopup(eid, scene, delta)
         slot.counter++
       } else {
         renderNonEnemy(eid, scene, delta)
