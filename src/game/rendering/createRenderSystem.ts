@@ -234,6 +234,7 @@ interface EnemyIMSlot {
 
 // ponytail: per-texture sprite Y offset — crawler frame is centered, needs to sit lower
 const SPRITE_Y_OFFSET: Record<string, number> = {
+  [APPARITION.TEXTURE]: APPARITION.Y_OFFSET,
   [CRAWLER.TEXTURE]: CRAWLER.Y_OFFSET
 }
 

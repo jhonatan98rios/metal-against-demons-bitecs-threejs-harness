@@ -24,6 +24,9 @@ export const APPARITION = {
   /** Frame height in world units */
   HEIGHT: 6,
 
+  /** Downward sprite offset in world units (sprite sits lower than its center) */
+  Y_OFFSET: -0.5,
+
   /** Starting health value */
   HEALTH: 5,
 
