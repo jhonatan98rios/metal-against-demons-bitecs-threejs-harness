@@ -10,6 +10,8 @@ import { MAX_ENTITIES, sab } from '../../shared/constants'
 export const Spiral = {
   /** Current angle in radians. Decrements each frame (clockwise). */
   angle: sab.f32(MAX_ENTITIES),
+  /** Current radius from the player (grows with age). */
+  radius: sab.f32(MAX_ENTITIES),
   /** Tangential speed in u/s (constant). Angular speed = this / radius. */
   angularSpeed: sab.f32(MAX_ENTITIES),
   /** Units per second moving outward from center. */

@@ -113,6 +113,7 @@ function createSpiralPool(
       Position.z[eid] = z
       TTL.remaining[eid] = ttl
       Spiral.angle[eid] = Math.random() * Math.PI * 2
+      Spiral.radius[eid] = 0
       return eid
     },
     release(eid: number) {
@@ -166,14 +167,14 @@ function createSpiralMovementSystem(world: World) {
 
       const ents = query(world, SPIRAL_QUERY)
       for (const eid of ents) {
-        const r =
-          Math.sqrt((Position.x[eid] - pX) ** 2 + (Position.z[eid] - pZ) ** 2) +
-          Spiral.radialSpeed[eid] * dt
-        // ponytail: constant speed spiral — omega = tangential speed / radius
-        Spiral.angle[eid] -= (Spiral.angularSpeed[eid] / r) * dt
+        // ponytail: radius is per-entity state (grows with age); the spiral
+        // center is the player's current position, so it translates with him
+        Spiral.radius[eid] += Spiral.radialSpeed[eid] * dt
+        Spiral.angle[eid] -=
+          (Spiral.angularSpeed[eid] / Math.max(Spiral.radius[eid], 0.01)) * dt
 
-        Position.x[eid] = pX + Math.cos(Spiral.angle[eid]) * r
-        Position.z[eid] = pZ + Math.sin(Spiral.angle[eid]) * r
+        Position.x[eid] = pX + Math.cos(Spiral.angle[eid]) * Spiral.radius[eid]
+        Position.z[eid] = pZ + Math.sin(Spiral.angle[eid]) * Spiral.radius[eid]
       }
     }
   }
