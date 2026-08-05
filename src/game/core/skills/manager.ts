@@ -26,6 +26,7 @@ function buildUpgradeOptions(
 
     options.push({
       icon: def.icon,
+      iconColumns: def.iconColumns,
       label: `${def.name} Lv.${nextLevel}`,
       description: upg
         ? Object.entries(upg.patch)
@@ -46,6 +47,7 @@ function buildUpgradeOptions(
 
     options.push({
       icon: def.icon,
+      iconColumns: def.iconColumns,
       label: `${def.name} Lv.1`,
       description: def.description,
       detail: def.getDetail(1),

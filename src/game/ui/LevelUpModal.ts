@@ -1,5 +1,7 @@
 export interface LevelUpOption {
   icon: string
+  /** Sprite sheets: columns in the icon sheet (1 frame shown). */
+  iconColumns?: number
   label: string
   description: string
   detail: string
@@ -89,8 +91,8 @@ function buildOverlay(
   return { overlay, detailText }
 }
 
-// ponytail: sprite sheet icon — show first frame of 2-column sheet
-function createIconSpan(icon: string): HTMLSpanElement {
+// ponytail: sprite sheet icon — show first frame of the sheet
+function createIconSpan(icon: string, columns = 2): HTMLSpanElement {
   const el = document.createElement('span')
   if (icon.startsWith('/')) {
     Object.assign(el.style, {
@@ -98,7 +100,7 @@ function createIconSpan(icon: string): HTMLSpanElement {
       width: '28px',
       height: '28px',
       backgroundImage: `url('${icon}')`,
-      backgroundSize: '200% 100%',
+      backgroundSize: `${columns * 100}% 100%`,
       backgroundRepeat: 'no-repeat'
     })
   } else {
@@ -135,7 +137,7 @@ export class LevelUpModal {
   ): HTMLDivElement {
     const card = document.createElement('div')
     Object.assign(card.style, createCardStyle())
-    const icon = createIconSpan(opt.icon)
+    const icon = createIconSpan(opt.icon, opt.iconColumns)
     const label = document.createElement('span')
     label.textContent = opt.label
     Object.assign(label.style, {

@@ -32,6 +32,8 @@ export type SkillDefinition = {
   id: number
   name: string
   icon: string
+  /** Sprite sheets: columns in the icon sheet (1 frame shown). Emoji icons omit this. */
+  iconColumns?: number
   description: string
   maxLevel: number
   upgrades: LevelUpgrade[]

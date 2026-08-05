@@ -299,6 +299,7 @@ registerSkill({
   id: SKILL_ID.RED_BOLT,
   name: 'Vampire Horde',
   icon: '/bat_attack_1.png',
+  iconColumns: BAT_SPRITE.columns,
   description: 'Summons a horde of bats that spiral outward from you.',
   maxLevel: 5,
   upgrades: UPGRADES,

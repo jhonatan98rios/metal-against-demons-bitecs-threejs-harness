@@ -138,7 +138,8 @@ function getProjectileDetail(lvl: number): string {
 registerSkill({
   id: SKILL_ID.PROJECTILE,
   name: 'Holy Bolt',
-  icon: '🔵',
+  icon: '/sound_attack_1.png',
+  iconColumns: SOUND_SPRITE.columns,
   description: 'Fires at nearest enemy',
   maxLevel: 5,
   upgrades: UPGRADES,
