@@ -9,10 +9,12 @@ import { AnimationRow } from '../core/shared/components/AnimationRow'
 import { Sprite } from '../core/shared/components/Sprite'
 import { Health } from '../core/shared/components/Health'
 import { HitEffect } from '../core/shared/components/HitEffect'
+import { DamagePopup } from '../core/shared/components/DamagePopup'
 import { Enemy } from '../core/enemies/components/Enemy'
 import { Projectile } from '../core/projectiles/components/Projectile'
 
 import { createSpriteRender } from './createSpriteRender'
+import { createDamagePopupSprite, updateDamagePopup } from './createDamagePopup'
 import { createEnemyIM, EnemyInstancedMesh } from './createEnemyInstancedMesh'
 import { APPARITION } from '../core/enemies/definitions/apparition'
 import { CRAWLER } from '../core/enemies/definitions/crawler'
@@ -299,6 +301,18 @@ function finalizeEnemyIM(slot: EnemyIMSlot) {
   slot.im.mesh.geometry.attributes.instanceColor.needsUpdate = true
 }
 
+const getOrCreateDamagePopup = (object: THREE.Mesh): THREE.Sprite => {
+  const existing = object.children.find((c) => c.userData.damagePopup) as
+    | THREE.Sprite
+    | undefined
+  if (existing) return existing
+
+  const sprite = createDamagePopupSprite()
+  sprite.userData.damagePopup = true
+  object.add(sprite)
+  return sprite
+}
+
 function renderNonEnemy(eid: number, scene: THREE.Scene, delta: number) {
   const object = getOrCreateRenderObject(eid, scene)
   object.visible = true
@@ -306,6 +320,9 @@ function renderNonEnemy(eid: number, scene: THREE.Scene, delta: number) {
   syncPosition(eid, object)
   applyHitFlash(object, eid, delta)
   updateHealthBar(object, eid)
+  if (DamagePopup.timer[eid] > 0) {
+    updateDamagePopup(getOrCreateDamagePopup(object), eid, delta)
+  }
 }
 
 function handleInactive(eid: number) {

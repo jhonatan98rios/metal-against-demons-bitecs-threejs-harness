@@ -11,5 +11,7 @@ import { MAX_ENTITIES, sab } from '../../shared/constants'
 export const Enemy = {
   isEnemy: sab.u8(MAX_ENTITIES),
   /** XP granted to player when this enemy dies */
-  xpValue: sab.u16(MAX_ENTITIES)
+  xpValue: sab.u16(MAX_ENTITIES),
+  /** Contact damage dealt to the player per hit */
+  damage: sab.u16(MAX_ENTITIES)
 }

@@ -46,5 +46,8 @@ export const CRAWLER = {
   END_FRAME: 3,
 
   /** XP granted to player on kill */
-  XP_VALUE: 7
+  XP_VALUE: 7,
+
+  /** Contact damage dealt to the player per hit */
+  DAMAGE: 5
 } as const

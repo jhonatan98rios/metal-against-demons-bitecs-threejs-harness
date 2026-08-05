@@ -46,5 +46,8 @@ export const APPARITION = {
   END_FRAME: 1,
 
   /** XP granted to player on kill */
-  XP_VALUE: 10
+  XP_VALUE: 10,
+
+  /** Contact damage dealt to the player per hit */
+  DAMAGE: 5
 } as const

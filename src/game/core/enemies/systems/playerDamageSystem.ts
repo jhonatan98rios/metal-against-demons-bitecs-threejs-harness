@@ -1,6 +1,10 @@
 import { Not, query, World } from 'bitecs'
 
 import { Active } from '../../shared/components/Active'
+import {
+  DamagePopup,
+  DAMAGE_POPUP_DURATION_S
+} from '../../shared/components/DamagePopup'
 import { Enemy } from '../components/Enemy'
 import { Health } from '../../shared/components/Health'
 import { HitEffect } from '../../shared/components/HitEffect'
@@ -8,7 +12,6 @@ import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 
 const DAMAGE_RADIUS_SQ = 1.5 * 1.5
-const DAMAGE_PER_HIT = 10
 const COOLDOWN_S = 0.5
 
 interface PlayerDamageWorld extends World {
@@ -51,8 +54,10 @@ export function createPlayerDamageSystem(world: World) {
           continue
         }
 
-        Health.current[playerEid] -= DAMAGE_PER_HIT
+        Health.current[playerEid] -= Enemy.damage[eid]
         HitEffect.timer[playerEid] = 0.15
+        DamagePopup.timer[playerEid] = DAMAGE_POPUP_DURATION_S
+        DamagePopup.damage[playerEid] = Enemy.damage[eid]
         cooldowns.set(eid, COOLDOWN_S)
       }
     }

@@ -100,6 +100,10 @@ const setupXpValue = (eid: number) => {
   Enemy.xpValue[eid] = APPARITION.XP_VALUE
 }
 
+const setupDamage = (eid: number) => {
+  Enemy.damage[eid] = APPARITION.DAMAGE
+}
+
 export function setupApparition(
   eid: number,
   x: number,
@@ -119,6 +123,7 @@ export function setupApparition(
   setupBoids(eid)
   setupBillboard(eid)
   setupXpValue(eid)
+  setupDamage(eid)
 }
 
 export function createApparition(
@@ -177,6 +182,10 @@ const setupCrawlerXpValue = (eid: number) => {
   Enemy.xpValue[eid] = CRAWLER.XP_VALUE
 }
 
+const setupCrawlerDamage = (eid: number) => {
+  Enemy.damage[eid] = CRAWLER.DAMAGE
+}
+
 export function setupCrawler(
   eid: number,
   x: number,
@@ -194,6 +203,7 @@ export function setupCrawler(
   setupCrawlerBoids(eid)
   setupBillboard(eid)
   setupCrawlerXpValue(eid)
+  setupCrawlerDamage(eid)
 }
 
 export function createCrawler(

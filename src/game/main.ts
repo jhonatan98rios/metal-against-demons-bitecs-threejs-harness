@@ -21,6 +21,7 @@ import { createFirstPersonOverlay } from './ui/FirstPersonOverlay'
 import { createLevelUpSystem } from './core/player/levelUpSystem'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { Health } from './core/shared/components/Health'
+import { DamagePopup } from './core/shared/components/DamagePopup'
 import { Position } from './core/shared/components/Position'
 import { GameState, STATES } from './core/shared/components/GameState'
 import { XP } from './core/shared/components/XP'
@@ -77,6 +78,7 @@ function makeRestartCallback(world: { playerEid: number }) {
   return () => {
     const pid = world.playerEid
     Health.current[pid] = Health.max[pid]
+    DamagePopup.timer[pid] = 0
     Position.x[pid] = 30
     Position.y[pid] = 5
     Position.z[pid] = 0
