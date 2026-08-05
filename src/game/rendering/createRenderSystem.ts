@@ -232,6 +232,23 @@ interface EnemyIMSlot {
   counter: number
 }
 
+// ponytail: per-texture sprite Y offset — crawler frame is centered, needs to sit lower
+const SPRITE_Y_OFFSET: Record<string, number> = {
+  [CRAWLER.TEXTURE]: CRAWLER.Y_OFFSET
+}
+
+function updateShadowMatrix(
+  im: EnemyInstancedMesh,
+  index: number,
+  eid: number,
+  yOffset: number
+) {
+  _pos.y = Position.y[eid] + yOffset - Sprite.height[eid] / 2 + 0.3
+  _scl.set(Math.max(0.55, Sprite.width[eid] * 0.32), 0.28, 1)
+  _mat.compose(_pos, new THREE.Quaternion(), _scl)
+  im.shadow.setMatrixAt(index, _mat)
+}
+
 function updateEnemyInstance(
   eid: number,
   index: number,
@@ -259,7 +276,8 @@ function updateEnemyInstance(
     im.colorBuffer[index * 3 + 2] = 1
   }
 
-  _pos.set(Position.x[eid], Position.y[eid], Position.z[eid])
+  const yOffset = SPRITE_Y_OFFSET[Sprite.texture[eid]] ?? 0
+  _pos.set(Position.x[eid], Position.y[eid] + yOffset, Position.z[eid])
   _scl.set(1, 1, 1)
   _rot.setFromAxisAngle(
     _up,
@@ -268,10 +286,7 @@ function updateEnemyInstance(
   _mat.compose(_pos, _rot, _scl)
   im.mesh.setMatrixAt(index, _mat)
 
-  _pos.y = Position.y[eid] - Sprite.height[eid] / 2 + 0.3
-  _scl.set(Math.max(0.55, Sprite.width[eid] * 0.32), 0.28, 1)
-  _mat.compose(_pos, new THREE.Quaternion(), _scl)
-  im.shadow.setMatrixAt(index, _mat)
+  updateShadowMatrix(im, index, eid, yOffset)
 }
 
 function finalizeEnemyIM(slot: EnemyIMSlot) {
