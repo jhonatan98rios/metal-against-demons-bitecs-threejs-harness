@@ -11,11 +11,13 @@ function createCardStyle(): Partial<CSSStyleDeclaration> {
     flexDirection: 'column',
     alignItems: 'center',
     gap: '6px',
-    padding: '14px 18px',
+    padding: '10px 8px',
     background: 'rgba(255,255,255,0.06)',
     borderRadius: '8px',
     border: '2px solid #444',
-    minWidth: '120px',
+    minWidth: '0',
+    flex: '1 1 0',
+    maxWidth: '150px',
     pointerEvents: 'auto',
     cursor: 'pointer',
     transition: 'border-color 0.12s, background 0.12s, transform 0.12s'
@@ -73,8 +75,10 @@ function buildOverlay(
   const row = document.createElement('div')
   Object.assign(row.style, {
     display: 'flex',
-    gap: '12px',
-    justifyContent: 'center'
+    gap: '8px',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 'min(96vw, 540px)'
   })
   options.forEach((opt, i) => row.appendChild(createCardFn(opt, i, onConfirm)))
   overlay.appendChild(row)
@@ -134,13 +138,19 @@ export class LevelUpModal {
     const icon = createIconSpan(opt.icon)
     const label = document.createElement('span')
     label.textContent = opt.label
-    Object.assign(label.style, { fontSize: '14px', fontWeight: 'bold' })
+    Object.assign(label.style, {
+      fontSize: '13px',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      wordBreak: 'break-word'
+    })
     const desc = document.createElement('span')
     desc.textContent = opt.description
     Object.assign(desc.style, {
-      fontSize: '11px',
+      fontSize: '10px',
       opacity: '0.6',
-      textAlign: 'center'
+      textAlign: 'center',
+      wordBreak: 'break-word'
     })
     card.append(icon, label, desc)
     const handleClick = () =>
