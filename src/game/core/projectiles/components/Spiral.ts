@@ -10,7 +10,7 @@ import { MAX_ENTITIES, sab } from '../../shared/constants'
 export const Spiral = {
   /** Current angle in radians. Decrements each frame (clockwise). */
   angle: sab.f32(MAX_ENTITIES),
-  /** Radians per second rotating around center. */
+  /** Tangential speed in u/s (constant). Angular speed = this / radius. */
   angularSpeed: sab.f32(MAX_ENTITIES),
   /** Units per second moving outward from center. */
   radialSpeed: sab.f32(MAX_ENTITIES)

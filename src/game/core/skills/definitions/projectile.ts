@@ -74,7 +74,7 @@ function setupProjectileSystems(
   spawn.setInterval(state.interval)
 
   getCollisionSystem(world).registerPool(1, (eid) => pool.release(eid))
-  const despawn = createDespawnSystem(world, (eid) => pool.release(eid))
+  const despawn = createDespawnSystem(world, 1, (eid) => pool.release(eid))
 
   return { spawn, despawn }
 }

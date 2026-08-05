@@ -6,6 +6,7 @@ import { Projectile } from '../components/Projectile'
 
 export function createDespawnSystem(
   world: World,
+  poolId: number,
   release: (eid: number) => void
 ) {
   return {
@@ -19,6 +20,8 @@ export function createDespawnSystem(
       // eslint-disable-next-line functional/no-let
       for (let i = 0; i < expired.length; i++) {
         const eid = expired[i]
+        // ponytail: only despawn our own pool — cross-pool releases corrupt free lists
+        if (Projectile.poolId[eid] !== poolId) continue
 
         TTL.remaining[eid] -= dt
         if (TTL.remaining[eid] <= 0) {

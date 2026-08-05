@@ -166,10 +166,11 @@ function createSpiralMovementSystem(world: World) {
 
       const ents = query(world, SPIRAL_QUERY)
       for (const eid of ents) {
-        Spiral.angle[eid] -= Spiral.angularSpeed[eid] * dt
         const r =
           Math.sqrt((Position.x[eid] - pX) ** 2 + (Position.z[eid] - pZ) ** 2) +
           Spiral.radialSpeed[eid] * dt
+        // ponytail: constant speed spiral — omega = tangential speed / radius
+        Spiral.angle[eid] -= (Spiral.angularSpeed[eid] / r) * dt
 
         Position.x[eid] = pX + Math.cos(Spiral.angle[eid]) * r
         Position.z[eid] = pZ + Math.sin(Spiral.angle[eid]) * r
@@ -237,7 +238,7 @@ function createRedBoltSkill(world: World, _playerEid: number, level: number) {
   const spawn = createSpiralSpawnSystem(world, pool, PROJECTILE_TTL)
   const movement = createSpiralMovementSystem(world)
   getCollisionSystem(world).registerPool(2, (eid) => pool.release(eid))
-  const despawn = createDespawnSystem(world, (eid) => pool.release(eid))
+  const despawn = createDespawnSystem(world, 2, (eid) => pool.release(eid))
 
   // eslint-disable-next-line functional/no-let
   let currentStats = accumulateUpgrades(level)
@@ -279,7 +280,7 @@ function getRedBoltDetail(lvl: number): string {
   const lines = [
     `Fires crimson bolts that spiral outward from you.`,
     `Damage: ${stats.damage}`,
-    `Angular: ${stats.angularSpeed} rad/s`,
+    `Tangential: ${stats.angularSpeed} u/s`,
     `Radius growth: ${stats.radialSpeed} u/s`,
     `Interval: ${stats.interval.toFixed(2)}s`
   ]
