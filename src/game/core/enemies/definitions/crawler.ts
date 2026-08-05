@@ -25,7 +25,7 @@ export const CRAWLER = {
   HEIGHT: 4,
 
   /** Downward sprite offset in world units (sprite sits lower than its center) */
-  Y_OFFSET: -1.5,
+  Y_OFFSET: -2.25,
 
   /** Starting health value */
   HEALTH: 3,
