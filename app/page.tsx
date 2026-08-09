@@ -76,9 +76,56 @@ function LevelCarousel() {
   )
 }
 
+function FixedNav() {
+  return (
+    <>
+      <Link
+        href="/config"
+        aria-label="Settings"
+        className="fixed top-4 right-4 z-10 rounded-full border border-zinc-700 bg-zinc-800 p-2.5 text-zinc-100 transition-colors hover:bg-zinc-700"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="h-5 w-5"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z"
+          />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      </Link>
+      <Link
+        href="/store"
+        aria-label="Store"
+        className="fixed top-16 right-4 z-10 rounded-full border border-zinc-700 bg-zinc-800 p-2.5 text-zinc-100 transition-colors hover:bg-zinc-700"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="h-5 w-5"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"
+          />
+        </svg>
+      </Link>
+    </>
+  )
+}
+
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-900">
+      <FixedNav />
       <main className="flex w-full max-w-3xl flex-col gap-6 px-6">
         <h1 className="text-center font-mono text-2xl font-bold text-zinc-100">
           Metal Against Demons
