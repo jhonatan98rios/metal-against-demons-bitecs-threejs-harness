@@ -28,7 +28,7 @@ import { XP } from './core/shared/components/XP'
 import { createGameStateSystem } from './systems/gameStateSystem'
 import { createVictorySystem } from './systems/victorySystem'
 import { getPhase, DEFAULT_PHASE } from './core/phases/definitions'
-import { createScenario, SCENARIOS } from './scenarios/createScenario'
+import { createScenario } from './scenarios/createScenario'
 import { createSkillManager } from './core/skills/manager'
 import { SKILL_ID } from './core/skills/skillIds'
 import { getCollisionSystem } from './core/projectiles/systems/collisionSystem'
@@ -212,7 +212,7 @@ export function start(phaseId?: string) {
   const renderCtx = createRender(canvas)
   const input = createInput()
 
-  createScenario(renderCtx.scene, SCENARIOS.LEVEL1)
+  createScenario(renderCtx.scene, phase.scenario)
   const enemyPool = createEnemyPool(world, phase.poolSize)
   spawnEnemies(enemyPool, phase.enemyCount)
 

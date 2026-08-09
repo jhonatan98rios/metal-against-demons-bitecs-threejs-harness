@@ -1,9 +1,12 @@
+import { SCENARIOS } from '../scenarios/definitions'
+
 export interface PhaseDef {
   id: string
   name: string
   description: string
   enemyCount: number
   poolSize: number
+  scenario: SCENARIOS
 }
 
 export const PHASES: PhaseDef[] = [
@@ -12,28 +15,32 @@ export const PHASES: PhaseDef[] = [
     name: 'First Contact',
     description: '20 enemies — a gentle start',
     enemyCount: 20,
-    poolSize: 30
+    poolSize: 30,
+    scenario: SCENARIOS.LEVEL1
   },
   {
     id: 'phase-2',
     name: 'Rising Tide',
     description: '50 enemies — they are getting closer',
     enemyCount: 50,
-    poolSize: 60
+    poolSize: 60,
+    scenario: SCENARIOS.LEVEL1
   },
   {
     id: 'phase-3',
     name: 'Full Assault',
     description: '100 enemies — all hell breaks loose',
     enemyCount: 100,
-    poolSize: 120
+    poolSize: 120,
+    scenario: SCENARIOS.LEVEL1
   },
   {
     id: 'phase-4',
     name: 'The Swarm',
     description: '2000 enemies — the true horde arrives',
     enemyCount: 2000,
-    poolSize: 2100
+    poolSize: 2100,
+    scenario: SCENARIOS.LEVEL1
   }
 ]
 
