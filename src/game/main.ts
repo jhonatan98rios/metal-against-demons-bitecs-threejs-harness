@@ -27,7 +27,13 @@ import { GameState, STATES } from './core/shared/components/GameState'
 import { XP } from './core/shared/components/XP'
 import { createGameStateSystem } from './systems/gameStateSystem'
 import { createVictorySystem } from './systems/victorySystem'
-import { getPhase, DEFAULT_PHASE } from './core/phases/definitions'
+import {
+  PHASES,
+  getPhase,
+  DEFAULT_PHASE,
+  type PhaseDef
+} from './core/phases/definitions'
+import { completePhase, isUnlocked } from './core/progress/storage'
 import { createScenario } from './scenarios/createScenario'
 import { createSkillManager } from './core/skills/manager'
 import { SKILL_ID } from './core/skills/skillIds'
@@ -203,11 +209,21 @@ function createHUD(
   )
 }
 
+// ponytail: locked phases (direct URL) fall back to phase 1
+function resolvePhase(phaseId?: string): { phase: PhaseDef; index: number } {
+  const requested = phaseId ? getPhase(phaseId) : undefined
+  const phase =
+    requested !== undefined && isUnlocked(PHASES.indexOf(requested))
+      ? requested
+      : DEFAULT_PHASE
+  return { phase, index: PHASES.indexOf(phase) }
+}
+
 export function start(phaseId?: string) {
   const canvas = document.querySelector('#game-canvas') as HTMLCanvasElement
   if (!canvas || typeof window === 'undefined') return
 
-  const phase = phaseId ? (getPhase(phaseId) ?? DEFAULT_PHASE) : DEFAULT_PHASE
+  const { phase, index: phaseIndex } = resolvePhase(phaseId)
   const world = setupWorld()
   const renderCtx = createRender(canvas)
   const input = createInput()
@@ -231,7 +247,7 @@ export function start(phaseId?: string) {
     renderCtx.scene,
     renderCtx.camera,
     enemyPool,
-    { input, gameState, skillManager }
+    { input, gameState, skillManager, phaseIndex }
   )
 
   const fpOverlay = createFirstPersonOverlay()
@@ -309,9 +325,10 @@ function createGameSystems(
     input: ReturnType<typeof createInput>
     gameState: ReturnType<typeof createGameStateSystem>
     skillManager: ReturnType<typeof createSkillManager>
+    phaseIndex: number
   }
 ) {
-  const { input, gameState, skillManager } = ctx
+  const { input, gameState, skillManager, phaseIndex } = ctx
   const destroyables: (() => void)[] = []
 
   const { cameraSystem, controller, pointerLock } = setupCameraAndInput(
@@ -334,7 +351,10 @@ function createGameSystems(
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
     playerDamage: createPlayerDamageSystem(world),
     playerDeath: createPlayerDeathSystem(world, () => gameState.setGameOver()),
-    victory: createVictorySystem(world, () => gameState.setVictory()),
+    victory: createVictorySystem(world, () => {
+      completePhase(phaseIndex)
+      gameState.setVictory()
+    }),
     camera: cameraSystem,
     controller
   }

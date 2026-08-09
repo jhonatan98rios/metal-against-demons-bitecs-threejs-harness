@@ -1,25 +1,35 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { PHASES, type PhaseDef } from '@/src/game/core/phases/definitions'
+import { getHighestCompletedIndex } from '@/src/game/core/progress/storage'
 import { SCENARIO_DEFS } from '@/src/game/core/scenarios/definitions'
 
-function LevelCard({ phase }: { phase: PhaseDef }) {
+function LevelCardContent({
+  phase,
+  unlocked
+}: {
+  phase: PhaseDef
+  unlocked: boolean
+}) {
   const scenario = SCENARIO_DEFS[phase.scenario]
   return (
-    <Link
-      data-card
-      href={`/scenes/phase-1?phase=${phase.id}`}
-      className="group w-64 shrink-0 snap-center overflow-hidden rounded border border-zinc-700 bg-zinc-800 transition-colors hover:border-zinc-500"
-    >
-      <div className="aspect-square w-full overflow-hidden">
+    <>
+      <div className="relative aspect-square w-full overflow-hidden">
         <img
           src={scenario.cover}
           alt={scenario.name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className={`h-full w-full object-cover transition-transform duration-300 ${
+            unlocked ? 'group-hover:scale-105' : 'opacity-40 grayscale'
+          }`}
         />
+        {!unlocked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-4xl">
+            🔒
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-1 p-4">
         <div className="font-mono text-sm font-bold text-zinc-100">
@@ -29,11 +39,38 @@ function LevelCard({ phase }: { phase: PhaseDef }) {
           {phase.description}
         </div>
       </div>
+    </>
+  )
+}
+
+function LevelCard({
+  phase,
+  unlocked
+}: {
+  phase: PhaseDef
+  unlocked: boolean
+}) {
+  const cardClass =
+    'group w-64 shrink-0 snap-center overflow-hidden rounded border border-zinc-700 bg-zinc-800'
+  if (!unlocked) {
+    return (
+      <div data-card className={cardClass}>
+        <LevelCardContent phase={phase} unlocked={false} />
+      </div>
+    )
+  }
+  return (
+    <Link
+      data-card
+      href={`/scenes/phase-1?phase=${phase.id}`}
+      className={`${cardClass} transition-colors hover:border-zinc-500`}
+    >
+      <LevelCardContent phase={phase} unlocked />
     </Link>
   )
 }
 
-function LevelCarousel() {
+function LevelCarousel({ unlockedCount }: { unlockedCount: number }) {
   const trackRef = useRef<HTMLDivElement | null>(null)
 
   function scrollByCard(direction: -1 | 1) {
@@ -52,8 +89,12 @@ function LevelCarousel() {
         ref={trackRef}
         className="flex snap-x snap-mandatory gap-6 overflow-x-auto px-[calc(50%_-_8rem)] pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {PHASES.map((phase) => (
-          <LevelCard key={phase.id} phase={phase} />
+        {PHASES.map((phase, index) => (
+          <LevelCard
+            key={phase.id}
+            phase={phase}
+            unlocked={index < unlockedCount}
+          />
         ))}
       </div>
       <button
@@ -123,6 +164,16 @@ function FixedNav() {
 }
 
 export default function Home() {
+  // ponytail: progress read on mount — returning to menu is a full page nav
+  const [highestCompleted, setHighestCompleted] = useState(-1)
+
+  useEffect(() => {
+    setHighestCompleted(getHighestCompletedIndex())
+  }, [])
+
+  const unlockedCount = Math.min(highestCompleted + 2, PHASES.length)
+  const allCleared = highestCompleted === PHASES.length - 1
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-900">
       <FixedNav />
@@ -131,9 +182,11 @@ export default function Home() {
           Metal Against Demons
         </h1>
         <p className="text-center font-mono text-sm text-zinc-400">
-          Select a level
+          {allCleared
+            ? 'All levels cleared'
+            : `Current level: ${unlockedCount} of ${PHASES.length}`}
         </p>
-        <LevelCarousel />
+        <LevelCarousel unlockedCount={unlockedCount} />
       </main>
     </div>
   )
