@@ -50,7 +50,7 @@ function LevelCarousel() {
     <div className="relative">
       <div
         ref={trackRef}
-        className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-6 overflow-x-auto px-[calc(50%_-_8rem)] pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {PHASES.map((phase) => (
           <LevelCard key={phase.id} phase={phase} />
