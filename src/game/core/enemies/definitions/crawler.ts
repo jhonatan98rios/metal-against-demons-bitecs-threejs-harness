@@ -28,13 +28,13 @@ export const CRAWLER = {
   Y_OFFSET: -2.25,
 
   /** Starting health value */
-  HEALTH: 3,
+  HEALTH: 4,
 
   /** Maximum health value */
-  MAX_HEALTH: 3,
+  MAX_HEALTH: 4,
 
   /** Movement speed multiplier (1 = default, higher = faster) */
-  SPEED: 0.35,
+  SPEED: 0.45,
 
   /** Animation frame rate (frames per second) */
   ANIM_FPS: 2.6,

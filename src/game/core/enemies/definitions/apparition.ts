@@ -28,13 +28,13 @@ export const APPARITION = {
   Y_OFFSET: -0.5,
 
   /** Starting health value */
-  HEALTH: 5,
+  HEALTH: 6,
 
   /** Maximum health value */
-  MAX_HEALTH: 5,
+  MAX_HEALTH: 6,
 
   /** Movement speed multiplier (1 = default, higher = faster) */
-  SPEED: 0.2,
+  SPEED: 0.26,
 
   /** Animation frame rate (frames per second) */
   ANIM_FPS: 0.4,
