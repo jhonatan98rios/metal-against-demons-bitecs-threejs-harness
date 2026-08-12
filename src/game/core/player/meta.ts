@@ -5,6 +5,8 @@
  * runs (level, XP, money, attributes). Single repository module — all
  * persistence goes through here, swap localStorage for a backend later.
  */
+import { runXpRequirement } from './levelUpSystem'
+
 const STORAGE_KEY = 'mad-player'
 
 export type Attribute =
@@ -68,6 +70,12 @@ export function savePlayerState(state: PlayerState): void {
 
 export function addExperience(state: PlayerState, amount: number): void {
   state.experience += amount
+  // ponytail: while handles multi-level-ups from big rewards; +1 point each
+  while (state.experience >= xpToNextLevel(state.level)) {
+    state.experience -= xpToNextLevel(state.level)
+    state.level += 1
+    state.upgradePoints += 1
+  }
   savePlayerState(state)
 }
 
@@ -76,9 +84,26 @@ export function addMoney(state: PlayerState, amount: number): void {
   savePlayerState(state)
 }
 
-// Level curve: 100, 150, 225, ... — same 1.5x progression as in-run XP
+// Total XP earned in a run: sum of run thresholds 1..level-1 + current progress
+export function runTotalXp(runLevel: number, runCurrentXp: number): number {
+  // eslint-disable-next-line functional/no-let
+  let total = runCurrentXp
+  // eslint-disable-next-line functional/no-let
+  for (let l = 1; l < runLevel; l += 1) {
+    total += runXpRequirement(l)
+  }
+  return total
+}
+
+// Interface between a finished run and meta progression — rewards the attempt
+export function grantRunXp(runLevel: number, runCurrentXp: number): void {
+  const state = loadPlayerState()
+  addExperience(state, runTotalXp(runLevel, runCurrentXp))
+}
+
+// Level curve: 1000, 1500, 2250, ... — 10x the in-run curve (100, 150, ...)
 export function xpToNextLevel(level: number): number {
-  return Math.round(100 * 1.5 ** (level - 1))
+  return Math.round(1000 * 1.5 ** (level - 1))
 }
 
 export function upgradeAttribute(

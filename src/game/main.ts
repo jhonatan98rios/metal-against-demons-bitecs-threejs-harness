@@ -18,7 +18,8 @@ import { createRenderSystem } from './rendering/createRenderSystem'
 import { createCameraSystem } from './systems/cameraSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { createFirstPersonOverlay } from './ui/FirstPersonOverlay'
-import { createLevelUpSystem } from './core/player/levelUpSystem'
+import { createLevelUpSystem, runXpRequirement } from './core/player/levelUpSystem'
+import { grantRunXp } from './core/player/meta'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { Health } from './core/shared/components/Health'
 import { DamagePopup } from './core/shared/components/DamagePopup'
@@ -63,6 +64,31 @@ function spawnEnemies(pool: ReturnType<typeof createEnemyPool>, count: number) {
   })
 }
 
+// ponytail: roguelite rewards the attempt — grant run XP on win AND death
+function wireRunEndings(
+  world: { playerEid: number },
+  gameState: ReturnType<typeof createGameStateSystem>,
+  phaseIndex: number
+) {
+  const grant = (onEnd: () => void) => () => {
+    grantRunXp(XP.level[world.playerEid], XP.current[world.playerEid])
+    onEnd()
+  }
+  return {
+    playerDeath: createPlayerDeathSystem(
+      world,
+      grant(() => gameState.setGameOver())
+    ),
+    victory: createVictorySystem(
+      world,
+      grant(() => {
+        completePhase(phaseIndex)
+        gameState.setVictory()
+      })
+    )
+  }
+}
+
 type GameSystems = ReturnType<typeof createGameSystems>
 type RenderCtx = ReturnType<typeof createRender>
 
@@ -88,6 +114,10 @@ function makeRestartCallback(world: { playerEid: number }) {
     Position.x[pid] = 30
     Position.y[pid] = 5
     Position.z[pid] = 0
+    // ponytail: run XP is per-run — reset so rewards count this run only
+    XP.current[pid] = 0
+    XP.level[pid] = 1
+    XP.next[pid] = runXpRequirement(1)
   }
 }
 
@@ -350,11 +380,7 @@ function createGameSystems(
     levelUp: createLevelUpSystem(world, () => gameState.setLevelUp()),
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
     playerDamage: createPlayerDamageSystem(world),
-    playerDeath: createPlayerDeathSystem(world, () => gameState.setGameOver()),
-    victory: createVictorySystem(world, () => {
-      completePhase(phaseIndex)
-      gameState.setVictory()
-    }),
+    ...wireRunEndings(world, gameState, phaseIndex),
     camera: cameraSystem,
     controller
   }

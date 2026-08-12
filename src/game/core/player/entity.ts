@@ -1,6 +1,7 @@
 import { addComponent, addEntity, World } from 'bitecs'
 
 import { Player } from './components'
+import { runXpRequirement } from './levelUpSystem'
 
 import { Active } from '../shared/components/Active'
 import { Health } from '../shared/components/Health'
@@ -86,7 +87,7 @@ const setupPlayerTag = (eid: number) => {
 const setupXP = (eid: number) => {
   XP.level[eid] = 1
   XP.current[eid] = 0
-  XP.next[eid] = 100
+  XP.next[eid] = runXpRequirement(1)
 }
 
 export function createPlayer(world: World) {

@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   addExperience,
   addMoney,
+  grantRunXp,
   loadPlayerState,
+  runTotalXp,
   savePlayerState,
   upgradeAttribute
 } from './meta'
@@ -77,6 +79,44 @@ describe('player meta-progression state', () => {
     expect(state.experience).toBe(50)
     expect(state.money).toBe(30)
     expect(loadPlayerState()).toEqual({ ...DEFAULTS, experience: 50, money: 30 })
+  })
+})
+
+describe('level ups and run rewards', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', { localStorage: makeStorage() })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('addExperience levels up at 10x thresholds and grants a point each', () => {
+    const state = loadPlayerState()
+    addExperience(state, 1200)
+    expect(state.level).toBe(2)
+    expect(state.experience).toBe(200)
+    expect(state.upgradePoints).toBe(1)
+    expect(loadPlayerState().level).toBe(2)
+  })
+
+  it('addExperience handles multi-level-ups from big rewards', () => {
+    const state = loadPlayerState()
+    addExperience(state, 10000)
+    expect(state.level).toBe(5)
+    expect(state.experience).toBe(1875)
+    expect(state.upgradePoints).toBe(4)
+  })
+
+  it('runTotalXp sums run thresholds plus current progress', () => {
+    expect(runTotalXp(1, 0)).toBe(0)
+    expect(runTotalXp(2, 50)).toBe(150)
+    expect(runTotalXp(4, 100)).toBe(575)
+  })
+
+  it('grantRunXp rewards a finished run', () => {
+    grantRunXp(2, 50)
+    expect(loadPlayerState()).toEqual({ ...DEFAULTS, experience: 150 })
   })
 })
 
