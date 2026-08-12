@@ -1,11 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { addExperience, addMoney, loadPlayerState, savePlayerState } from './meta'
+import {
+  addExperience,
+  addMoney,
+  loadPlayerState,
+  savePlayerState,
+  upgradeAttribute
+} from './meta'
 
 const DEFAULTS = {
   level: 1,
   experience: 0,
   money: 0,
+  upgradePoints: 0,
   attributes: {
     health: 100,
     baseDamage: 1,
@@ -42,20 +49,16 @@ describe('player meta-progression state', () => {
     state.level = 4
     state.experience = 250
     state.money = 120
+    state.upgradePoints = 3
     state.attributes.health = 150
     savePlayerState(state)
     expect(loadPlayerState()).toEqual({
+      ...DEFAULTS,
       level: 4,
       experience: 250,
       money: 120,
-      attributes: {
-        health: 150,
-        baseDamage: 1,
-        attackSpeed: 1,
-        attackRange: 1,
-        movementSpeed: 20,
-        luck: 1
-      }
+      upgradePoints: 3,
+      attributes: { ...DEFAULTS.attributes, health: 150 }
     })
   })
 
@@ -74,5 +77,32 @@ describe('player meta-progression state', () => {
     expect(state.experience).toBe(50)
     expect(state.money).toBe(30)
     expect(loadPlayerState()).toEqual({ ...DEFAULTS, experience: 50, money: 30 })
+  })
+})
+
+describe('upgradeAttribute', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', { localStorage: makeStorage() })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('spends a point and persists', () => {
+    const state = loadPlayerState()
+    state.upgradePoints = 2
+    upgradeAttribute(state, 'health')
+    expect(state.upgradePoints).toBe(1)
+    expect(state.attributes.health).toBe(101)
+    expect(loadPlayerState().attributes.health).toBe(101)
+  })
+
+  it('does nothing without points', () => {
+    const state = loadPlayerState()
+    upgradeAttribute(state, 'luck')
+    expect(state.upgradePoints).toBe(0)
+    expect(state.attributes.luck).toBe(1)
+    expect(loadPlayerState().attributes.luck).toBe(1)
   })
 })

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 
 import {
   loadPlayerState,
+  upgradeAttribute,
   xpToNextLevel,
   type Attribute,
   type PlayerState
@@ -33,18 +34,33 @@ const ATTRIBUTES: { key: Attribute; label: string; description: string }[] = [
 
 function AttributeCard({
   attr,
-  value
+  value,
+  canUpgrade,
+  onUpgrade
 }: {
   attr: (typeof ATTRIBUTES)[number]
   value: number
+  canUpgrade: boolean
+  onUpgrade: () => void
 }) {
   return (
     <div className="rounded border border-zinc-700 bg-zinc-800 p-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center justify-between">
         <div className="font-mono text-sm font-bold text-zinc-100">
           {attr.label}
         </div>
-        <div className="font-mono text-sm text-amber-400">{value}</div>
+        <div className="flex items-center gap-2">
+          <div className="font-mono text-sm text-amber-400">{value}</div>
+          <button
+            type="button"
+            onClick={onUpgrade}
+            disabled={!canUpgrade}
+            aria-label={`Upgrade ${attr.label}`}
+            className="rounded border border-zinc-600 bg-zinc-700 px-2 font-mono text-sm text-zinc-100 transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
       </div>
       <div className="mt-1 font-mono text-xs text-zinc-400">
         {attr.description}
@@ -77,20 +93,45 @@ export default function PlayerPage() {
         </h1>
         <div className="w-16" />
       </header>
-      <main className="w-full max-w-3xl px-6 pb-8">
-        <div className="mb-4 font-mono text-sm text-zinc-400">
-          Level {player.level} — {player.experience}/{xpToNextLevel(player.level)} XP
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {ATTRIBUTES.map((attr) => (
-            <AttributeCard
-              key={attr.key}
-              attr={attr}
-              value={player.attributes[attr.key]}
-            />
-          ))}
-        </div>
-      </main>
+      <AttributesView player={player} setPlayer={setPlayer} />
     </div>
+  )
+}
+
+function AttributesView({
+  player,
+  setPlayer
+}: {
+  player: PlayerState
+  setPlayer: (player: PlayerState) => void
+}) {
+  const upgrade = (key: Attribute) => {
+    upgradeAttribute(player, key)
+    // ponytail: spread clones to force re-render of mutated state
+    setPlayer({ ...player })
+  }
+
+  return (
+    <main className="w-full max-w-3xl px-6 pb-8">
+      <div className="mb-4 flex items-center justify-between font-mono text-sm text-zinc-400">
+        <span>
+          Level {player.level} — {player.experience}/{xpToNextLevel(player.level)} XP
+        </span>
+        <span className="text-amber-400">
+          Upgrade points: {player.upgradePoints}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {ATTRIBUTES.map((attr) => (
+          <AttributeCard
+            key={attr.key}
+            attr={attr}
+            value={player.attributes[attr.key]}
+            canUpgrade={player.upgradePoints > 0}
+            onUpgrade={() => upgrade(attr.key)}
+          />
+        ))}
+      </div>
+    </main>
   )
 }

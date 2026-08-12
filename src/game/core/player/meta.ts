@@ -19,6 +19,7 @@ export interface PlayerState {
   level: number
   experience: number
   money: number
+  upgradePoints: number
   attributes: Record<Attribute, number>
 }
 
@@ -26,6 +27,7 @@ const createDefaultState = (): PlayerState => ({
   level: 1,
   experience: 0,
   money: 0,
+  upgradePoints: 0,
   // ponytail: baselines mirror live game values (Health 100, speed 20, dmg 1)
   attributes: {
     health: 100,
@@ -77,4 +79,14 @@ export function addMoney(state: PlayerState, amount: number): void {
 // Level curve: 100, 150, 225, ... — same 1.5x progression as in-run XP
 export function xpToNextLevel(level: number): number {
   return Math.round(100 * 1.5 ** (level - 1))
+}
+
+export function upgradeAttribute(
+  state: PlayerState,
+  attribute: Attribute
+): void {
+  if (state.upgradePoints <= 0) return
+  state.upgradePoints -= 1
+  state.attributes[attribute] += 1
+  savePlayerState(state)
 }
