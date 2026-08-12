@@ -135,7 +135,11 @@ function PlayerProgress() {
   const pct = Math.min(100, Math.round((player.experience / next) * 100))
 
   return (
-    <div className="fixed top-4 left-4 z-10 rounded border border-zinc-700 bg-zinc-800 px-3 py-2 font-mono">
+    <Link
+      href="/player"
+      aria-label="Player attributes"
+      className="fixed top-4 left-4 z-10 rounded border border-zinc-700 bg-zinc-800 px-3 py-2 font-mono transition-colors hover:border-zinc-500"
+    >
       <div className="text-xs font-bold text-zinc-100">Level {player.level}</div>
       <div className="mt-1 h-2 w-36 overflow-hidden rounded bg-zinc-700">
         <div
@@ -146,7 +150,7 @@ function PlayerProgress() {
       <div className="mt-1 text-[10px] text-zinc-400">
         {player.experience}/{next} XP
       </div>
-    </div>
+    </Link>
   )
 }
 

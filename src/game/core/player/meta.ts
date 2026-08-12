@@ -7,7 +7,13 @@
  */
 const STORAGE_KEY = 'mad-player'
 
-export type Attribute = 'strength' | 'vitality' | 'agility'
+export type Attribute =
+  | 'health'
+  | 'baseDamage'
+  | 'attackSpeed'
+  | 'attackRange'
+  | 'movementSpeed'
+  | 'luck'
 
 export interface PlayerState {
   level: number
@@ -20,7 +26,15 @@ const createDefaultState = (): PlayerState => ({
   level: 1,
   experience: 0,
   money: 0,
-  attributes: { strength: 1, vitality: 1, agility: 1 }
+  // ponytail: baselines mirror live game values (Health 100, speed 20, dmg 1)
+  attributes: {
+    health: 100,
+    baseDamage: 1,
+    attackSpeed: 1,
+    attackRange: 1,
+    movementSpeed: 20,
+    luck: 1
+  }
 })
 
 // ponytail: merge-with-defaults tolerates missing fields; strict schema later

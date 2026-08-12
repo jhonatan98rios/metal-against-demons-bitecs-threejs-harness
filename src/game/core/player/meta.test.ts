@@ -6,7 +6,14 @@ const DEFAULTS = {
   level: 1,
   experience: 0,
   money: 0,
-  attributes: { strength: 1, vitality: 1, agility: 1 }
+  attributes: {
+    health: 100,
+    baseDamage: 1,
+    attackSpeed: 1,
+    attackRange: 1,
+    movementSpeed: 20,
+    luck: 1
+  }
 }
 
 const makeStorage = () => {
@@ -35,13 +42,20 @@ describe('player meta-progression state', () => {
     state.level = 4
     state.experience = 250
     state.money = 120
-    state.attributes.strength = 3
+    state.attributes.health = 150
     savePlayerState(state)
     expect(loadPlayerState()).toEqual({
       level: 4,
       experience: 250,
       money: 120,
-      attributes: { strength: 3, vitality: 1, agility: 1 }
+      attributes: {
+        health: 150,
+        baseDamage: 1,
+        attackSpeed: 1,
+        attackRange: 1,
+        movementSpeed: 20,
+        luck: 1
+      }
     })
   })
 
