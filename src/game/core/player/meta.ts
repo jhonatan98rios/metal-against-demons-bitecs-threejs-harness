@@ -30,16 +30,27 @@ const createDefaultState = (): PlayerState => ({
   experience: 0,
   money: 0,
   upgradePoints: 0,
-  // ponytail: baselines mirror live game values (Health 100, speed 20, dmg 1)
+  // ponytail: baselines mirror live game values (Health 100, dmg 1, speed 1)
   attributes: {
     health: 100,
     baseDamage: 1,
     attackSpeed: 1,
     attackRange: 1,
-    movementSpeed: 20,
+    movementSpeed: 1,
     luck: 1
   }
 })
+
+// Upgrade step per point: health is chunky, the rest scale softly
+const ATTRIBUTE_STEPS: Record<Attribute, number> = {
+  health: 20,
+  baseDamage: 0.2,
+  attackSpeed: 0.2,
+  attackRange: 0.2,
+  // ponytail: stored as 1 base — apply movementSpeed * 20 to gameplay
+  movementSpeed: 0.2,
+  luck: 0.2
+}
 
 // ponytail: merge-with-defaults tolerates missing fields; strict schema later
 const normalize = (raw: unknown): PlayerState => {
@@ -112,6 +123,9 @@ export function upgradeAttribute(
 ): void {
   if (state.upgradePoints <= 0) return
   state.upgradePoints -= 1
-  state.attributes[attribute] += 1
+  // ponytail: round to 1 decimal — 0.2 steps drift in float otherwise
+  state.attributes[attribute] =
+    Math.round((state.attributes[attribute] + ATTRIBUTE_STEPS[attribute]) * 10) /
+    10
   savePlayerState(state)
 }

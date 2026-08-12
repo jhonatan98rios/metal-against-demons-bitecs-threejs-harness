@@ -20,7 +20,7 @@ const DEFAULTS = {
     baseDamage: 1,
     attackSpeed: 1,
     attackRange: 1,
-    movementSpeed: 20,
+    movementSpeed: 1,
     luck: 1
   }
 }
@@ -134,8 +134,18 @@ describe('upgradeAttribute', () => {
     state.upgradePoints = 2
     upgradeAttribute(state, 'health')
     expect(state.upgradePoints).toBe(1)
-    expect(state.attributes.health).toBe(101)
-    expect(loadPlayerState().attributes.health).toBe(101)
+    expect(state.attributes.health).toBe(120)
+    expect(loadPlayerState().attributes.health).toBe(120)
+  })
+
+  it('adds 0.2 per point for non-health attributes', () => {
+    const state = loadPlayerState()
+    state.upgradePoints = 3
+    upgradeAttribute(state, 'baseDamage')
+    upgradeAttribute(state, 'movementSpeed')
+    upgradeAttribute(state, 'baseDamage')
+    expect(state.attributes.baseDamage).toBe(1.4)
+    expect(state.attributes.movementSpeed).toBe(1.2)
   })
 
   it('does nothing without points', () => {
