@@ -59,3 +59,8 @@ export function addMoney(state: PlayerState, amount: number): void {
   state.money = Math.max(0, state.money + amount)
   savePlayerState(state)
 }
+
+// Level curve: 100, 150, 225, ... — same 1.5x progression as in-run XP
+export function xpToNextLevel(level: number): number {
+  return Math.round(100 * 1.5 ** (level - 1))
+}
