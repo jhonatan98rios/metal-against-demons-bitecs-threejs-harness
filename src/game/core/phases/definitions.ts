@@ -6,6 +6,8 @@ export interface PhaseDef {
   description: string
   enemyCount: number
   poolSize: number
+  /** Base seconds between enemy spawns — pools reference this value */
+  spawnInterval: number
   scenario: SCENARIOS
 }
 
@@ -16,6 +18,7 @@ export const PHASES: PhaseDef[] = [
     description: '100 enemies — a gentle start',
     enemyCount: 100,
     poolSize: 110,
+    spawnInterval: 0.8,
     scenario: SCENARIOS.LEVEL1
   },
   {
@@ -24,6 +27,7 @@ export const PHASES: PhaseDef[] = [
     description: '200 enemies — they are getting closer',
     enemyCount: 200,
     poolSize: 210,
+    spawnInterval: 0.5,
     scenario: SCENARIOS.LEVEL1
   },
   {
@@ -32,6 +36,7 @@ export const PHASES: PhaseDef[] = [
     description: '300 enemies — all hell breaks loose',
     enemyCount: 300,
     poolSize: 310,
+    spawnInterval: 0.3,
     scenario: SCENARIOS.LEVEL1
   },
   {
@@ -40,6 +45,7 @@ export const PHASES: PhaseDef[] = [
     description: '5000 enemies — the true horde arrives',
     enemyCount: 5000,
     poolSize: 5100,
+    spawnInterval: 0.12,
     scenario: SCENARIOS.LEVEL1
   }
 ]

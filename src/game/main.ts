@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 
 import { setupWorld } from './core/bootstrap/setup'
-import { setupApparition, setupCrawler } from './core/enemies/entity'
 import { createEnemyPool } from './core/enemies/pool/enemyPool'
 import { createBoidsSystem } from './core/enemies/systems/boidsSystem'
 import { createEnemyDeathSystem } from './core/enemies/systems/deathSystem'
 import { createPlayerDamageSystem } from './core/enemies/systems/playerDamageSystem'
+import { createEnemySpawnSystem } from './core/enemies/systems/spawnSystem'
 import { createPlayerDeathSystem } from './core/player/deathSystem'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
@@ -18,7 +18,10 @@ import { createRenderSystem } from './rendering/createRenderSystem'
 import { createCameraSystem } from './systems/cameraSystem'
 import { createCameraSwitcher } from './ui/cameraSwitcher'
 import { createFirstPersonOverlay } from './ui/FirstPersonOverlay'
-import { createLevelUpSystem, runXpRequirement } from './core/player/levelUpSystem'
+import {
+  createLevelUpSystem,
+  runXpRequirement
+} from './core/player/levelUpSystem'
 import { grantRunXp } from './core/player/meta'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { Health } from './core/shared/components/Health'
@@ -41,28 +44,6 @@ import { SKILL_ID } from './core/skills/skillIds'
 import { getCollisionSystem } from './core/projectiles/systems/collisionSystem'
 import './core/skills/definitions/projectile'
 import './core/skills/definitions/redBolt'
-
-function spawnEnemies(pool: ReturnType<typeof createEnemyPool>, count: number) {
-  Array.from({ length: count }, () => {
-    const eid = pool.acquire()
-    // ponytail: 50/50 split between Apparition and Crawler
-    if (Math.random() > 0.5) {
-      setupApparition(
-        eid,
-        -300 + Math.random() * 600,
-        -240 + Math.random() * 480,
-        Math.random() > 0.5
-      )
-    } else {
-      setupCrawler(
-        eid,
-        -300 + Math.random() * 600,
-        -240 + Math.random() * 480,
-        Math.random() > 0.5
-      )
-    }
-  })
-}
 
 // ponytail: roguelite rewards the attempt — grant run XP on win AND death
 function wireRunEndings(
@@ -123,6 +104,7 @@ function makeRestartCallback(world: { playerEid: number }) {
 
 // ponytail: per-frame helpers extracted to keep loop complexity low
 function tickGameplay(systems: GameSystems, _eid: number, dt: number) {
+  systems.spawn.update(dt)
   systems.controller.update(dt)
   systems.boids.update()
   systems.skillManager.update(dt)
@@ -249,6 +231,17 @@ function resolvePhase(phaseId?: string): { phase: PhaseDef; index: number } {
   return { phase, index: PHASES.indexOf(phase) }
 }
 
+// ponytail: phase config → spawner entity, one per enemy pool
+function setupEnemySpawning(
+  world: ReturnType<typeof setupWorld>,
+  pool: ReturnType<typeof createEnemyPool>,
+  phase: PhaseDef
+) {
+  return createEnemySpawnSystem(world, [
+    { pool, interval: phase.spawnInterval, total: phase.enemyCount }
+  ])
+}
+
 export function start(phaseId?: string) {
   const canvas = document.querySelector('#game-canvas') as HTMLCanvasElement
   if (!canvas || typeof window === 'undefined') return
@@ -260,7 +253,7 @@ export function start(phaseId?: string) {
 
   createScenario(renderCtx.scene, phase.scenario)
   const enemyPool = createEnemyPool(world, phase.poolSize)
-  spawnEnemies(enemyPool, phase.enemyCount)
+  const enemySpawn = setupEnemySpawning(world, enemyPool, phase)
 
   const gameState = createGameStateSystem(
     world,
@@ -277,7 +270,7 @@ export function start(phaseId?: string) {
     renderCtx.scene,
     renderCtx.camera,
     enemyPool,
-    { input, gameState, skillManager, phaseIndex }
+    { input, gameState, skillManager, phaseIndex, enemySpawn }
   )
 
   const fpOverlay = createFirstPersonOverlay()
@@ -356,9 +349,10 @@ function createGameSystems(
     gameState: ReturnType<typeof createGameStateSystem>
     skillManager: ReturnType<typeof createSkillManager>
     phaseIndex: number
+    enemySpawn: ReturnType<typeof createEnemySpawnSystem>
   }
 ) {
-  const { input, gameState, skillManager, phaseIndex } = ctx
+  const { input, gameState, skillManager, phaseIndex, enemySpawn } = ctx
   const destroyables: (() => void)[] = []
 
   const { cameraSystem, controller, pointerLock } = setupCameraAndInput(
@@ -379,6 +373,7 @@ function createGameSystems(
     animation: createWorkerPool(world),
     levelUp: createLevelUpSystem(world, () => gameState.setLevelUp()),
     death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
+    spawn: enemySpawn,
     playerDamage: createPlayerDamageSystem(world),
     ...wireRunEndings(world, gameState, phaseIndex),
     camera: cameraSystem,
