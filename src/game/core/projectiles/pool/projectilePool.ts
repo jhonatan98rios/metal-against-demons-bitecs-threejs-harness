@@ -76,7 +76,7 @@ export function createProjectilePool(
   }
 
   return {
-    acquire(x: number, z: number, vx: number, vz: number) {
+    acquire(x: number, z: number, vx: number, vz: number, ttl = 1) {
       const eid = free.pop()
       if (eid === undefined) return -1
       Active.isActive[eid] = 1
@@ -86,7 +86,7 @@ export function createProjectilePool(
       Position.z[eid] = z
       Velocity.x[eid] = vx
       Velocity.z[eid] = vz
-      TTL.remaining[eid] = 1
+      TTL.remaining[eid] = ttl
       return eid
     },
 

@@ -23,6 +23,7 @@ import { Spiral } from '../../projectiles/components/Spiral'
 import { getCollisionSystem } from '../../projectiles/systems/collisionSystem'
 import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
 import type { ProjectileSpriteConfig } from '../../projectiles/pool/projectilePool'
+import { loadPlayerState } from '../../player/meta'
 
 // bat_attack_1.png: 96×48, 2 frames in a single row (48×48 each)
 const BAT_SPRITE: ProjectileSpriteConfig = {
@@ -187,6 +188,8 @@ const BASE_ANGULAR_SPEED = 5
 const BASE_RADIAL_SPEED = 3
 const BASE_INTERVAL = 1.5
 const PROJECTILE_TTL = 3
+// ponytail: internal static range bump — at least +50%, tune here
+const BAT_TTL_MULT = 1.5
 
 const UPGRADES: SkillDefinition['upgrades'] = [
   { level: 2, patch: { damage: 2, radialSpeed: 1 } },
@@ -236,7 +239,10 @@ function applyStatOverrides(world: World, stats: SpiralStats) {
 
 function createRedBoltSkill(world: World, _playerEid: number, level: number) {
   const pool = createSpiralPool(world, 200, BAT_SPRITE)
-  const spawn = createSpiralSpawnSystem(world, pool, PROJECTILE_TTL)
+  // ponytail: attackRange is meta, fixed per run — read once at creation
+  const ttl =
+    PROJECTILE_TTL * loadPlayerState().attributes.attackRange * BAT_TTL_MULT
+  const spawn = createSpiralSpawnSystem(world, pool, ttl)
   const movement = createSpiralMovementSystem(world)
   getCollisionSystem(world).registerPool(2, (eid) => pool.release(eid))
   const despawn = createDespawnSystem(world, 2, (eid) => pool.release(eid))

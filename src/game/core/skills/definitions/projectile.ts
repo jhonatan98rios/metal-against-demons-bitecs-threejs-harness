@@ -9,6 +9,7 @@ import { createProjectileSpawnSystem } from '../../projectiles/systems/spawnSyst
 import { getCollisionSystem } from '../../projectiles/systems/collisionSystem'
 import { createDespawnSystem } from '../../projectiles/systems/despawnSystem'
 import { Projectile } from '../../projectiles/components/Projectile'
+import { loadPlayerState } from '../../player/meta'
 import type { World } from 'bitecs'
 
 // sound_attack_1.png: 104×26, 4 frames in a single row (26×26 each)
@@ -27,6 +28,10 @@ const SOUND_SPRITE: ProjectileSpriteConfig = {
 const BASE_DAMAGE = 1
 const BASE_SPEED = 25
 const BASE_INTERVAL = 0.8
+// Base projectile lifetime; scaled by player attackRange and static bump below
+const BASE_TTL = 1
+// ponytail: internal static range bump — smaller than bats, tune here
+const SOUND_TTL_MULT = 1.2
 
 const UPGRADES: SkillDefinition['upgrades'] = [
   { level: 2, patch: { damage: 2, speed: 5 } },
@@ -59,13 +64,14 @@ function accumulateUpgrades(level: number): ProjectileStats {
 function setupProjectileSystems(
   world: World,
   state: ProjectileStats,
-  initialSpeed: number
+  initialSpeed: number,
+  ttl: number
 ) {
   const pool = createProjectilePool(world, 200, SOUND_SPRITE)
   const poolAcquire = pool.acquire.bind(pool)
 
   const acquire = (x: number, z: number, vx: number, vz: number): number => {
-    const eid = poolAcquire(x, z, vx, vz)
+    const eid = poolAcquire(x, z, vx, vz, ttl)
     if (eid >= 0) Projectile.damage[eid] = state.damage
     return eid
   }
@@ -90,7 +96,15 @@ function createProjectileSkill(
     interval: BASE_INTERVAL
   }
 
-  const { spawn, despawn } = setupProjectileSystems(world, state, BASE_SPEED)
+  // ponytail: attackRange is meta, fixed per run — read once at creation
+  const ttl =
+    BASE_TTL * loadPlayerState().attributes.attackRange * SOUND_TTL_MULT
+  const { spawn, despawn } = setupProjectileSystems(
+    world,
+    state,
+    BASE_SPEED,
+    ttl
+  )
 
   function applyLevel(lvl: number): void {
     const stats = accumulateUpgrades(lvl)
