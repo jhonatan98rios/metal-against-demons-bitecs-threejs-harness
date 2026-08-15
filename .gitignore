@@ -44,3 +44,6 @@ graphify-out/
 .memory/
 .code-graph/
 docs/
+
+# pi-subagents runtime artifacts
+.pi-subagents/

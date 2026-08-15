@@ -2,6 +2,7 @@ import { query, World } from 'bitecs'
 import * as THREE from 'three'
 
 import { Active } from '../core/shared/components/Active'
+import { Billboard } from '../core/shared/components/Billboard'
 import { Position } from '../core/shared/components/Position'
 import { Renderable } from '../core/shared/components/Renderable'
 import { Animation } from '../core/shared/components/Animation'
@@ -84,6 +85,20 @@ const updateSpriteFrame = (eid: number, object: THREE.Mesh) => {
 
 const syncPosition = (eid: number, object: THREE.Mesh) => {
   object.position.set(Position.x[eid], Position.y[eid], Position.z[eid])
+}
+
+// cylindrical billboard on Y, same math as updateEnemyInstance
+const syncBillboardRotation = (
+  eid: number,
+  object: THREE.Mesh,
+  cam: { x: number; z: number }
+) => {
+  if (Billboard.isBillboard[eid] === 0) return
+  _rot.setFromAxisAngle(
+    _up,
+    Math.atan2(cam.x - Position.x[eid], cam.z - Position.z[eid])
+  )
+  object.quaternion.copy(_rot)
 }
 
 // -- health bars -----------------------------------------------------------
@@ -342,11 +357,17 @@ const getOrCreateDamagePopup = (object: THREE.Mesh): THREE.Sprite => {
   return sprite
 }
 
-function renderNonEnemy(eid: number, scene: THREE.Scene, delta: number) {
+function renderNonEnemy(
+  eid: number,
+  scene: THREE.Scene,
+  delta: number,
+  cam: { x: number; z: number }
+) {
   const object = getOrCreateRenderObject(eid, scene)
   object.visible = true
   updateSpriteFrame(eid, object)
   syncPosition(eid, object)
+  syncBillboardRotation(eid, object, cam)
   applyHitFlash(object, eid, delta)
   updateHealthBar(object, eid)
   if (DamagePopup.timer[eid] > 0) {
@@ -436,7 +457,7 @@ export const createRenderSystem = (
         syncEnemyPopup(eid, scene, delta)
         slot.counter++
       } else {
-        renderNonEnemy(eid, scene, delta)
+        renderNonEnemy(eid, scene, delta, cam)
       }
     }
 

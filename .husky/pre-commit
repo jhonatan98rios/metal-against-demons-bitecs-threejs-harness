@@ -1,10 +1,13 @@
 #!/bin/sh
 
-export NVM_DIR="$HOME/.nvm"
-. "$NVM_DIR/nvm.sh"
+if [ -f "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+fi
 
-export PNPM_HOME="$HOME/snap/code/241/.local/share/pnpm/bin"
-export PATH="$PNPM_HOME:$PATH"
+if [ -d "$HOME/snap/code/241/.local/share/pnpm/bin" ]; then
+  export PNPM_HOME="$HOME/snap/code/241/.local/share/pnpm/bin"
+  export PATH="$PNPM_HOME:$PATH"
+fi
 
 pnpm lint-staged
 pnpm lint
