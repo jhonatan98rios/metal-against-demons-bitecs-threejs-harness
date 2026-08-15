@@ -1,0 +1,10 @@
+{
+  "defaultThinkingLevel": "low",
+  "subagents": {
+    "agentOverrides": {
+      "worker": { "thinking": "low", "defaultContext": "fresh" },
+      "reviewer": { "thinking": "low", "defaultContext": "fresh" },
+      "scout": { "thinking": "low", "defaultContext": "fresh" }
+    }
+  }
+}

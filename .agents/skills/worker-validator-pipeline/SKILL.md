@@ -123,6 +123,46 @@ and reuse the map for all its tasks instead of re-running it per task.
 Cap fix rounds at 3 by default; if still failing, escalate to the user instead of
 looping forever.
 
+## Deterministic mode (no model orchestration)
+
+Small local models burn context "deciding how to orchestrate" (long thinking
+before each subagent call). Two config files remove that entirely:
+
+### 1. `.pi/settings.json` (project scope) — kill the deliberation
+
+```json
+{
+  "defaultThinkingLevel": "low",
+  "subagents": {
+    "agentOverrides": {
+      "worker": { "thinking": "low", "defaultContext": "fresh" },
+      "reviewer": { "thinking": "low", "defaultContext": "fresh" },
+      "scout": { "thinking": "low", "defaultContext": "fresh" }
+    }
+  }
+}
+```
+
+- `defaultThinkingLevel: "low"` stops the parent's long monologue before every
+  tool call (the #1 context burner for orchestration).
+- `thinking: "low"` on subagents stops their deliberation too.
+- `defaultContext: "fresh"` removes the builtin worker's fork default (fork needs
+  a persisted parent session; fresh is what this pipeline needs anyway).
+- Project scope only — the user's global settings stay untouched.
+
+### 2. `.pi/chains/implement.chain.md` — deterministic linear graph
+
+The saved chain declares recon → worker → validator once. The parent makes ONE
+call (`/run-chain implement -- <task>`) and the runtime enforces the order — no
+step-by-step decisions for the model. Steps pass results via `{outputs.recon}` /
+`{outputs.worker}`. Verified: 3 steps in 1m2s, PASS, parent result was a compact
+summary (artifacts under `.pi-subagents/chain-runs/`).
+
+**Chain limitation:** `.chain.md`/`.chain.json` are DAGs — no loops or
+conditionals. The fix loop stays with the parent: on `VERDICT: FAIL`, re-run the
+chain with a fix task (cheap with low thinking). Full loops in the graph require
+a custom extension (deterministic state machine driving pi-subagents via RPC).
+
 ## Verified test log (2026-08-15)
 
 Environment: this project (Next.js + BitECS + Three.js, Termux/Android).
