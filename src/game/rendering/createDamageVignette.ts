@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 
-// Reuses the same damage intensity (hitTimer / 0.15) as the top-down sprite glow,
-// but paints it onto the screen edges instead of a visible sprite — FPS has no
-// self-sprite in view, so the feedback must ride the camera buffer.
+// Same damage intensity (hitTimer / 0.15) as the top-down sprite glow, but painted
+// onto the screen edges instead of a visible sprite — FPS has no self-sprite in view,
+// so the feedback must ride the camera buffer.
 const VERT = /* glsl */ `
   varying vec2 vUv;
   void main() {
@@ -21,6 +21,7 @@ const FRAG = /* glsl */ `
 
   void main() {
     vec4 c = texture2D( tDiffuse, vUv );
+    vUv *= 0.5;                       // normalize [0,2] or [0,1] to unit space (robust across THREE versions)
     float dist = length( ( vUv - vec2( 0.5 ) ) * 2.0 );
     float edge = smoothstep( 0.6, 1.0, dist ); // corners dark, center clear
     gl_FragColor = c - uDamage * uMix * edge * uColor;
@@ -39,9 +40,6 @@ export function createDamageVignette(): ShaderPass {
       }
     })
   )
-
-  // ponytail: shader samples by vUv (normalized), not gl_FragCoord — the quad covers
-  // the whole target regardless of setSize, so no override needed.
 
   return pass
 }
