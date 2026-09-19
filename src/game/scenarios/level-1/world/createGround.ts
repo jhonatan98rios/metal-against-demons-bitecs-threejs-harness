@@ -47,6 +47,30 @@ function createSideGround(
   return mesh
 }
 
+// ponytail: flat sand fill behind the noisy side grounds — same texture/color,
+// no displacement relief. Occludes the gray background that shows through the
+// noise gaps in the real floor.
+function setupFlatSandMaterial(): THREE.MeshStandardMaterial {
+  const material = setupMaterial()
+  material.displacementScale = 0
+  return material
+}
+
+function createFillGround(width: number, centerX: number): THREE.Mesh {
+  const geometry = new THREE.PlaneGeometry(width, 1000, 1, 1)
+  const material = setupFlatSandMaterial()
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.rotation.x = -Math.PI / 2
+  // ponytail: sit just behind the real floor (z<0) so gaps reveal sand, not gray bg
+  mesh.position.set(centerX, -1, -3)
+  mesh.name = 'Ground.Fill'
+  return mesh
+}
+
+export function createFillGrounds(): THREE.Mesh[] {
+  return [createFillGround(515, -242.5), createFillGround(455, 272.5)]
+}
+
 export function createGround(): [THREE.Mesh, THREE.Mesh] {
   return [
     createSideGround(515, -242.5, 'Ground.Left'),
