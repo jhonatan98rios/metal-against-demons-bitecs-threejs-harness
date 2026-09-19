@@ -181,7 +181,11 @@ const updateHealthBar = (mesh: THREE.Mesh, eid: number) => {
 
 const enemyHealthBars = new Map<number, { bg: THREE.Mesh; fill: THREE.Mesh }>()
 
-const syncEnemyHealthBar = (eid: number, scene: THREE.Scene) => {
+const syncEnemyHealthBar = (
+  eid: number,
+  scene: THREE.Scene,
+  cam: { x: number; z: number }
+) => {
   const current = Health.current[eid]
   const max = Health.max[eid]
 
@@ -202,6 +206,11 @@ const syncEnemyHealthBar = (eid: number, scene: THREE.Scene) => {
 
   bar.bg.visible = true
   bar.bg.position.set(Position.x[eid], Position.y[eid] + BAR_Y, Position.z[eid])
+  _rot.setFromAxisAngle(
+    _up,
+    Math.atan2(cam.x - Position.x[eid], cam.z - Position.z[eid])
+  )
+  bar.bg.quaternion.copy(_rot)
 
   const ratio = Math.max(0, current / max)
   bar.fill.scale.x = ratio
@@ -453,7 +462,7 @@ export const createRenderSystem = (
       if (Enemy.isEnemy[eid] === 1) {
         const slot = enemyIMByTexture.get(Sprite.texture[eid])!
         updateEnemyInstance(eid, slot.counter, slot.im, cam, delta)
-        syncEnemyHealthBar(eid, scene)
+        syncEnemyHealthBar(eid, scene, cam)
         syncEnemyPopup(eid, scene, delta)
         slot.counter++
       } else {
