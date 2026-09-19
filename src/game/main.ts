@@ -42,6 +42,7 @@ import { createScenario } from './scenarios/createScenario'
 import { createSkillManager } from './core/skills/manager'
 import { SKILL_ID } from './core/skills/skillIds'
 import { getCollisionSystem } from './core/projectiles/systems/collisionSystem'
+import { HitEffect } from './core/shared/components/HitEffect'
 import './core/skills/definitions/projectile'
 import './core/skills/definitions/redBolt'
 
@@ -133,7 +134,7 @@ function tickVisuals(
   hud: PlayerHUD | null,
   fpOverlay: ReturnType<typeof createFirstPersonOverlay>
 ) {
-  const { composer, playerFill } = renderCtx
+  const { composer, playerFill, damageVignette } = renderCtx
   const { stateEid, playerEid } = world
 
   systems.camera.update()
@@ -162,6 +163,14 @@ function tickVisuals(
       Position.z[playerEid]
     )
   }
+
+  // ponytail: FPS only — no self-sprite to glow, so the damage rides the camera.
+  // Reuses the same intensity curve as the top-down sprite flash.
+  const damage =
+    systems.camera.isFirstPerson() && playerEid != null
+      ? Math.min(HitEffect.timer[playerEid] / 0.15, 1)
+      : 0
+  damageVignette.uniforms.uDamage.value = damage
 
   composer.render()
 }

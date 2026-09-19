@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { createDamageVignette } from './createDamageVignette'
 import { Position } from '../core/shared/components/Position'
 
 // -- color palette: sunset sandstorm — pink/salmon shift, diffuse light ---------
@@ -51,6 +52,7 @@ function createPostProcessing(
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera
 ) {
+  const vignette = createDamageVignette()
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
 
@@ -62,9 +64,11 @@ function createPostProcessing(
     0.85
   )
   composer.addPass(bloomPass)
+  // ponytail: vignette after bloom, before output — only darkens edges on damage
+  composer.addPass(vignette)
   composer.addPass(new OutputPass())
 
-  return composer
+  return { composer, damageVignette: vignette }
 }
 
 // ponytail: small point light that follows player to prevent silhouette loss
@@ -122,13 +126,18 @@ export const createRender = (canvas: HTMLCanvasElement) => {
   const playerFill = createPlayerFillLight()
   scene.add(playerFill)
 
-  const composer = createPostProcessing(renderer, scene, camera)
+  const { composer, damageVignette } = createPostProcessing(
+    renderer,
+    scene,
+    camera
+  )
 
   return {
     renderer,
     scene,
     camera,
     composer,
-    playerFill
+    playerFill,
+    damageVignette
   }
 }
