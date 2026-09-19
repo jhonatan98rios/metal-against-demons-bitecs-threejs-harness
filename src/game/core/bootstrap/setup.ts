@@ -1,5 +1,6 @@
 import { addComponent, addEntity, createWorld, World } from 'bitecs'
 import { createPlayer } from '../player/entity'
+import { CameraLook } from '../shared/components/CameraLook'
 import { CameraMode } from '../shared/components/CameraMode'
 import { GameState, STATES } from '../shared/components/GameState'
 
@@ -16,6 +17,9 @@ export const setupWorld = () => {
   const cameraEid = addEntity(world)
   addComponent(world, cameraEid, CameraMode)
   CameraMode.mode[cameraEid] = 0
+  addComponent(world, cameraEid, CameraLook)
+  CameraLook.yaw[cameraEid] = 0
+  CameraLook.pitch[cameraEid] = 0
   world.cameraEid = cameraEid
 
   const stateEid = addEntity(world)

@@ -9,7 +9,9 @@ const STYLE = `
     height: auto;
     transform: translateY(30%);
     pointer-events: none;
-    z-index: 100;
+    /* ponytail: below #hud-container (z-10 stacking context) so pause/level-up
+       overlays always paint on top. */
+    z-index: 5;
     opacity: 0;
     transition: opacity 0.2s;
   }

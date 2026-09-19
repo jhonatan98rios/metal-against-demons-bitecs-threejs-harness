@@ -117,13 +117,12 @@ function tickGameplay(systems: GameSystems, _eid: number, dt: number) {
   systems.victory.update()
 }
 
+// ponytail: lock is gesture-gated — never request it from the render loop
 function handlePointerLock(systems: GameSystems, stateEid: number) {
   if (!systems.pointerLock) return
   const isFP = systems.camera.isFirstPerson()
   const isPlaying = GameState.status[stateEid] === STATES.PLAYING
-  if (isFP && isPlaying && !systems.pointerLock.isLocked())
-    void systems.pointerLock.lock()
-  else if ((!isFP || !isPlaying) && systems.pointerLock.isLocked())
+  if ((!isFP || !isPlaying) && systems.pointerLock.isLocked())
     systems.pointerLock.unlock()
 }
 
@@ -139,7 +138,11 @@ function tickVisuals(
 
   systems.camera.update()
   handlePointerLock(systems, stateEid)
-  fpOverlay.update(systems.camera.isFirstPerson())
+  // ponytail: hide hands unless actually playing — menus must own the screen
+  fpOverlay.update(
+    systems.camera.isFirstPerson() &&
+      GameState.status[stateEid] === STATES.PLAYING
+  )
 
   if (hud) {
     hud.update({
@@ -195,6 +198,7 @@ function createGameLoop(
 function createHUD(
   gameState: ReturnType<typeof createGameStateSystem>,
   skillManager: ReturnType<typeof createSkillManager>,
+  onResume: () => void,
   onReturnToMenu: () => void
 ): PlayerHUD | null {
   const container = document.querySelector('#hud-container')
@@ -204,9 +208,14 @@ function createHUD(
   // eslint-disable-next-line functional/no-let
   let currentOptions: ReturnType<typeof skillManager.getUpgradeOptions> = []
 
+  const togglePause = () => {
+    gameState.togglePause()
+    if (gameState.getState() === STATES.PLAYING) onResume()
+  }
+
   return new PlayerHUD(
     container as HTMLElement,
-    () => gameState.togglePause(),
+    togglePause,
     () => {
       currentOptions = skillManager.getUpgradeOptions()
       return currentOptions
@@ -216,9 +225,29 @@ function createHUD(
         skillManager.applyUpgradeChoice(currentOptions[index])
       }
       gameState.resumeFromLevelUp()
+      onResume()
     },
     onReturnToMenu
   )
+}
+
+// ponytail: extracted to keep start() under 50 lines
+function setupHud(
+  gameState: ReturnType<typeof createGameStateSystem>,
+  skillManager: ReturnType<typeof createSkillManager>,
+  systems: GameSystems,
+  cleanup: () => void
+) {
+  // ponytail: Resume/upgrade clicks are user gestures — relock the pointer in
+  // the same click, so resuming is one action instead of two
+  const onResume = () => {
+    if (systems.camera.isFirstPerson()) void systems.pointerLock?.lock()
+  }
+  return createHUD(gameState, skillManager, onResume, () => {
+    cleanup()
+    // ponytail: full page nav cleans up everything, no lingering DOM
+    window.location.href = '/'
+  })
 }
 
 // ponytail: locked phases (direct URL) fall back to phase 1
@@ -281,11 +310,7 @@ export function start(phaseId?: string) {
     hud?.destroy?.()
   }
 
-  const hud = createHUD(gameState, skillManager, () => {
-    cleanup()
-    // ponytail: full page nav cleans up everything, no lingering DOM
-    window.location.href = '/'
-  })
+  const hud = setupHud(gameState, skillManager, systems, cleanup)
   const loop = createGameLoop(systems, world, renderCtx, hud, fpOverlay)
   loop()
 
@@ -316,14 +341,11 @@ function setupCameraAndInput(
       })()
 
   const cameraSystem = createCameraSystem(world, camera, () =>
-    cameraCtrl.getAngle()
+    cameraCtrl.consumeLook()
   )
   const controller = createCharacterController(world, input, 20, () =>
-    cameraSystem.isFirstPerson() ? cameraCtrl.getAngle() : 0
+    cameraSystem.isFirstPerson() ? cameraSystem.getYaw() : 0
   )
-
-  const cameraSwitcher = createCameraSwitcher(() => cameraSystem.toggle())
-  destroyables.push(() => cameraSwitcher.destroy())
 
   const pointerLock = isTouch
     ? undefined
@@ -336,7 +358,45 @@ function setupCameraAndInput(
         }
       })()
 
+  // ponytail: keep the FP switch inside the click gesture so lock is allowed
+  const cameraSwitcher = createCameraSwitcher(() => {
+    cameraSystem.toggle()
+    if (cameraSystem.isFirstPerson()) void pointerLock?.lock()
+  })
+  destroyables.push(() => cameraSwitcher.destroy())
+
   return { cameraSystem, controller, pointerLock }
+}
+
+// ponytail: pointer lock cannot be requested outside a user gesture
+function wirePointerLock(
+  gameState: ReturnType<typeof createGameStateSystem>,
+  cameraSystem: ReturnType<typeof createCameraSystem>,
+  pointerLock: GameSystems['pointerLock'],
+  destroyables: (() => void)[]
+) {
+  if (!pointerLock) return
+  const isLooking = () =>
+    cameraSystem.isFirstPerson() && gameState.getState() === STATES.PLAYING
+
+  const onClick = () => {
+    if (isLooking()) void pointerLock.lock()
+  }
+  // ponytail: Esc exits pointer lock without a keydown reaching the page —
+  // losing the lock IS the pause, so one Esc pauses instead of two
+  const onLockChange = () => {
+    if (!pointerLock.isLocked() && isLooking()) gameState.togglePause()
+  }
+
+  const canvas = document.querySelector('#game-canvas')
+  if (canvas) {
+    canvas.addEventListener('click', onClick)
+    destroyables.push(() => canvas.removeEventListener('click', onClick))
+  }
+  document.addEventListener('pointerlockchange', onLockChange)
+  destroyables.push(() =>
+    document.removeEventListener('pointerlockchange', onLockChange)
+  )
 }
 
 function createGameSystems(
@@ -361,6 +421,8 @@ function createGameSystems(
     input,
     destroyables
   )
+
+  wirePointerLock(gameState, cameraSystem, pointerLock, destroyables)
 
   return {
     gameState,

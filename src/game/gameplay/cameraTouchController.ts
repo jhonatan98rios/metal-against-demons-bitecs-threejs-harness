@@ -1,6 +1,12 @@
 interface TouchState {
   touchId: number | null
   lastX: number
+  lastY: number
+}
+
+type Look = {
+  yaw: number
+  pitch: number
 }
 
 const isJoystickTouch = (target: EventTarget | null): boolean => {
@@ -16,10 +22,11 @@ const onTouchStart =
     if (!touch || isJoystickTouch(e.target)) return
     state.touchId = touch.identifier
     state.lastX = touch.clientX
+    state.lastY = touch.clientY
   }
 
 const onTouchMove =
-  (angle: { value: number }, state: TouchState) =>
+  (look: Look, state: TouchState) =>
   (e: TouchEvent): void => {
     if (state.touchId === null) return
     const touch = Array.from(e.changedTouches).find(
@@ -27,8 +34,11 @@ const onTouchMove =
     )
     if (!touch) return
     const dx = touch.clientX - state.lastX
+    const dy = touch.clientY - state.lastY
     state.lastX = touch.clientX
-    angle.value += (dx / window.innerWidth) * (Math.PI / 2) // full swipe = 90°
+    state.lastY = touch.clientY
+    look.yaw += (dx / window.innerWidth) * (Math.PI / 2) // full swipe = 90°
+    look.pitch -= (dy / window.innerHeight) * (Math.PI / 2)
   }
 
 const onTouchEnd =
@@ -43,11 +53,11 @@ const onTouchEnd =
   }
 
 export function createCameraTouchController() {
-  const angle = { value: 0 }
-  const state: TouchState = { touchId: null, lastX: 0 }
+  const look: Look = { yaw: 0, pitch: 0 }
+  const state: TouchState = { touchId: null, lastX: 0, lastY: 0 }
 
   const ts = onTouchStart(state)
-  const tm = onTouchMove(angle, state)
+  const tm = onTouchMove(look, state)
   const te = onTouchEnd(state)
 
   document.addEventListener('touchstart', ts, { passive: true })
@@ -56,7 +66,12 @@ export function createCameraTouchController() {
   document.addEventListener('touchcancel', te, { passive: true })
 
   return {
-    getAngle: () => angle.value,
+    consumeLook: () => {
+      const delta = { yaw: look.yaw, pitch: look.pitch }
+      look.yaw = 0
+      look.pitch = 0
+      return delta
+    },
     destroy() {
       document.removeEventListener('touchstart', ts)
       document.removeEventListener('touchmove', tm)
