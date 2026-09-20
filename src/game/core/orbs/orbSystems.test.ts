@@ -2,6 +2,7 @@ import { createWorld } from 'bitecs'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Active } from '../shared/components/Active'
+import { Glow } from '../shared/components/Glow'
 import { Position } from '../shared/components/Position'
 import { XP } from '../shared/components/XP'
 import { ORB } from './definitions/orb'
@@ -77,6 +78,18 @@ describe('orb collect system', () => {
 
     expect(XP.current[PLAYER]).toBe(0)
     expect(Active.isActive[eid]).toBe(1)
+  })
+})
+
+describe('orb glow', () => {
+  it('scales emissive intensity with xp value', () => {
+    const { pool } = setup()
+    const weak = pool.acquire(0, 0, 7)
+    const strong = pool.acquire(0, 0, 10)
+
+    expect(Glow.intensity[weak]).toBe(ORB.GLOW_BASE + 7 * ORB.GLOW_PER_XP)
+    expect(Glow.intensity[strong]).toBeGreaterThan(Glow.intensity[weak])
+    expect(Glow.intensity[strong]).toBeLessThanOrEqual(255)
   })
 })
 

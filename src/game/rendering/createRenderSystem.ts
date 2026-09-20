@@ -25,6 +25,7 @@ import {
   updateWorldDamagePopup
 } from './createDamagePopup'
 import {
+  applyGlow,
   createEnemyIM,
   EnemyIMConfig,
   EnemyInstancedMesh
@@ -473,6 +474,7 @@ export const createRenderSystem = (
         const slot = enemyIMByTexture.get(Sprite.texture[eid])
         if (slot && slot.counter * 2 < slot.im.uvBuffer.length) {
           updateEnemyInstance(eid, slot.counter, slot.im, cam, delta)
+          applyGlow(eid, slot.counter, slot.im)
           slot.counter++
         }
       } else {

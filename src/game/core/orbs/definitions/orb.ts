@@ -29,5 +29,9 @@ export const ORB = {
   COLLECT_RADIUS: 1.2,
 
   /** Orb travel speed toward the player (world units / second) */
-  MAGNET_SPEED: 22
+  MAGNET_SPEED: 22,
+
+  /** Glow (u8, 0-255): intensity = GLOW_BASE + xpValue * GLOW_PER_XP, capped at 255 */
+  GLOW_BASE: 80,
+  GLOW_PER_XP: 16
 } as const

@@ -8,6 +8,7 @@ import {
 } from 'bitecs'
 
 import { Active } from '../../shared/components/Active'
+import { Glow } from '../../shared/components/Glow'
 import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Renderable } from '../../shared/components/Renderable'
@@ -15,7 +16,14 @@ import { Sprite } from '../../shared/components/Sprite'
 import { Orb } from '../components/Orb'
 import { ORB } from '../definitions/orb'
 
-const ORB_COMPONENTS = [Active, Orb, Position, Renderable, Sprite] as const
+const ORB_COMPONENTS = [
+  Active,
+  Glow,
+  Orb,
+  Position,
+  Renderable,
+  Sprite
+] as const
 
 const addOrbComponents = (world: World, eid: number) => {
   ORB_COMPONENTS.forEach((component) => {
@@ -25,6 +33,7 @@ const addOrbComponents = (world: World, eid: number) => {
 
 const initOrb = (world: World, eid: number) => {
   Active.isActive[eid] = 0
+  Glow.intensity[eid] = 0
   Orb.isOrb[eid] = 1
   Renderable.isRenderable[eid] = 1
   Sprite.texture[eid] = ORB.TEXTURE
@@ -59,6 +68,10 @@ export function createOrbPool(world: World, size: number) {
       Active.isActive[eid] = 1
       removeComponent(world, eid, Inactive)
       Orb.xpValue[eid] = xpValue
+      Glow.intensity[eid] = Math.min(
+        255,
+        ORB.GLOW_BASE + xpValue * ORB.GLOW_PER_XP
+      )
       Position.x[eid] = x
       Position.y[eid] = ORB.HOVER_Y
       Position.z[eid] = z

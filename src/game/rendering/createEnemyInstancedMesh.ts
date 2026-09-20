@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+import { Glow } from '../core/shared/components/Glow'
+
 // ponytail: single InstancedMesh per texture — N textures → N draw calls
 // per-instance: matrix (position + billboard rotation), UV offset (sprite frame), color (hit flash)
 
@@ -114,6 +116,22 @@ export interface EnemyIMConfig {
     blending?: THREE.Blending
     depthWrite?: boolean
   }
+}
+
+// -- glow (emissive) -------------------------------------------------------
+// ponytail: emissive = tint * intensity folded into the instance color, so the
+// existing bloom pass spreads a halo without new materials or draw calls
+const GLOW_COLOR = new THREE.Color(0.35, 0.85, 1)
+const GLOW_GAIN = 2.5
+
+export function applyGlow(eid: number, index: number, im: EnemyInstancedMesh) {
+  const intensity = Glow.intensity[eid]
+  if (intensity === 0) return
+
+  const boost = 1 + (intensity / 255) * GLOW_GAIN
+  im.colorBuffer[index * 3] = GLOW_COLOR.r * boost
+  im.colorBuffer[index * 3 + 1] = GLOW_COLOR.g * boost
+  im.colorBuffer[index * 3 + 2] = GLOW_COLOR.b * boost
 }
 
 export function createEnemyIM(
