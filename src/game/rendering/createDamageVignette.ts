@@ -15,7 +15,7 @@ const VERT = /* glsl */ `
 const FRAG = /* glsl */ `
   uniform sampler2D tDiffuse; // read buffer, wired by ShaderPass
   uniform float uDamage;      // 0..1, mirrors HitEffect.timer / 0.15
-  uniform vec3  uColor;       // red tint subtracted from the edges
+  uniform vec3  uColor;       // red tint blended into the edges
   uniform float uMix;         // edge strength 0..1
 
   varying vec2 vUv;
@@ -24,7 +24,8 @@ const FRAG = /* glsl */ `
     vec4 c = texture2D( tDiffuse, vUv );
     float dist = length( ( vUv - vec2( 0.5 ) ) * 2.0 );
     float edge = smoothstep( 0.6, 1.0, dist ); // corners dark, center clear
-    gl_FragColor = vec4( c.rgb - uDamage * uMix * edge * uColor, c.a );
+    // ponytail: lerp toward red — subtracting red would leave the edges cyan/green
+    gl_FragColor = vec4( mix( c.rgb, uColor, uDamage * uMix * edge ), c.a );
   }
 `
 
