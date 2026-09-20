@@ -13,6 +13,8 @@ import { HitEffect } from '../core/shared/components/HitEffect'
 import { DamagePopup } from '../core/shared/components/DamagePopup'
 import { Enemy } from '../core/enemies/components/Enemy'
 import { Projectile } from '../core/projectiles/components/Projectile'
+import { Orb } from '../core/orbs/components/Orb'
+import { ORB } from '../core/orbs/definitions/orb'
 
 import { createSpriteRender } from './createSpriteRender'
 import {
@@ -290,7 +292,8 @@ interface EnemyIMSlot {
 // ponytail: per-texture sprite Y offset — crawler frame is centered, needs to sit lower
 const SPRITE_Y_OFFSET: Record<string, number> = {
   [APPARITION.TEXTURE]: APPARITION.Y_OFFSET,
-  [CRAWLER.TEXTURE]: CRAWLER.Y_OFFSET
+  [CRAWLER.TEXTURE]: CRAWLER.Y_OFFSET,
+  [ORB.TEXTURE]: ORB.Y_OFFSET
 }
 
 function updateShadowMatrix(
@@ -434,6 +437,7 @@ function createEnemyIMSlots(scene: THREE.Scene): Map<string, EnemyIMSlot> {
     CRAWLER.WIDTH,
     CRAWLER.HEIGHT
   )
+  makeSlot(ORB.TEXTURE, ORB.COLUMNS, ORB.ROWS, ORB.WIDTH, ORB.HEIGHT)
 
   return map
 }
@@ -465,6 +469,13 @@ export const createRenderSystem = (
         syncEnemyHealthBar(eid, scene, cam)
         syncEnemyPopup(eid, scene, delta)
         slot.counter++
+      } else if (Orb.isOrb[eid] === 1) {
+        // ponytail: cap at instanced capacity instead of throwing on overflow
+        const slot = enemyIMByTexture.get(Sprite.texture[eid])
+        if (slot && slot.counter * 2 < slot.im.uvBuffer.length) {
+          updateEnemyInstance(eid, slot.counter, slot.im, cam, delta)
+          slot.counter++
+        }
       } else {
         renderNonEnemy(eid, scene, delta, cam)
       }

@@ -6,6 +6,9 @@ import { createBoidsSystem } from './core/enemies/systems/boidsSystem'
 import { createEnemyDeathSystem } from './core/enemies/systems/deathSystem'
 import { createPlayerDamageSystem } from './core/enemies/systems/playerDamageSystem'
 import { createEnemySpawnSystem } from './core/enemies/systems/spawnSystem'
+import { createOrbPool } from './core/orbs/pool/orbPool'
+import { createOrbMagnetSystem } from './core/orbs/systems/magnetSystem'
+import { createOrbCollectSystem } from './core/orbs/systems/collectSystem'
 import { createPlayerDeathSystem } from './core/player/deathSystem'
 import { createCharacterController } from './gameplay/characterController'
 import { createInput } from './gameplay/input'
@@ -88,7 +91,10 @@ function setupBackButton(gameState: ReturnType<typeof createGameStateSystem>) {
 }
 
 // ponytail: shared restart logic — reset player and resume
-function makeRestartCallback(world: { playerEid: number }) {
+function makeRestartCallback(
+  world: { playerEid: number },
+  orbPool: ReturnType<typeof createOrbPool>
+) {
   return () => {
     const pid = world.playerEid
     Health.current[pid] = Health.max[pid]
@@ -100,6 +106,7 @@ function makeRestartCallback(world: { playerEid: number }) {
     XP.current[pid] = 0
     XP.level[pid] = 1
     XP.next[pid] = runXpRequirement(1)
+    orbPool.releaseAll()
   }
 }
 
@@ -113,6 +120,8 @@ function tickGameplay(systems: GameSystems, _eid: number, dt: number) {
   systems.animation.update(dt)
   systems.playerDamage.update(dt)
   systems.death.update()
+  systems.orbMagnet.update(dt)
+  systems.orbCollect.update()
   systems.playerDeath.update()
   systems.levelUp.update()
   systems.victory.update()
@@ -292,12 +301,13 @@ export function start(phaseId?: string) {
   createScenario(renderCtx.scene, phase.scenario)
   const enemyPool = createEnemyPool(world, phase.poolSize)
   const enemySpawn = setupEnemySpawning(world, enemyPool, phase)
+  const orbPool = createOrbPool(world, phase.enemyCount)
 
   const gameState = createGameStateSystem(
     world,
     () => input.consumePressed('escape'),
     () => input.consumePressed('enter'),
-    makeRestartCallback(world)
+    makeRestartCallback(world, orbPool)
   )
 
   const skillManager = createSkillManager(world)
@@ -308,7 +318,7 @@ export function start(phaseId?: string) {
     renderCtx.scene,
     renderCtx.camera,
     enemyPool,
-    { input, gameState, skillManager, phaseIndex, enemySpawn }
+    { input, gameState, skillManager, phaseIndex, enemySpawn, orbPool }
   )
 
   const fpOverlay = createFirstPersonOverlay()
@@ -408,6 +418,23 @@ function wirePointerLock(
   )
 }
 
+// ponytail: extracted to keep createGameSystems under 50 lines
+function createCombatSystems(
+  world: ReturnType<typeof setupWorld>,
+  enemyPool: ReturnType<typeof createEnemyPool>,
+  orbPool: ReturnType<typeof createOrbPool>
+) {
+  return {
+    death: createEnemyDeathSystem(
+      world,
+      (eid) => enemyPool.release(eid),
+      (x, z, xpValue) => orbPool.acquire(x, z, xpValue)
+    ),
+    orbMagnet: createOrbMagnetSystem(world),
+    orbCollect: createOrbCollectSystem(world, (eid) => orbPool.release(eid))
+  }
+}
+
 function createGameSystems(
   world: ReturnType<typeof setupWorld>,
   scene: THREE.Scene,
@@ -419,9 +446,11 @@ function createGameSystems(
     skillManager: ReturnType<typeof createSkillManager>
     phaseIndex: number
     enemySpawn: ReturnType<typeof createEnemySpawnSystem>
+    orbPool: ReturnType<typeof createOrbPool>
   }
 ) {
-  const { input, gameState, skillManager, phaseIndex, enemySpawn } = ctx
+  const { input, gameState, skillManager, phaseIndex, enemySpawn, orbPool } =
+    ctx
   const destroyables: (() => void)[] = []
 
   const { cameraSystem, controller, pointerLock } = setupCameraAndInput(
@@ -443,7 +472,7 @@ function createGameSystems(
     render: createRenderSystem(world, scene, camera),
     animation: createWorkerPool(world),
     levelUp: createLevelUpSystem(world, () => gameState.setLevelUp()),
-    death: createEnemyDeathSystem(world, (eid) => enemyPool.release(eid)),
+    ...createCombatSystems(world, enemyPool, orbPool),
     spawn: enemySpawn,
     playerDamage: createPlayerDamageSystem(world),
     ...wireRunEndings(world, gameState, phaseIndex),
