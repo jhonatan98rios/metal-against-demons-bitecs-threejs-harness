@@ -21,7 +21,8 @@ const SOUND_SPRITE: ProjectileSpriteConfig = {
   height: 2.0,
   fps: 8,
   startFrame: 0,
-  endFrame: 3
+  endFrame: 3,
+  glow: 255
 }
 
 // Base stats at level 1

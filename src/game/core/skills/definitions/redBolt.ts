@@ -13,6 +13,7 @@ import type { SkillDefinition } from '../types'
 import { Active } from '../../shared/components/Active'
 import { Animation } from '../../shared/components/Animation'
 import { Billboard } from '../../shared/components/Billboard'
+import { Glow } from '../../shared/components/Glow'
 import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Renderable } from '../../shared/components/Renderable'
@@ -34,13 +35,15 @@ const BAT_SPRITE: ProjectileSpriteConfig = {
   height: 2.0,
   fps: 8,
   startFrame: 0,
-  endFrame: 1
+  endFrame: 1,
+  glow: 200
 }
 
 // ── Spiral projectile pool ──────────────────────────────────────────────
 
 const POOL_COMPONENTS = [
   Active,
+  Glow,
   Projectile,
   Position,
   Renderable,
@@ -77,6 +80,7 @@ function initSpiralEntity(
   Projectile.friendlyFire[eid] = 0
   Renderable.isRenderable[eid] = 1
   Billboard.isBillboard[eid] = 1
+  Glow.intensity[eid] = sprite.glow
   Sprite.texture[eid] = sprite.texture
   Sprite.columns[eid] = sprite.columns
   Sprite.rows[eid] = sprite.rows

@@ -1,6 +1,7 @@
 import { addComponent, addEntity, removeComponent, World } from 'bitecs'
 
 import { Active } from '../../shared/components/Active'
+import { Glow } from '../../shared/components/Glow'
 import { Inactive } from '../../shared/components/Inactive'
 import { Position } from '../../shared/components/Position'
 import { Velocity } from '../../shared/components/Velocity'
@@ -13,6 +14,7 @@ import { Projectile } from '../components/Projectile'
 
 const COMPONENTS = [
   Active,
+  Glow,
   Projectile,
   Position,
   Velocity,
@@ -37,6 +39,8 @@ export type ProjectileSpriteConfig = {
   fps: number
   startFrame: number
   endFrame: number
+  /** Glow (u8, 0-255): 0 = no emission, 255 = brightest. */
+  glow: number
 }
 
 function initEntity(world: World, eid: number, sprite: ProjectileSpriteConfig) {
@@ -48,6 +52,7 @@ function initEntity(world: World, eid: number, sprite: ProjectileSpriteConfig) {
   Projectile.friendlyFire[eid] = 0
   Renderable.isRenderable[eid] = 1
   Billboard.isBillboard[eid] = 1
+  Glow.intensity[eid] = sprite.glow
   Sprite.texture[eid] = sprite.texture
   Sprite.columns[eid] = sprite.columns
   Sprite.rows[eid] = sprite.rows

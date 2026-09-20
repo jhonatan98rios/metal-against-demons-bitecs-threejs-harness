@@ -16,7 +16,7 @@ import { Projectile } from '../core/projectiles/components/Projectile'
 import { Orb } from '../core/orbs/components/Orb'
 import { ORB } from '../core/orbs/definitions/orb'
 
-import { createSpriteRender } from './createSpriteRender'
+import { createSpriteRender, applySpriteGlow } from './createSpriteRender'
 import {
   createDamagePopupSprite,
   ENEMY_POPUP_COLOR,
@@ -386,6 +386,7 @@ function renderNonEnemy(
   syncPosition(eid, object)
   syncBillboardRotation(eid, object, cam)
   applyHitFlash(object, eid, delta)
+  applySpriteGlow(eid, object.material)
   updateHealthBar(object, eid)
   if (DamagePopup.timer[eid] > 0) {
     updateDamagePopup(getOrCreateDamagePopup(object), eid, delta)
