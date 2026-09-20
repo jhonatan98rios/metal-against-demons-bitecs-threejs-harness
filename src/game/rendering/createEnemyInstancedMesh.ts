@@ -30,7 +30,8 @@ varying vec3 vColor;
 
 void main() {
     vec4 texColor = texture2D(map, vUv);
-    if (texColor.a < 0.5) discard;
+    // ponytail: low threshold keeps soft glows (orbs) while pixel art is unaffected
+    if (texColor.a < 0.02) discard;
     gl_FragColor = vec4(texColor.rgb * vColor, texColor.a);
 }
 `
@@ -38,7 +39,12 @@ void main() {
 // ponytail: hardcoded capacity, bump if more enemies needed
 const ENEMY_CAPACITY = 5000
 
-function createMaterial(texture: THREE.Texture, columns: number, rows: number) {
+function createMaterial(
+  texture: THREE.Texture,
+  columns: number,
+  rows: number,
+  options: EnemyIMConfig['material'] = {}
+): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       map: { value: texture },
@@ -48,7 +54,8 @@ function createMaterial(texture: THREE.Texture, columns: number, rows: number) {
     fragmentShader: FRAGMENT_SHADER,
     transparent: true,
     depthTest: true,
-    depthWrite: true
+    depthWrite: options.depthWrite ?? true,
+    blending: options.blending ?? THREE.NormalBlending
   })
 }
 
@@ -102,6 +109,11 @@ export interface EnemyIMConfig {
   rows: number
   width: number
   height: number
+  /** Optional material overrides — additive blending + no depth write gives glow. */
+  material?: {
+    blending?: THREE.Blending
+    depthWrite?: boolean
+  }
 }
 
 export function createEnemyIM(
@@ -117,7 +129,12 @@ export function createEnemyIM(
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
 
-  const material = createMaterial(texture, config.columns, config.rows)
+  const material = createMaterial(
+    texture,
+    config.columns,
+    config.rows,
+    config.material
+  )
   const mesh = new THREE.InstancedMesh(geometry, material, ENEMY_CAPACITY)
   mesh.frustumCulled = false
 

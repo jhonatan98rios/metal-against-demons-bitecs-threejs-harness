@@ -13,8 +13,8 @@ export const ORB = {
   ROWS: 1,
 
   /** Frame size in world units */
-  WIDTH: 0.7,
-  HEIGHT: 0.7,
+  WIDTH: 1.4,
+  HEIGHT: 1.4,
 
   /** Sprite Y offset (sprite is already centered) */
   Y_OFFSET: 0,

@@ -24,7 +24,11 @@ import {
   updateDamagePopup,
   updateWorldDamagePopup
 } from './createDamagePopup'
-import { createEnemyIM, EnemyInstancedMesh } from './createEnemyInstancedMesh'
+import {
+  createEnemyIM,
+  EnemyIMConfig,
+  EnemyInstancedMesh
+} from './createEnemyInstancedMesh'
 import { APPARITION } from '../core/enemies/definitions/apparition'
 import { CRAWLER } from '../core/enemies/definitions/crawler'
 
@@ -404,40 +408,35 @@ function handleInactive(eid: number) {
 function createEnemyIMSlots(scene: THREE.Scene): Map<string, EnemyIMSlot> {
   const map = new Map<string, EnemyIMSlot>()
 
-  const makeSlot = (
-    texture: string,
-    columns: number,
-    rows: number,
-    width: number,
-    height: number
-  ) => {
-    map.set(texture, {
+  type SpriteDef = {
+    TEXTURE: string
+    COLUMNS: number
+    ROWS: number
+    WIDTH: number
+    HEIGHT: number
+  }
+
+  const makeSlot = (def: SpriteDef, material?: EnemyIMConfig['material']) => {
+    map.set(def.TEXTURE, {
       im: createEnemyIM(scene, {
-        texturePath: texture,
-        columns,
-        rows,
-        width,
-        height
+        texturePath: def.TEXTURE,
+        columns: def.COLUMNS,
+        rows: def.ROWS,
+        width: def.WIDTH,
+        height: def.HEIGHT,
+        material
       }),
       counter: 0
     })
   }
 
-  makeSlot(
-    APPARITION.TEXTURE,
-    APPARITION.COLUMNS,
-    APPARITION.ROWS,
-    APPARITION.WIDTH,
-    APPARITION.HEIGHT
-  )
-  makeSlot(
-    CRAWLER.TEXTURE,
-    CRAWLER.COLUMNS,
-    CRAWLER.ROWS,
-    CRAWLER.WIDTH,
-    CRAWLER.HEIGHT
-  )
-  makeSlot(ORB.TEXTURE, ORB.COLUMNS, ORB.ROWS, ORB.WIDTH, ORB.HEIGHT)
+  makeSlot(APPARITION)
+  makeSlot(CRAWLER)
+  makeSlot(ORB, {
+    // ponytail: additive glow — a magic XP sphere, not a flat sprite
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
 
   return map
 }

@@ -27,7 +27,8 @@ the player and grants its carried `Enemy.xpValue` XP when collected.
 ### Constraints
 
 - Mirrors the `src/game/core/projectiles/` layout: `components/`, `pool/`, `systems/`, plus `definitions/orb.ts` for tunables and the sprite config.
-- Zero new dependencies. One new static asset: `public/orbs/xp_orb.png` (small light-blue orb, single frame).
+- Zero new dependencies. One new static asset: `public/orbs/xp_orb.png` (64×64 light-blue glowing sphere, single frame).
+- Orb material uses additive blending with `depthWrite: false` so the soft glow reads as a magic sphere; the instanced shader discards only near-zero alpha so the halo is preserved.
 - Orbs must NOT carry the `Animation` (or `AnimationRow`) component: the sprite is single-frame, and more importantly `createWorkerPool` removes every `Animation` entity whose `Health.current <= 0`, and orbs have no `Health`. This keeps orbs out of the worker animation query entirely.
 - Orb components are minimal: `Active`, `Orb`, `Position`, `Renderable`, `Sprite`. No `Velocity`: the magnet system integrates position directly (orbs are outside the worker movement query, so a velocity would never be applied).
 - All distance math is XZ-only, consistent with projectile collision.
