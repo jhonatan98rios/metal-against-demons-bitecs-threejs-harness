@@ -6,6 +6,21 @@
 - After any change, you need to run `pnpm validate:full` to call the self healing harness that will verify the code quality and return a report with errors.
 - You should never ignore the errors returned by `pnpm validate:full` command. You should analize the error, apply the fix to the code and run the `pnpm validate:full` command again.
 
+# Environment check (do this first)
+
+- **Always check the OS before running validations:** run `uname -s` (or `echo $PREFIX`) and see if it is `Android` / Termux.
+- **On Android/Termux some validations are NOT available** because their native binaries are missing or crash with `Illegal instruction`:
+  - `pnpm test` / `vitest` — unavailable (crashes, no vite native binary).
+  - `pnpm knip` — unavailable (crashes, native binary).
+  - `pnpm complexity` (`lizard`) — unavailable (not installed).
+- On Android, **do not run `pnpm validate:full`** (it will abort on the above). Instead run only the available checks:
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm depcruise`
+  - `pnpm format:check`
+- On non-Android environments (CI, Linux, macOS) run the full `pnpm validate:full`.
+- If a test/lint-only failure is suspected on Android, note it clearly in the report instead of looping on unavailable commands.
+
 # Project Notes
 
 - **Tool Usage**: Always `read` to confirm exact formatting before `edit` operations.
@@ -22,9 +37,10 @@
 - Common errors and how to avoid:
   - Path and quoting mistakes: Do not prefix paths with @; ensure backticks in code blocks are closed properly.
 - How to solve:
-  - Plan patch, apply patch with multi_edit, then run `pnpm validate:full`.
+  - Plan patch, apply patch with multi_edit, then run the available validations (see "Environment check" above).
 - Quick workflow recap:
   - 1. Read AGENTS.md
-  - 2. Patch via multi_edit
-  - 3. Validate
-  - 4. Fix issues and re-validate
+  - 2. Check OS (skip Android-unavailable validations)
+  - 3. Patch via multi_edit
+  - 4. Validate
+  - 5. Fix issues and re-validate
