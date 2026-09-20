@@ -13,33 +13,30 @@ const VERT = /* glsl */ `
 `
 
 const FRAG = /* glsl */ `
-  uniform float uDamage; // 0..1, mirrors HitEffect.timer / 0.15
-  uniform vec3  uColor;  // red tint subtracted from the edges
-  uniform float uMix;    // edge strength 0..1
+  uniform sampler2D tDiffuse; // read buffer, wired by ShaderPass
+  uniform float uDamage;      // 0..1, mirrors HitEffect.timer / 0.15
+  uniform vec3  uColor;       // red tint subtracted from the edges
+  uniform float uMix;         // edge strength 0..1
 
   varying vec2 vUv;
 
   void main() {
     vec4 c = texture2D( tDiffuse, vUv );
-    vUv *= 0.5;                       // normalize [0,2] or [0,1] to unit space (robust across THREE versions)
     float dist = length( ( vUv - vec2( 0.5 ) ) * 2.0 );
     float edge = smoothstep( 0.6, 1.0, dist ); // corners dark, center clear
-    gl_FragColor = c - uDamage * uMix * edge * uColor;
+    gl_FragColor = vec4( c.rgb - uDamage * uMix * edge * uColor, c.a );
   }
 `
 
 export function createDamageVignette(): ShaderPass {
-  const pass = new ShaderPass(
-    new THREE.ShaderMaterial({
-      vertexShader: VERT,
-      fragmentShader: FRAG,
-      uniforms: {
-        uDamage: { value: 0 },
-        uColor: { value: new THREE.Color(0xff2200) },
-        uMix: { value: 0.65 }
-      }
-    })
-  )
-
-  return pass
+  return new ShaderPass({
+    uniforms: {
+      tDiffuse: { value: null },
+      uDamage: { value: 0 },
+      uColor: { value: new THREE.Color(0xff2200) },
+      uMix: { value: 0.65 }
+    },
+    vertexShader: VERT,
+    fragmentShader: FRAG
+  })
 }
