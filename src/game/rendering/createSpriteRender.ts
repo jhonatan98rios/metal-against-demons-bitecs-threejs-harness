@@ -5,7 +5,7 @@ import { Sprite } from '../core/shared/components/Sprite'
 
 // ponytail: emissive reuses the sprite texture, so a glowing projectile keeps
 // its own colors and the global bloom pass spreads the halo — no second map
-const GLOW_GAIN = 4
+const GLOW_GAIN = 2.4
 
 /**
  * Applies the reusable `Glow` component to a sprite mesh material.

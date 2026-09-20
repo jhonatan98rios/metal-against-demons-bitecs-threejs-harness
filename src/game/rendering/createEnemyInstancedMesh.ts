@@ -122,7 +122,7 @@ export interface EnemyIMConfig {
 // ponytail: emissive = tint * intensity folded into the instance color, so the
 // existing bloom pass spreads a halo without new materials or draw calls
 const GLOW_COLOR = new THREE.Color(0.35, 0.85, 1)
-const GLOW_GAIN = 2.5
+const GLOW_GAIN = 1.6
 
 export function applyGlow(eid: number, index: number, im: EnemyInstancedMesh) {
   const intensity = Glow.intensity[eid]
