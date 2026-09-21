@@ -31,8 +31,8 @@ const LIGHTNING_SPRITE: ProjectileSpriteConfig = {
   texture: '/lightning_1.png',
   columns: 8,
   rows: 1,
-  width: 6,
-  height: 6.5,
+  width: 9,
+  height: 9.75,
   fps: 8,
   startFrame: 0,
   endFrame: 7,
@@ -42,6 +42,8 @@ const LIGHTNING_SPRITE: ProjectileSpriteConfig = {
 // 8 frames at 8 fps = 1s of animation; the strike lives exactly that long.
 const STRIKE_TTL = 1
 const STRIKE_Y = 5
+// Contact area: ground footprint the sprite covers (AABB half-extent).
+const STRIKE_HALF = LIGHTNING_SPRITE.width / 2
 
 // pool 1 = holy bolt, 2 = vampire horde, 3 = lightning strike
 const POOL_ID = 3
@@ -188,6 +190,27 @@ function findStrikeTarget(
 
 type LightningStats = { damage: number; interval: number; range: number }
 
+/** Damages every enemy whose center falls inside the strike footprint. */
+function damageStrikeArea(
+  world: World,
+  x: number,
+  z: number,
+  damage: number
+): void {
+  const enemies = query(world, [
+    Enemy,
+    Position,
+    Not(Inactive)
+  ]) as readonly number[]
+
+  for (const eid of enemies) {
+    // ponytail: AABB test, no sqrt — the bolt never moves horizontally
+    if (Math.abs(Position.x[eid] - x) > STRIKE_HALF) continue
+    if (Math.abs(Position.z[eid] - z) > STRIKE_HALF) continue
+    applyDamage(eid, damage)
+  }
+}
+
 function createStrikeSpawnSystem(
   world: World,
   pool: ReturnType<typeof createStrikePool>,
@@ -210,27 +233,25 @@ function createStrikeSpawnSystem(
       const target = findStrikeTarget(world, px, pz, stats.range)
       if (target < 0) return
 
-      const eid = pool.acquire(
-        Position.x[target],
-        Position.z[target],
-        STRIKE_TTL
-      )
-      if (eid >= 0) applyDamage(target, stats.damage)
+      const tx = Position.x[target]
+      const tz = Position.z[target]
+      const eid = pool.acquire(tx, tz, STRIKE_TTL)
+      if (eid >= 0) damageStrikeArea(world, tx, tz, stats.damage)
     }
   }
 }
 
 // ── skill definition ────────────────────────────────────────────────────
 
-const BASE_DAMAGE = 4
+const BASE_DAMAGE = 2
 const BASE_INTERVAL = 2
 const BASE_RANGE = 18
 
 const UPGRADES: SkillDefinition['upgrades'] = [
-  { level: 2, patch: { damage: 2 } },
-  { level: 3, patch: { damage: 3, interval: -0.2 } },
-  { level: 4, patch: { damage: 4, range: 4 } },
-  { level: 5, patch: { damage: 6, interval: -0.4 } }
+  { level: 2, patch: { damage: 1 } },
+  { level: 3, patch: { damage: 1.5, interval: -0.2 } },
+  { level: 4, patch: { damage: 2, range: 4 } },
+  { level: 5, patch: { damage: 3, interval: -0.4 } }
 ]
 
 function accumulateUpgrades(level: number): LightningStats {
@@ -290,7 +311,7 @@ function createLightningSkill(world: World, _playerEid: number, level: number) {
 function getLightningDetail(lvl: number): string {
   const stats = accumulateUpgrades(lvl)
   const lines = [
-    `Calls a bolt down on the second nearest enemy in range.`,
+    `Calls a bolt down on the second nearest enemy, shocking all foes in its blast.`,
     `Damage: ${stats.damage}`,
     `Range: ${stats.range}`,
     `Interval: ${stats.interval.toFixed(2)}s`
@@ -310,7 +331,7 @@ registerSkill({
   name: 'Skyfall',
   icon: '/lightning_1.png',
   iconColumns: LIGHTNING_SPRITE.columns,
-  description: 'Strikes the second nearest enemy in range',
+  description: 'Bolts the second nearest enemy, shocking the blast area',
   maxLevel: 5,
   upgrades: UPGRADES,
   create: createLightningSkill,
