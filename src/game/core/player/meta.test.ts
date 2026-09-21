@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   addExperience,
   addMoney,
-  grantRunXp,
+  grantRunRewards,
   loadPlayerState,
+  runCoins,
   runTotalXp,
   savePlayerState,
+  spendMoney,
   upgradeAttribute
 } from './meta'
 
@@ -33,14 +35,13 @@ const makeStorage = () => {
   }
 }
 
-describe('player meta-progression state', () => {
-  beforeEach(() => {
-    vi.stubGlobal('window', { localStorage: makeStorage() })
-  })
+const stubStorage = () =>
+  vi.stubGlobal('window', { localStorage: makeStorage() })
 
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
+describe('player meta-progression state', () => {
+  beforeEach(stubStorage)
+
+  afterEach(() => vi.unstubAllGlobals())
 
   it('starts with defaults when nothing is saved', () => {
     expect(loadPlayerState()).toEqual(DEFAULTS)
@@ -78,18 +79,18 @@ describe('player meta-progression state', () => {
     addMoney(state, -1000)
     expect(state.experience).toBe(50)
     expect(state.money).toBe(30)
-    expect(loadPlayerState()).toEqual({ ...DEFAULTS, experience: 50, money: 30 })
+    expect(loadPlayerState()).toEqual({
+      ...DEFAULTS,
+      experience: 50,
+      money: 30
+    })
   })
 })
 
-describe('level ups and run rewards', () => {
-  beforeEach(() => {
-    vi.stubGlobal('window', { localStorage: makeStorage() })
-  })
+describe('level ups', () => {
+  beforeEach(stubStorage)
 
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
+  afterEach(() => vi.unstubAllGlobals())
 
   it('addExperience levels up at 10x thresholds and grants a point each', () => {
     const state = loadPlayerState()
@@ -113,21 +114,41 @@ describe('level ups and run rewards', () => {
     expect(runTotalXp(2, 50)).toBe(150)
     expect(runTotalXp(4, 100)).toBe(575)
   })
+})
 
-  it('grantRunXp rewards a finished run', () => {
-    grantRunXp(2, 50)
-    expect(loadPlayerState()).toEqual({ ...DEFAULTS, experience: 150 })
+describe('run rewards and spending', () => {
+  beforeEach(stubStorage)
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('runCoins pays about one coin per kill', () => {
+    expect(runCoins(0)).toBe(0)
+    expect(runCoins(1000 * 8.5)).toBe(1000)
+  })
+
+  it('spendMoney refuses to overspend', () => {
+    const state = loadPlayerState()
+    addMoney(state, 50)
+    expect(spendMoney(state, 30)).toBe(true)
+    expect(spendMoney(state, 30)).toBe(false)
+    expect(loadPlayerState().money).toBe(20)
+  })
+
+  it('grantRunRewards pays the run XP plus coins', () => {
+    // 150 run XP / 8.5 avg enemy XP = 18 coins
+    grantRunRewards(2, 50)
+    expect(loadPlayerState()).toEqual({
+      ...DEFAULTS,
+      experience: 150,
+      money: 18
+    })
   })
 })
 
 describe('upgradeAttribute', () => {
-  beforeEach(() => {
-    vi.stubGlobal('window', { localStorage: makeStorage() })
-  })
+  beforeEach(stubStorage)
 
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
+  afterEach(() => vi.unstubAllGlobals())
 
   it('spends a point and persists', () => {
     const state = loadPlayerState()

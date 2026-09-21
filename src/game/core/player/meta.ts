@@ -6,6 +6,8 @@
  * persistence goes through here, swap localStorage for a backend later.
  */
 import { runXpRequirement } from './levelUpSystem'
+import { APPARITION } from '../enemies/definitions/apparition'
+import { CRAWLER } from '../enemies/definitions/crawler'
 
 const STORAGE_KEY = 'mad-player'
 
@@ -95,6 +97,14 @@ export function addMoney(state: PlayerState, amount: number): void {
   savePlayerState(state)
 }
 
+/** Deducts coins if the player can afford it. Returns false on overspend. */
+export function spendMoney(state: PlayerState, amount: number): boolean {
+  if (amount > state.money) return false
+  state.money -= amount
+  savePlayerState(state)
+  return true
+}
+
 // Total XP earned in a run: sum of run thresholds 1..level-1 + current progress
 export function runTotalXp(runLevel: number, runCurrentXp: number): number {
   // eslint-disable-next-line functional/no-let
@@ -106,10 +116,21 @@ export function runTotalXp(runLevel: number, runCurrentXp: number): number {
   return total
 }
 
+// ponytail: enemies spawn in a 50/50 apparition/crawler split, so one kill is
+// worth the average of their XP values and pays out exactly 1 coin.
+const AVERAGE_ENEMY_XP = (APPARITION.XP_VALUE + CRAWLER.XP_VALUE) / 2
+
+/** Coins a run earned: ~1 per kill (phase 1 = 100 kills = 100 coins). */
+export function runCoins(runXp: number): number {
+  return Math.round(runXp / AVERAGE_ENEMY_XP)
+}
+
 // Interface between a finished run and meta progression — rewards the attempt
-export function grantRunXp(runLevel: number, runCurrentXp: number): void {
+export function grantRunRewards(runLevel: number, runCurrentXp: number): void {
   const state = loadPlayerState()
-  addExperience(state, runTotalXp(runLevel, runCurrentXp))
+  const total = runTotalXp(runLevel, runCurrentXp)
+  addExperience(state, total)
+  addMoney(state, runCoins(total))
 }
 
 // Level curve: 1000, 1500, 2250, ... — 10x the in-run curve (100, 150, ...)
@@ -125,7 +146,8 @@ export function upgradeAttribute(
   state.upgradePoints -= 1
   // ponytail: round to 1 decimal — 0.2 steps drift in float otherwise
   state.attributes[attribute] =
-    Math.round((state.attributes[attribute] + ATTRIBUTE_STEPS[attribute]) * 10) /
-    10
+    Math.round(
+      (state.attributes[attribute] + ATTRIBUTE_STEPS[attribute]) * 10
+    ) / 10
   savePlayerState(state)
 }

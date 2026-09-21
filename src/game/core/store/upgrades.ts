@@ -9,14 +9,20 @@ const STORAGE_KEY = 'mad-store-upgrades'
 export const MAX_ITEM_LEVEL = 10
 export const ITEMS_PER_SHELF = 3
 
+/** Price of the first upgrade, in coins. */
+export const UPGRADE_BASE_COST = 30
+
+/** Each level costs 50% more than the previous one. */
+export const UPGRADE_COST_GROWTH = 1.5
+
 export interface StoreItem {
   id: string
   name: string
   description: string
 }
 
-// ponytail: costs/effects land here — a `cost(level)` + `effect(level)` pair
-// is all the page needs once money and gameplay bonuses are wired.
+// ponytail: gameplay effects land here — an `effect(level)` pair is all the
+// page needs once item bonuses are wired.
 export const STORE_ITEMS: readonly StoreItem[] = [
   {
     id: 'pick',
@@ -81,6 +87,14 @@ export const STORE_ITEMS: readonly StoreItem[] = [
 ]
 
 export type ItemLevels = Readonly<Record<string, number>>
+
+/**
+ * Cost of taking an item from `level` to `level + 1`: 30, 45, 68, 101...
+ * Phase 1 pays ~100 coins, which buys exactly 2 upgrades.
+ */
+export function upgradeCost(level: number): number {
+  return Math.round(UPGRADE_BASE_COST * UPGRADE_COST_GROWTH ** level)
+}
 
 const emptyLevels = (): ItemLevels =>
   Object.fromEntries(STORE_ITEMS.map((item) => [item.id, 0]))

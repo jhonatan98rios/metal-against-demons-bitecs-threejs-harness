@@ -25,7 +25,7 @@ import {
   createLevelUpSystem,
   runXpRequirement
 } from './core/player/levelUpSystem'
-import { grantRunXp } from './core/player/meta'
+import { grantRunRewards } from './core/player/meta'
 import { PlayerHUD } from './ui/PlayerHUD'
 import { Health } from './core/shared/components/Health'
 import { DamagePopup } from './core/shared/components/DamagePopup'
@@ -56,7 +56,7 @@ function wireRunEndings(
   phaseIndex: number
 ) {
   const grant = (onEnd: () => void) => () => {
-    grantRunXp(XP.level[world.playerEid], XP.current[world.playerEid])
+    grantRunRewards(XP.level[world.playerEid], XP.current[world.playerEid])
     onEnd()
   }
   return {
