@@ -58,7 +58,7 @@ function ItemSlot({
           {level}/{MAX_ITEM_LEVEL}
         </span>
       </span>
-      <span className="line-clamp-3 w-full text-center font-mono text-[9px] leading-tight text-zinc-300">
+      <span className="line-clamp-3 h-[33px] w-full text-center font-mono text-[9px] leading-[11px] text-zinc-300">
         {item.name}
       </span>
     </button>
