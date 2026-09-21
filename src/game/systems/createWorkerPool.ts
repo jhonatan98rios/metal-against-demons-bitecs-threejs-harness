@@ -1,15 +1,14 @@
-import { Not, query, removeEntity, asBuffer, World } from 'bitecs'
+import { Not, query, asBuffer, World } from 'bitecs'
 
 import { Active } from '../core/shared/components/Active'
 import { Animation } from '../core/shared/components/Animation'
 import { AnimationRow } from '../core/shared/components/AnimationRow'
-import { Health } from '../core/shared/components/Health'
 import { Inactive } from '../core/shared/components/Inactive'
 import { Position } from '../core/shared/components/Position'
 import { Velocity } from '../core/shared/components/Velocity'
-import { MAX_COMMANDS, MAX_ENTITIES } from '../core/shared/constants'
+import { MAX_ENTITIES } from '../core/shared/constants'
 
-import type { ComponentTransfer, WorkerMessage, WorkerResponse } from './types'
+import type { ComponentTransfer, WorkerMessage } from './types'
 import { processPartition } from './processors'
 
 const SAB_SUPPORTED =
@@ -25,7 +24,6 @@ const BUF: ComponentTransfer = {
     endFrame: Animation.endFrame.buffer
   },
   AnimationRow: { row: AnimationRow.row.buffer },
-  Health: { current: Health.current.buffer },
   Position: {
     x: Position.x.buffer,
     y: Position.y.buffer,
@@ -42,102 +40,32 @@ export type WorkerPool = {
   destroy(): void
 }
 
-type PerWorkerQueues = {
-  remove: Uint32Array
-  move: Float32Array
-}
-
 type SharedState = {
   /** Shared buffer for entity-ID partitions. Main thread copies query results here once per frame. */
   entityIds: Uint32Array
   entitySAB: SharedArrayBuffer
 }
 
-function flushRemoveQueue(world: World, eids: Readonly<Uint32Array>): void {
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < eids.length; i++) {
-    removeEntity(world, eids[i])
-  }
-}
-
-type PoolState = {
-  completedWorkers: number
-  removeCounts: number[]
-  moveCounts: number[]
-  perWorkerQueues: PerWorkerQueues[]
-  workers: Worker[]
-  world: World
-  workerCount: number
-}
-
-function processAllQueues(state: PoolState): void {
-  const { completedWorkers, removeCounts, perWorkerQueues, world } = state
-
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < completedWorkers; i++) {
-    if (removeCounts[i] > 0) {
-      flushRemoveQueue(
-        world,
-        perWorkerQueues[i].remove.subarray(0, removeCounts[i])
-      )
-    }
-  }
-}
-
-function allocateQueues(count: number): PerWorkerQueues[] {
-  return Array.from({ length: count }, () => ({
-    remove: new Uint32Array(
-      new SharedArrayBuffer(MAX_COMMANDS * Uint32Array.BYTES_PER_ELEMENT)
-    ),
-    move: new Float32Array(
-      new SharedArrayBuffer(MAX_COMMANDS * 3 * Float32Array.BYTES_PER_ELEMENT)
-    )
-  }))
-}
-
-function createSingleWorker(
-  wi: number,
-  perWorkerQueues: PerWorkerQueues[],
-  shared: SharedState,
-  state: PoolState
-): Worker {
+function createSingleWorker(shared: SharedState): Worker {
   const worker = new Worker(new URL('./game.worker.ts', import.meta.url), {
     type: 'module'
   })
 
-  const initMsg: WorkerMessage = {
+  worker.postMessage({
     type: 'init',
     components: BUF,
-    removeQueueBuffer: perWorkerQueues[wi]
-      .remove as unknown as SharedArrayBuffer,
-    moveQueueBuffer: perWorkerQueues[wi].move as unknown as SharedArrayBuffer,
     entityBuffer: shared.entitySAB
-  }
-
-  worker.postMessage(initMsg)
-
-  worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
-    const res = e.data
-
-    state.removeCounts[wi] = res.removeCount
-    state.moveCounts[wi] = res.moveCount
-    state.completedWorkers++
-
-    if (state.completedWorkers === state.workerCount) {
-      processAllQueues(state)
-      state.completedWorkers = 0
-    }
-  }
+  } satisfies WorkerMessage)
 
   return worker
 }
 
 function makePoolUpdater(
-  state: PoolState,
-  workerCount: number,
+  world: World,
+  workers: readonly Worker[],
   shared: SharedState
 ): (dt: number) => void {
-  const { workers, world } = state
+  const workerCount = workers.length
 
   return (dt: number) => {
     const entities = query(
@@ -149,7 +77,7 @@ function makePoolUpdater(
     if (entities.length === 0) return
 
     // ponytail: copy entity IDs into shared buffer once per frame.
-    // Workers read partitions via subarray() — zero structured-clone overhead.
+    // Workers read partitions via subarray() — zero structured-clone overhead
     shared.entityIds.set(entities)
 
     const partitionSize = Math.ceil(entities.length / workerCount)
@@ -188,30 +116,13 @@ function createWorkerPoolImpl(world: World): WorkerPool {
     entitySAB
   }
 
-  const perWorkerQueues = allocateQueues(workerCount)
-  const removeCounts: number[] = Array.from({ length: workerCount }, () => 0)
-  const moveCounts: number[] = Array.from({ length: workerCount }, () => 0)
-
-  const state: PoolState = {
-    completedWorkers: 0,
-    removeCounts,
-    moveCounts,
-    perWorkerQueues,
-    workers: [],
-    world,
-    workerCount
-  }
-
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < workerCount; i++) {
-    const worker = createSingleWorker(i, perWorkerQueues, shared, state)
-
-    state.workers.push(worker)
-  }
+  const workers = Array.from({ length: workerCount }, () =>
+    createSingleWorker(shared)
+  )
 
   return {
-    update: makePoolUpdater(state, workerCount, shared),
-    destroy: makePoolDestroyer(state.workers)
+    update: makePoolUpdater(world, workers, shared),
+    destroy: makePoolDestroyer(workers)
   }
 }
 
@@ -220,24 +131,14 @@ function createFallbackPool(world: World): WorkerPool {
     update(dt: number) {
       const entities = query(world, [Animation, Not(Inactive)])
 
-      const removeAcc: number[] = []
-
       processPartition({
         entities: new Uint32Array(entities),
         dt,
         active: Active,
         animation: Animation,
         position: Position,
-        velocity: Velocity,
-        health: Health,
-        removeQueue: removeAcc,
-        moveQueue: []
+        velocity: Velocity
       })
-
-      // eslint-disable-next-line functional/no-let
-      for (let i = 0; i < removeAcc.length; i++) {
-        removeEntity(world, removeAcc[i])
-      }
     },
 
     destroy() {

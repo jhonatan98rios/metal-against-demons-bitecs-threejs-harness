@@ -1,12 +1,13 @@
 /**
- * Game worker — processes entity updates (animation, velocity integration) in a background thread.
+ * Game worker — advances sprite animation and integrates velocity for an
+ * entity partition in a background thread.
  *
- * Receives SharedArrayBuffer-backed component views and entity partitions from the main thread.
- * Writes command queues directly to pre-allocated SharedArrayBuffer queues (zero-copy).
- * Sends back only counts — main thread reads the shared memory.
+ * Receives SharedArrayBuffer-backed component views plus a shared entity-ID
+ * buffer and mutates them in place (zero-copy). Entity lifecycle is owned by
+ * main-thread systems, so the worker never removes entities.
  */
 
-import type { WorkerMessage, WorkerInitMessage, WorkerResponse } from './types'
+import type { WorkerMessage, WorkerInitMessage } from './types'
 import type { ActiveData } from './processors'
 
 interface ComponentViews {
@@ -18,7 +19,6 @@ interface ComponentViews {
     startFrame: Uint16Array
     endFrame: Uint16Array
   }
-  Health: { current: Float32Array }
   Position: {
     x: Float32Array
     y: Float32Array
@@ -42,7 +42,6 @@ function createViewsFromBuffers(msg: WorkerInitMessage): ComponentViews {
       startFrame: new Uint16Array(c.Animation.startFrame),
       endFrame: new Uint16Array(c.Animation.endFrame)
     },
-    Health: { current: new Float32Array(c.Health.current) },
     Position: {
       x: new Float32Array(c.Position.x),
       y: new Float32Array(c.Position.y),
@@ -57,13 +56,9 @@ function createViewsFromBuffers(msg: WorkerInitMessage): ComponentViews {
 
 const state: {
   comps: ComponentViews | null
-  removeQueue: Uint32Array | null
-  moveQueue: Float32Array | null
   entityBuffer: Uint32Array | null
 } = {
   comps: null,
-  removeQueue: null,
-  moveQueue: null,
   entityBuffer: null
 }
 
@@ -85,62 +80,14 @@ function updateOneEntity(eid: number, dt: number, c: ComponentViews): void {
   c.Position.z[eid] += c.Velocity.z[eid] * dt
 }
 
-function collectRemoves(
-  entities: Readonly<Uint32Array>,
-  c: ComponentViews,
-  removeQueue: Uint32Array,
-  counts: { remove: number; move: number }
-): void {
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i]
-
-    if (c.Health.current[eid] > 0) continue
-
-    if (counts.remove < removeQueue.length) {
-      removeQueue[counts.remove] = eid
-      counts.remove++
-    }
-  }
-}
-
-function collectMoves(
-  entities: Readonly<Uint32Array>,
-  c: ComponentViews,
-  moveQueue: Float32Array,
-  counts: { remove: number; move: number }
-): void {
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i]
-
-    if (counts.move + 3 > moveQueue.length) continue
-
-    moveQueue[counts.move] = eid
-    moveQueue[counts.move + 1] = c.Position.x[eid]
-    moveQueue[counts.move + 2] = c.Position.z[eid]
-    counts.move += 3
-  }
-}
-
-function processAndCollect(
+function updatePartition(
   entities: Readonly<Uint32Array>,
   dt: number,
   c: ComponentViews
-): { removeCount: number; moveCount: number } {
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i]
-
+): void {
+  for (const eid of entities) {
     updateOneEntity(eid, dt, c)
   }
-
-  const counts = { remove: 0, move: 0 }
-
-  collectRemoves(entities, c, state.removeQueue!, counts)
-  collectMoves(entities, c, state.moveQueue!, counts)
-
-  return { removeCount: counts.remove, moveCount: counts.move }
 }
 
 self.onmessage = (e: MessageEvent<WorkerMessage>) => {
@@ -148,27 +95,15 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 
   if (msg.type === 'init') {
     state.comps = createViewsFromBuffers(msg)
-    state.removeQueue = new Uint32Array(msg.removeQueueBuffer)
-    state.moveQueue = new Float32Array(msg.moveQueueBuffer)
     state.entityBuffer = new Uint32Array(msg.entityBuffer)
     return
   }
 
-  if (msg.type === 'update') {
-    const c = state.comps
+  const c = state.comps
+  if (!c || !state.entityBuffer) return
 
-    if (!c || !state.entityBuffer) return
+  // ponytail: read entity partition from shared buffer — zero copy from main thread
+  const entities = state.entityBuffer.subarray(msg.start, msg.start + msg.count)
 
-    // ponytail: read entity partition from shared buffer — zero copy from main thread
-    const entities = state.entityBuffer.subarray(
-      msg.start,
-      msg.start + msg.count
-    )
-
-    const { removeCount, moveCount } = processAndCollect(entities, msg.dt, c)
-
-    const response: WorkerResponse = { type: 'done', removeCount, moveCount }
-
-    self.postMessage(response)
-  }
+  updatePartition(entities, msg.dt, c)
 }

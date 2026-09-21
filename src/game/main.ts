@@ -48,6 +48,7 @@ import { getCollisionSystem } from './core/projectiles/systems/collisionSystem'
 import { HitEffect } from './core/shared/components/HitEffect'
 import './core/skills/definitions/projectile'
 import './core/skills/definitions/redBolt'
+import './core/skills/definitions/lightning'
 
 // ponytail: roguelite rewards the attempt — grant run XP on win AND death
 function wireRunEndings(

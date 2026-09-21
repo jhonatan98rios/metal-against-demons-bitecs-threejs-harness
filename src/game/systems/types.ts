@@ -12,7 +12,6 @@ export interface ComponentTransfer {
     endFrame: ArrayBufferLike
   }
   AnimationRow: { row: ArrayBufferLike }
-  Health: { current: ArrayBufferLike }
   Position: {
     x: ArrayBufferLike
     y: ArrayBufferLike
@@ -27,8 +26,6 @@ export interface ComponentTransfer {
 export type WorkerInitMessage = {
   type: 'init'
   components: ComponentTransfer
-  removeQueueBuffer: SharedArrayBuffer
-  moveQueueBuffer: SharedArrayBuffer
   /** Shared entity-ID buffer. Workers read partitions via subarray(start, start+count). */
   entityBuffer: SharedArrayBuffer
 }
@@ -43,15 +40,3 @@ export type WorkerUpdateMessage = {
 }
 
 export type WorkerMessage = WorkerInitMessage | WorkerUpdateMessage
-
-/**
- * Per-frame response from each worker partition.
- *
- * Workers write directly to pre-allocated SharedArrayBuffer queues.
- * Only counts are sent back — main thread reads the shared memory.
- */
-export type WorkerResponse = {
-  type: 'done'
-  removeCount: number
-  moveCount: number
-}

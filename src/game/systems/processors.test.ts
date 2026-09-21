@@ -7,8 +7,6 @@ import { describe, it, expect } from 'vitest'
 import {
   updateAnimations,
   updateMovement,
-  collectRemoveQueue,
-  collectMoveQueue,
   processPartition
 } from './processors'
 
@@ -187,96 +185,8 @@ describe('updateMovement > zero', () => {
   })
 })
 
-describe('collectRemoveQueue > health', () => {
-  it('collects entity IDs where health.current <= 0', () => {
-    const entities = makeEntities(4)
-    const out: number[] = []
-
-    collectRemoveQueue({
-      entities,
-      active: { isActive: new Uint8Array([1, 1, 1, 1]) },
-      health: { current: new Float32Array([10, 0, -1, 5]) },
-      out
-    })
-
-    expect(out).toEqual([1, 2])
-  })
-})
-
-describe('collectRemoveQueue > inactive', () => {
-  it('skips inactive entities even if health <= 0', () => {
-    const entities = makeEntities(3)
-    const out: number[] = []
-
-    collectRemoveQueue({
-      entities,
-      active: { isActive: new Uint8Array([0, 1, 0]) },
-      health: { current: new Float32Array([0, 0, 0]) },
-      out
-    })
-
-    expect(out).toEqual([1])
-  })
-})
-
-describe('collectRemoveQueue > null', () => {
-  it('does nothing when health is null', () => {
-    const entities = makeEntities(2)
-    const out: number[] = []
-
-    collectRemoveQueue({
-      entities,
-      active: { isActive: new Uint8Array([1, 1]) },
-      health: null,
-      out
-    })
-
-    expect(out).toEqual([])
-  })
-})
-
-describe('collectMoveQueue > basic', () => {
-  it('collects flat [eid, x, z] for active entities', () => {
-    const entities = makeEntities(2)
-    const out: number[] = []
-
-    collectMoveQueue({
-      entities,
-      active: { isActive: new Uint8Array([1, 1]) },
-      position: {
-        x: new Float32Array([10, 20]),
-        y: new Float32Array([0, 0]),
-        z: new Float32Array([5, 15])
-      },
-      out
-    })
-
-    expect(out).toEqual([0, 10, 5, 1, 20, 15])
-  })
-})
-
-describe('collectMoveQueue > inactive', () => {
-  it('skips inactive entities', () => {
-    const entities = makeEntities(3)
-    const out: number[] = []
-
-    collectMoveQueue({
-      entities,
-      active: { isActive: new Uint8Array([0, 1, 1]) },
-      position: {
-        x: new Float32Array([1, 2, 3]),
-        y: new Float32Array([0, 0, 0]),
-        z: new Float32Array([4, 5, 6])
-      },
-      out
-    })
-
-    expect(out).toEqual([1, 2, 5, 2, 3, 6])
-  })
-})
-
 describe('processPartition > full', () => {
-  it('runs animation, movement, and queues', () => {
+  it('runs animation and movement, leaving lifecycle alone', () => {
     const entities = makeEntities(1)
     const anim = {
       currentFrame: new Uint16Array([0]),
@@ -294,33 +204,25 @@ describe('processPartition > full', () => {
       x: new Float32Array([10]),
       z: new Float32Array([5])
     }
-    const removeAcc: number[] = []
-    const moveAcc: number[] = []
+
     processPartition({
       entities,
       dt: 0.05,
       active: { isActive: new Uint8Array([1]) },
       animation: anim,
       position,
-      velocity,
-      health: { current: new Float32Array([100]) },
-      removeQueue: removeAcc,
-      moveQueue: moveAcc
+      velocity
     })
 
     expect(anim.elapsed[0]).toBeCloseTo(0.05)
     expect(position.x[0]).toBeCloseTo(0.5)
     expect(position.z[0]).toBeCloseTo(0.25)
-    expect(removeAcc).toEqual([])
-    expect(moveAcc).toEqual([0, 0.5, 0.25])
   })
 })
-describe('processPartition > nulls', () => {
-  it('handles null animation, position, velocity, health', () => {
-    const entities = makeEntities(1)
 
-    const removeAcc: number[] = []
-    const moveAcc: number[] = []
+describe('processPartition > nulls', () => {
+  it('handles null animation, position, velocity', () => {
+    const entities = makeEntities(1)
 
     processPartition({
       entities,
@@ -328,13 +230,9 @@ describe('processPartition > nulls', () => {
       active: { isActive: new Uint8Array([1]) },
       animation: null,
       position: null,
-      velocity: null,
-      health: null,
-      removeQueue: removeAcc,
-      moveQueue: moveAcc
+      velocity: null
     })
 
-    expect(removeAcc).toEqual([])
-    expect(moveAcc).toEqual([])
+    expect(entities.length).toBe(1)
   })
 })

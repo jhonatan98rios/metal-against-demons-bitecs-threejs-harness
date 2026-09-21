@@ -3,6 +3,9 @@
  *
  * All functions operate on SharedArrayBuffer-backed typed arrays directly.
  * No classes, no state — just ECS data in, mutations applied.
+ *
+ * Entity lifecycle (death, despawn) is owned by dedicated systems, never by
+ * these processors: they only advance animation and integrate velocity.
  */
 
 interface AnimationData {
@@ -48,20 +51,6 @@ interface EntityInput {
   active: ActiveData
 }
 
-interface RemoveQueueInput {
-  entities: Readonly<Uint32Array>
-  active: ActiveData
-  health: { current: Float32Array } | null
-  out: number[]
-}
-
-interface MoveQueueInput {
-  entities: Readonly<Uint32Array>
-  active: ActiveData
-  position: MovementData
-  out: number[]
-}
-
 interface PartitionInput {
   entities: Readonly<Uint32Array>
   dt: number
@@ -69,19 +58,12 @@ interface PartitionInput {
   animation: AnimationData | null
   position: MovementData | null
   velocity: VelocityData | null
-  health: { current: Float32Array } | null
-  removeQueue: number[]
-  moveQueue: number[]
 }
 
 function isActive(input: EntityInput): boolean {
   return input.active.isActive[input.eid] !== 0
 }
 
-/**
- * Process animation frame cycling for a single entity.
- * Mutates Animation arrays in place.
- */
 /**
  * Process animation frame cycling for a partition of entities.
  * Mutates Animation arrays in place.
@@ -134,56 +116,10 @@ export function updateMovement(input: MovementInput): void {
 }
 
 /**
- * Collect entities whose health has dropped to zero or below.
- * Appends their entity IDs to the output array.
- */
-export function collectRemoveQueue(input: RemoveQueueInput): void {
-  const { entities, active, health, out } = input
-
-  if (!health) return
-
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i]
-
-    if (!isActive({ eid, active })) continue
-    if (health.current[eid] <= 0) {
-      out.push(eid)
-    }
-  }
-}
-
-/**
- * Collect flat [eid, x, z] triples for every processed entity.
- */
-export function collectMoveQueue(input: MoveQueueInput): void {
-  const { entities, active, position, out } = input
-
-  // eslint-disable-next-line functional/no-let
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i]
-
-    if (!isActive({ eid, active })) continue
-
-    out.push(eid, position.x[eid], position.z[eid])
-  }
-}
-
-/**
  * Run all processing steps for a partition of entities.
  */
 export function processPartition(input: PartitionInput): void {
-  const {
-    entities,
-    dt,
-    active,
-    animation,
-    position,
-    velocity,
-    health,
-    removeQueue,
-    moveQueue
-  } = input
+  const { entities, dt, active, animation, position, velocity } = input
 
   if (animation) {
     updateAnimations({ entities, active, animation, dt })
@@ -192,19 +128,7 @@ export function processPartition(input: PartitionInput): void {
   if (position && velocity) {
     updateMovement({ entities, active, position, velocity, dt })
   }
-
-  collectRemoveQueue({ entities, active, health, out: removeQueue })
-
-  if (position) {
-    collectMoveQueue({ entities, active, position, out: moveQueue })
-  }
 }
 
 export type { AnimationData, MovementData, VelocityData, ActiveData }
-export type {
-  AnimationInput,
-  MovementInput,
-  RemoveQueueInput,
-  MoveQueueInput,
-  PartitionInput
-}
+export type { AnimationInput, MovementInput, PartitionInput }

@@ -5,13 +5,6 @@
  */
 export const MAX_ENTITIES = 100_000
 
-/**
- * Maximum commands per frame per queue (remove, move, spawn).
- * Used for SharedArrayBuffer-backed command queue buffers shared
- * between main thread and workers.
- */
-export const MAX_COMMANDS = 10_000
-
 const SAB_SUPPORTED = typeof SharedArrayBuffer !== 'undefined'
 
 /**

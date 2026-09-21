@@ -2,7 +2,8 @@
 export const SKILL_ID = {
   NONE: 0,
   PROJECTILE: 1,
-  RED_BOLT: 2
+  RED_BOLT: 2,
+  LIGHTNING: 3
 } as const
 
 export type SkillId = (typeof SKILL_ID)[keyof typeof SKILL_ID]
