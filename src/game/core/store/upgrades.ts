@@ -3,17 +3,22 @@
  *
  * 12 infernal music-shop items, 3 per shelf, each upgradable to level 10
  * (120 upgrade steps total). Levels persist across runs.
+ *
+ * Pricing is soulslike: the price depends on how many upgrades the player
+ * already bought, not on which item. Buying the cheap item raises the price of
+ * every other item, so the choice becomes "what is useful?" instead of "what is
+ * cheap?" and builds stop converging on the cheapest stats.
  */
 const STORAGE_KEY = 'mad-store-upgrades'
 
 export const MAX_ITEM_LEVEL = 10
 export const ITEMS_PER_SHELF = 3
 
-/** Price of the first upgrade, in coins. */
+/** Price of the first upgrade ever, in coins. */
 export const UPGRADE_BASE_COST = 30
 
-/** Each level costs 50% more than the previous one. */
-export const UPGRADE_COST_GROWTH = 1.5
+/** Coin weight of the curve — how fast prices climb per upgrade bought. */
+export const UPGRADE_COST_SCALE = 25
 
 export interface StoreItem {
   id: string
@@ -88,12 +93,18 @@ export const STORE_ITEMS: readonly StoreItem[] = [
 
 export type ItemLevels = Readonly<Record<string, number>>
 
+/** Total upgrades bought across every item — the soulslike "level". */
+export function totalUpgrades(levels: ItemLevels): number {
+  return Object.values(levels).reduce((sum, level) => sum + level, 0)
+}
+
 /**
- * Cost of taking an item from `level` to `level + 1`: 30, 45, 68, 101...
- * Phase 1 pays ~100 coins, which buys exactly 2 upgrades.
+ * Cost of the next upgrade, given how many were already bought: 30, 55, 101,
+ * 160, 239... Sub-exponential on purpose — 1.5^n would price the 120th
+ * upgrade past 10^22 coins. Phase 1 pays ~100 coins, which buys exactly 2.
  */
-export function upgradeCost(level: number): number {
-  return Math.round(UPGRADE_BASE_COST * UPGRADE_COST_GROWTH ** level)
+export function upgradeCost(bought: number): number {
+  return Math.round(UPGRADE_BASE_COST + UPGRADE_COST_SCALE * bought ** 1.5)
 }
 
 const emptyLevels = (): ItemLevels =>

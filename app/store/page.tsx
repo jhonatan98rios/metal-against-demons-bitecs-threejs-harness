@@ -13,6 +13,7 @@ import {
   MAX_ITEM_LEVEL,
   STORE_ITEMS,
   loadItemLevels,
+  totalUpgrades,
   upgradeCost,
   upgradeItem,
   type ItemLevels,
@@ -51,16 +52,17 @@ function ItemArt({ level, maxed }: { level: number; maxed: boolean }) {
 function ItemSlot({
   item,
   level,
+  cost,
   coins,
   onUpgrade
 }: {
   item: StoreItem
   level: number
+  cost: number
   coins: number
   onUpgrade: () => void
 }) {
   const maxed = level >= MAX_ITEM_LEVEL
-  const cost = upgradeCost(level)
   const enabled = maxed || coins >= cost
   return (
     <button
@@ -99,6 +101,8 @@ function Shelf({
   coins: number
   onUpgrade: (id: string) => void
 }) {
+  // soulslike: one price for the whole shelf, driven by total upgrades bought
+  const cost = upgradeCost(totalUpgrades(levels))
   return (
     <div className="flex flex-col justify-end">
       <div className="flex items-end justify-around gap-2">
@@ -107,6 +111,7 @@ function Shelf({
             key={item.id}
             item={item}
             level={levels[item.id] ?? 0}
+            cost={cost}
             coins={coins}
             onUpgrade={() => onUpgrade(item.id)}
           />
@@ -166,7 +171,8 @@ export default function StorePage() {
     return <div className="min-h-[100dvh] bg-zinc-950" />
 
   const upgrade = (id: string) => {
-    if (!spendMoney(player, upgradeCost(levels[id] ?? 0))) return
+    const cost = upgradeCost(totalUpgrades(levels))
+    if (!spendMoney(player, cost)) return
     setLevels(upgradeItem(levels, id))
     // ponytail: spread clone forces a re-render of the mutated player state
     setPlayer({ ...player })

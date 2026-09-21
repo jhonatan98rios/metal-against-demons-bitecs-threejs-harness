@@ -9,6 +9,7 @@ import {
   STORE_ITEMS,
   UPGRADE_BASE_COST,
   loadItemLevels,
+  totalUpgrades,
   upgradeCost,
   upgradeItem
 } from './upgrades'
@@ -64,14 +65,30 @@ describe('store upgrade levels', () => {
 })
 
 describe('upgrade pricing', () => {
-  it('follows a 1.5x curve from the base cost', () => {
+  beforeEach(stubStorage)
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('follows a sub-exponential curve from the base cost', () => {
     expect(upgradeCost(0)).toBe(UPGRADE_BASE_COST)
-    expect(upgradeCost(1)).toBe(45)
-    expect(upgradeCost(2)).toBe(68)
-    expect(upgradeCost(9)).toBeGreaterThan(upgradeCost(8))
+    expect(upgradeCost(1)).toBe(55)
+    expect(upgradeCost(2)).toBe(101)
+    expect(upgradeCost(119)).toBeLessThan(1_000_000)
+    expect(upgradeCost(119)).toBeGreaterThan(upgradeCost(118))
   })
 
-  // Economy target: clearing phase 1 funds exactly 2 upgrades, no more.
+  it('counts upgrades bought across every item', () => {
+    const levels = upgradeItem(upgradeItem(loadItemLevels(), 'pick'), 'amp')
+    expect(totalUpgrades(levels)).toBe(2)
+  })
+
+  // Soulslike coupling: upgrading A must make B cost more too.
+  it('raises every item price once one is bought', () => {
+    const before = upgradeCost(totalUpgrades(loadItemLevels()))
+    const levels = upgradeItem(loadItemLevels(), 'pick')
+    expect(upgradeCost(totalUpgrades(levels))).toBeGreaterThan(before)
+  })
+
   it('lets a phase-1 clear buy exactly 2 upgrades', () => {
     const avgKillXp = (APPARITION.XP_VALUE + CRAWLER.XP_VALUE) / 2
     const coins = runCoins(PHASES[0].enemyCount * avgKillXp)
