@@ -15,7 +15,7 @@ import {
 
 // 3 items must fit side by side, and 4 shelves must fit the viewport height —
 // min() picks whichever budget is tighter, so nothing overflows on mobile.
-const ITEM_SIZE = 'w-[min(28%,calc((100dvh-220px)/4))]'
+const ITEM_SIZE = 'w-[min(25%,calc((100dvh-240px)/4.4))]'
 
 const SHELVES: readonly StoreItem[][] = Array.from(
   { length: STORE_ITEMS.length / ITEMS_PER_SHELF },
@@ -58,7 +58,7 @@ function ItemSlot({
           {level}/{MAX_ITEM_LEVEL}
         </span>
       </span>
-      <span className="w-full truncate text-center font-mono text-[9px] leading-tight text-zinc-300">
+      <span className="line-clamp-3 w-full text-center font-mono text-[9px] leading-tight text-zinc-300">
         {item.name}
       </span>
     </button>
@@ -113,15 +113,25 @@ export default function StorePage() {
       >
         ‹ Back
       </Link>
-      <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col justify-between gap-2 px-8 py-6">
-        {SHELVES.map((shelf, index) => (
-          <Shelf
-            key={index}
-            items={shelf}
-            levels={levels}
-            onUpgrade={upgrade}
-          />
-        ))}
+      <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col justify-center gap-6 px-8 py-6">
+        <header className="text-center">
+          <h1 className="font-mono text-xl font-bold text-amber-400">
+            Loja do Lamento
+          </h1>
+          <p className="mt-1 font-mono text-[10px] text-zinc-400">
+            onde o seu lamento é a nossa alegria
+          </p>
+        </header>
+        <div className="flex flex-col gap-3">
+          {SHELVES.map((shelf, index) => (
+            <Shelf
+              key={index}
+              items={shelf}
+              levels={levels}
+              onUpgrade={upgrade}
+            />
+          ))}
+        </div>
       </main>
     </div>
   )
