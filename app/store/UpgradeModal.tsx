@@ -8,6 +8,7 @@ export function UpgradeModal({
   level,
   cost,
   maxed,
+  affordable,
   onConfirm,
   onClose
 }: {
@@ -15,9 +16,11 @@ export function UpgradeModal({
   level: number
   cost: number
   maxed: boolean
+  affordable: boolean
   onConfirm: () => void
   onClose: () => void
 }) {
+  const canBuy = !maxed && affordable
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-8">
       <div className="w-full max-w-sm rounded border border-zinc-600 bg-zinc-900 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.8)]">
@@ -28,22 +31,20 @@ export function UpgradeModal({
           {item.description}
         </p>
         <div className="mt-3 flex items-center justify-between">
-          <span
-            className={`font-mono text-sm ${maxed ? 'text-amber-300' : 'text-zinc-300'}`}
-          >
+          <span className="font-mono text-sm text-zinc-300">
             Nível {level}/{MAX_ITEM_LEVEL}
           </span>
           <div className="flex gap-2">
-            {!maxed && (
-              <button
-                type="button"
-                disabled={maxed}
-                onClick={onConfirm}
-                className="rounded border border-zinc-600 bg-zinc-800 px-3 py-1 font-mono text-xs text-amber-400 active:scale-95 disabled:opacity-50"
-              >
-                🪙 {cost}
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={!canBuy}
+              onClick={onConfirm}
+              className={`rounded border border-zinc-600 bg-zinc-800 px-3 py-1 font-mono text-xs active:scale-95 ${
+                canBuy ? 'text-amber-400' : 'text-red-400 opacity-50'
+              }`}
+            >
+              {maxed ? 'MAX' : `🪙 ${cost}`}
+            </button>
             <button
               type="button"
               onClick={onClose}
