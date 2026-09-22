@@ -24,6 +24,8 @@ export interface StoreItem {
   id: string
   name: string
   description: string
+  /** What one level buys — shown in the upgrade modal. */
+  effect: string
 }
 
 // ponytail: gameplay effects land here — an `effect(level)` pair is all the
@@ -32,62 +34,74 @@ export const STORE_ITEMS: readonly StoreItem[] = [
   {
     id: 'pick',
     name: 'Palheta Endiabrada',
-    description: 'Feita de chifre de demônio menor. Não desafina nem na lava.'
+    description: 'Feita de chifre de demônio menor. Não desafina nem na lava.',
+    effect: 'Aumenta o dano por golpe'
   },
   {
     id: 'strings',
     name: 'Cordas do Lamento',
-    description: 'Afinam sozinhas com o choro dos condenados.'
+    description: 'Afinam sozinhas com o choro dos condenados.',
+    effect: 'Aumenta a precisão dos acordes'
   },
   {
     id: 'tuner',
     name: 'Afinador Elétrico do Grito das Almas',
-    description: 'Baterias inclusas. Não inclusas: piedade.'
+    description: 'Baterias inclusas. Não inclusas: piedade.',
+    effect: 'Reduz o tempo de recarga'
   },
   {
     id: 'distortion',
     name: 'Pedal de Distorção Possuído',
-    description: 'Sussurra riffs que você não compôs.'
+    description: 'Sussurra riffs que você não compôs.',
+    effect: 'Aumenta o dano de distorção'
   },
   {
     id: 'sticks',
     name: 'Baqueta de Osso',
-    description: 'Durabilidade eterna, procedência... discutível.'
+    description: 'Durabilidade eterna, procedência... discutível.',
+    effect: 'Aumenta a velocidade de ataque'
   },
   {
     id: 'amp',
     name: 'Amplificador Valvulado do Abismo',
-    description: 'O volume vai até 666.'
+    description: 'O volume vai até 666.',
+    effect: 'Aumenta o poder do ataque'
   },
   {
     id: 'headphones',
     name: 'Fone do Silêncio Eterno',
-    description: 'Isola o som de fora e a sua alma de dentro.'
+    description: 'Isola o som de fora e a sua alma de dentro.',
+    effect: 'Aumenta a resistência a dano'
   },
   {
     id: 'guitar',
     name: 'Guitarra do Pacto Assinado',
-    description: 'Assinada com sangue, garantia de 666 anos.'
+    description: 'Assinada com sangue, garantia de 666 anos.',
+    effect: 'Aumenta o dano base'
   },
   {
     id: 'cable',
     name: 'Cabo Blindado Contra Exorcismo',
-    description: 'Nenhum padre consegue desligar o seu som.'
+    description: 'Nenhum padre consegue desligar o seu som.',
+    effect: 'Aumenta o alcance do ataque'
   },
   {
     id: 'metronome',
     name: 'Metrônomo do Juízo Final',
-    description: 'Marca o tempo até o fim dos tempos. Precisão absoluta.'
+    description: 'Marca o tempo até o fim dos tempos. Precisão absoluta.',
+    effect: 'Aumenta a velocidade de movimento'
   },
   {
     id: 'strap',
     name: 'Correia de Alma Penada',
-    description: 'Ajusta no ombro, aperta na consciência.'
+    description: 'Ajusta no ombro, aperta na consciência.',
+    effect: 'Aumenta a esquiva'
   },
   {
     id: 'score',
     name: 'Partitura Escrita com Sangue',
-    description: 'Toda música, inclusive as que ainda não existem.'
+    description: 'Toda música, inclusive as que ainda não existem.',
+    effect: 'Melhora a habilidade especial'
   }
 ]
 

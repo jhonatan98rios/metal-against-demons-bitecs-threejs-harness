@@ -30,9 +30,13 @@ export function UpgradeModal({
         <p className="mt-2 font-mono text-xs leading-relaxed text-zinc-300">
           {item.description}
         </p>
+        <p className="mt-2 font-mono text-xs text-amber-300">
+          {maxed ? 'Efeito' : 'Upgrade'}: {item.effect}
+        </p>
         <div className="mt-3 flex items-center justify-between">
           <span className="font-mono text-sm text-zinc-300">
             Nível {level}/{MAX_ITEM_LEVEL}
+            {maxed ? '' : ` → ${level + 1}`}
           </span>
           <div className="flex gap-2">
             <button
