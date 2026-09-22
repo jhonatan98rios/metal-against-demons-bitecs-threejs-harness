@@ -23,7 +23,7 @@ import { UpgradeModal } from './UpgradeModal'
 
 // 3 items must fit side by side, and 4 shelves must fit the viewport height —
 // min() picks whichever budget is tighter, so nothing overflows on mobile.
-const ITEM_SIZE = 'w-[min(25%,calc((100dvh-260px)/4.4))]'
+const ITEM_SIZE = 'w-[min(25%,calc((100dvh-260px)/4.8))]'
 
 const SHELVES: readonly StoreItem[][] = Array.from(
   { length: STORE_ITEMS.length / ITEMS_PER_SHELF },
@@ -53,12 +53,10 @@ function ItemArt({ level, maxed }: { level: number; maxed: boolean }) {
 function ItemSlot({
   item,
   level,
-  cost,
   onSelect
 }: {
   item: StoreItem
   level: number
-  cost: number
   onSelect: () => void
 }) {
   const maxed = level >= MAX_ITEM_LEVEL
@@ -74,9 +72,6 @@ function ItemSlot({
       <span className="line-clamp-3 h-[33px] w-full text-center font-mono text-[9px] leading-[11px] text-zinc-300">
         {item.name}
       </span>
-      <span className="h-[11px] w-full text-center font-mono text-[9px] leading-[11px] text-amber-400">
-        {maxed ? 'MAX' : `🪙 ${cost}`}
-      </span>
     </button>
   )
 }
@@ -90,8 +85,6 @@ function Shelf({
   levels: ItemLevels
   onSelect: (item: StoreItem) => void
 }) {
-  // soulslike: one price for the whole shelf, driven by total upgrades bought
-  const cost = upgradeCost(totalUpgrades(levels))
   return (
     <div className="flex flex-col justify-end">
       <div className="flex items-end justify-around gap-2">
@@ -100,12 +93,11 @@ function Shelf({
             key={item.id}
             item={item}
             level={levels[item.id] ?? 0}
-            cost={cost}
             onSelect={() => onSelect(item)}
           />
         ))}
       </div>
-      <div className="h-3 rounded-[2px] bg-gradient-to-b from-amber-700 via-amber-900 to-black shadow-[0_8px_16px_rgba(0,0,0,0.8)]" />
+      <div className="h-2 rounded-[2px] bg-gradient-to-b from-amber-700 via-amber-900 to-black shadow-[0_8px_16px_rgba(0,0,0,0.8)]" />
     </div>
   )
 }
@@ -130,7 +122,7 @@ function StoreBody({
         </p>
         <p className="mt-2 font-mono text-sm text-amber-300">🪙 {coins}</p>
       </header>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {SHELVES.map((shelf, index) => (
           <Shelf
             key={index}
