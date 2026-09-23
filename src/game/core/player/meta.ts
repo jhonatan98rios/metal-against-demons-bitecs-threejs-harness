@@ -120,7 +120,7 @@ export function runTotalXp(runLevel: number, runCurrentXp: number): number {
 // worth the average of their XP values and pays out exactly 1 coin.
 const AVERAGE_ENEMY_XP = (APPARITION.XP_VALUE + CRAWLER.XP_VALUE) / 2
 
-/** Coins a run earned: ~1 per kill (phase 1 = 100 kills = 100 coins). */
+/** Coins a run earned: ~1 per kill (phase 1 = 200 kills = 200 coins). */
 export function runCoins(runXp: number): number {
   return Math.round(runXp / AVERAGE_ENEMY_XP)
 }

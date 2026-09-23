@@ -89,11 +89,11 @@ describe('upgrade pricing', () => {
     expect(upgradeCost(totalUpgrades(levels))).toBeGreaterThan(before)
   })
 
-  it('lets a phase-1 clear buy exactly 2 upgrades', () => {
+  it('lets a phase-1 clear buy exactly 3 upgrades', () => {
     const avgKillXp = (APPARITION.XP_VALUE + CRAWLER.XP_VALUE) / 2
     const coins = runCoins(PHASES[0].enemyCount * avgKillXp)
-    const two = upgradeCost(0) + upgradeCost(1)
-    expect(coins).toBeGreaterThanOrEqual(two)
-    expect(coins).toBeLessThan(two + upgradeCost(2))
+    const three = upgradeCost(0) + upgradeCost(1) + upgradeCost(2)
+    expect(coins).toBeGreaterThanOrEqual(three)
+    expect(coins).toBeLessThan(three + upgradeCost(3))
   })
 })

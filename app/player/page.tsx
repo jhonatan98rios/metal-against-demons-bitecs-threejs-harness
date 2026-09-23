@@ -115,7 +115,8 @@ function AttributesView({
     <main className="w-full max-w-3xl px-6 pb-8">
       <div className="mb-4 flex items-center justify-between font-mono text-sm text-zinc-400">
         <span>
-          Level {player.level} — {player.experience}/{xpToNextLevel(player.level)} XP
+          Level {player.level} — {player.experience}/
+          {xpToNextLevel(player.level)} XP
         </span>
         <span className="text-amber-400">
           Upgrade points: {player.upgradePoints}

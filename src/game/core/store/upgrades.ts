@@ -115,7 +115,7 @@ export function totalUpgrades(levels: ItemLevels): number {
 /**
  * Cost of the next upgrade, given how many were already bought: 30, 55, 101,
  * 160, 239... Sub-exponential on purpose — 1.5^n would price the 120th
- * upgrade past 10^22 coins. Phase 1 pays ~100 coins, which buys exactly 2.
+ * upgrade past 10^22 coins. Phase 1 pays 200 coins (200 kills), which buys 3.
  */
 export function upgradeCost(bought: number): number {
   return Math.round(UPGRADE_BASE_COST + UPGRADE_COST_SCALE * bought ** 1.5)
@@ -150,8 +150,9 @@ export function saveItemLevels(levels: ItemLevels): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(levels))
 }
 
-/** Returns the next level map (maxed items unchanged) and persists it. */
+/** Returns the next level map (unknown and maxed items unchanged) and persists it. */
 export function upgradeItem(levels: ItemLevels, id: string): ItemLevels {
+  if (!STORE_ITEMS.some((item) => item.id === id)) return levels
   const current = clampLevel(levels[id])
   if (current >= MAX_ITEM_LEVEL) return levels
   const next = { ...levels, [id]: current + 1 }

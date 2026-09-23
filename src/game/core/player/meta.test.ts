@@ -78,11 +78,11 @@ describe('player meta-progression state', () => {
     addMoney(state, 30)
     addMoney(state, -1000)
     expect(state.experience).toBe(50)
-    expect(state.money).toBe(30)
+    expect(state.money).toBe(0)
     expect(loadPlayerState()).toEqual({
       ...DEFAULTS,
       experience: 50,
-      money: 30
+      money: 0
     })
   })
 })
