@@ -66,10 +66,10 @@ function ItemSlot({
       onClick={onSelect}
       title={`${item.name} — ${item.description}`}
       aria-label={`${item.name}, level ${level} of ${MAX_ITEM_LEVEL}`}
-      className={`${ITEM_SIZE} flex touch-manipulation flex-col items-center gap-1 select-none active:scale-95`}
+      className={`${ITEM_SIZE} flex touch-manipulation flex-col items-center select-none active:scale-95`}
     >
       <ItemArt level={level} maxed={maxed} />
-      <span className="line-clamp-3 h-[33px] w-full text-center font-mono text-[9px] leading-[11px] text-zinc-300">
+      <span className="line-clamp-3 h-[33px] w-full flex items-center justify-center text-center font-mono text-[9px] leading-[11px] text-zinc-300 bg-black">
         {item.name}
       </span>
     </button>
@@ -87,7 +87,7 @@ function Shelf({
 }) {
   return (
     <div className="flex flex-col justify-end">
-      <div className="flex items-end justify-around gap-2">
+      <div className="flex items-end justify-around mb-1">
         {items.map((item) => (
           <ItemSlot
             key={item.id}
@@ -97,7 +97,6 @@ function Shelf({
           />
         ))}
       </div>
-      <div className="h-2 rounded-[2px] bg-gradient-to-b from-amber-700 via-amber-900 to-black shadow-[0_8px_16px_rgba(0,0,0,0.8)]" />
     </div>
   )
 }
@@ -114,15 +113,9 @@ function StoreBody({
   return (
     <>
       <header className="text-center">
-        <h1 className="font-mono text-xl font-bold text-amber-400">
-          Loja do Lamento
-        </h1>
-        <p className="mt-1 font-mono text-[10px] text-zinc-400">
-          onde o seu lamento é a nossa alegria
-        </p>
         <p className="mt-2 font-mono text-sm text-amber-300">🪙 {coins}</p>
       </header>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col mt-32">
         {SHELVES.map((shelf, index) => (
           <Shelf
             key={index}
@@ -193,7 +186,7 @@ export default function StorePage() {
   }
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-zinc-950">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-[url(/store_bg.png)] bg-cover bg-center">
       {/* ponytail: hell music-shop backdrop art goes behind this content */}
       <Link
         href="/"

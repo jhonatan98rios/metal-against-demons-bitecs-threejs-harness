@@ -15,10 +15,10 @@ export const PHASES: PhaseDef[] = [
   {
     id: 'phase-1',
     name: 'First Contact',
-    description: '100 enemies — a gentle start',
-    enemyCount: 100,
-    poolSize: 110,
-    spawnInterval: 0.8,
+    description: '200 enemies — first contact, but not gentle',
+    enemyCount: 200,
+    poolSize: 220,
+    spawnInterval: 0.6,
     scenario: SCENARIOS.LEVEL1
   },
   {
